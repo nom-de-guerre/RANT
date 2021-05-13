@@ -131,7 +131,7 @@ struct stratum_t
 	void RPROP (void);
 	void RPROP (int);
 	double *f (double *);
-	void f (double *, double *);
+	double *f (double *, double *);
 };
 
 template<typename T> class NNet_t
@@ -164,8 +164,8 @@ public:
 
 	/*
 	 * levels is the number of layers, including the output.  width is an
-	 * arrays specifying the width of each level.  e.g., { 1, 4, 1 }, is an SLP
-	 * with a single input, 4 hidden and 1 output perceptron.
+	 * array specifying the width of each level.  e.g., { 1, 4, 1 }, is
+	 * an SLP with a single input, 4 hidden and 1 output perceptron.
 	 *
 	 */
 	NNet_t (const int * const width, const int levels) :

@@ -165,7 +165,7 @@ stratum_t::f (double *xi)
  * Used when a stratum is stand-alone trained.
  *
  */
-void
+double *
 stratum_t::f (double *xi, double *result)
 {
 	s_dot.MatrixVectorMult (s_W, xi);
@@ -250,8 +250,6 @@ template<typename T> double
 NNet_t<T>::Compute (double *x)
 {
 	double *ripple;
-
-// printf ("theta = %f\n", x[0]);
 
 	ripple = x;
 

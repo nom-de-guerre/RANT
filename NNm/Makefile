@@ -1,7 +1,8 @@
 OPTIONS= $(OUTSIDE)
 CC=g++
 # DEBUG=-O0 -g
-DEBUG=-O3 -mavx
+# DEBUG=-O3 -mavx
+DEBUG=-O3 
 CFLAGS=-Wall -I. $(OPTIONS) $(DEBUG)
 HDEPS = NNm.h NNm.tcc data.h NeuralM.h
 DEPS = Makefile $(HDEPS)

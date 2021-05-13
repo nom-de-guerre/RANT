@@ -62,14 +62,21 @@ public:
 	bool Test (DataSet_t const * const);
 
 	int ComputeSoftmax (void);
+
 	double metric (void)
 	{
 		return c_Correct;
 	}
+
 	double ratio (void)
 	{
 		double right = c_Correct;
 		return right / (double) c_seen;
+	}
+
+	double Loss (void) const
+	{
+		return c_Loss / (double) c_seen;
 	}
 };
 
@@ -88,8 +95,7 @@ double Softmax_t::f (double *x)
 int Softmax_t::ComputeSoftmax ()
 {
 	double denom = 0;
-	double best = -100000000;
-	double max = -10000000;
+	double max = -DBL_MAX;
 	int factor = -1;
 
 	for (int i = 0; i < n_Nout; ++i)
@@ -104,17 +110,19 @@ int Softmax_t::ComputeSoftmax ()
 		denom += c_P[i];
 	}
 
+	max = -DBL_MAX;
 	for (int i = 0; i < n_Nout; ++i)
 	{
 		c_P[i] /= denom;
 
-		if (c_P[i] > best)
+		if (c_P[i] > max)
 		{
-			best = c_P[i];
+			max = c_P[i];
 			factor = i;
 		}
 	}
 
+	assert (max >= 0.0 && max <= 1.0);
 	assert (factor > -1 && factor < n_Nout);
 
 	return factor;
@@ -178,13 +186,6 @@ double Softmax_t::error (DataSet_t const * tp)
 {
 	double loss = 0;
 
-assert (false);
-#if 0
-	for (int i = 0; i < n_Results.rows (); ++i)
-		loss += n_Results (i, 0);
-
-	loss /= tp->t_N;
-#endif
 	return loss;
 }
 
