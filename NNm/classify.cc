@@ -119,7 +119,11 @@ void Run (int *layers)
 	} catch (const char *excep) {
 
 		printf ("ERROR: %s\n", excep);
+
+		exit (-1);
 	}
+
+	printf (" *** Loss\t%f\t%d\n", Np->Loss (), Np->Iterations ());
 
 	bool accept_soln = true;
 	bool correct;

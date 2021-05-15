@@ -72,7 +72,7 @@ double Regression_t::bprop (const TrainingRow_t &x)
 	double delta_k;
 	double aj;
 	double dAct;
-	stratum_t *p = n_strata[n_levels - 1];
+	stratum_t *me = n_strata[n_levels - 1];
 	stratum_t *ante = n_strata[n_levels - 2];
 
 	y = Result; // s[output_i];
@@ -85,11 +85,11 @@ double Regression_t::bprop (const TrainingRow_t &x)
 
 	aj = 1; // the bias
 
-	p->s_delta.sm_data[0] = delta_k;
+	me->s_delta.sm_data[0] = delta_k;
 
-	p->s_dL.sm_data[0] += delta_k;			// the bias
-	for (int i = 1; i < p->s_Nin; ++i)
-		p->s_dL.sm_data[i] += delta_k * ante->s_response.sm_data[i - 1];
+	me->s_dL.sm_data[0] += delta_k;			// the bias
+	for (int i = 1; i < me->s_Nin; ++i)
+		me->s_dL.sm_data[i] += delta_k * ante->s_response.sm_data[i - 1];
 
 	return y;
 }

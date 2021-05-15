@@ -66,8 +66,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 struct stratum_t
 {
-	int						s_Nperceptrons;
-	int						s_Nin; 				// # weights, includes bias
+	int							s_Nperceptrons;
+	int							s_Nin; 				// # weights, includes bias
 
 	// Matrices - per weight, s_Nperceptrons x s_Nin
 	NeuralM_t					s_W;
@@ -209,6 +209,11 @@ printf ("CONFIG:\t%d\t%d\t%d\n", n_Nin, n_Nout, n_Nweights);
 	void setMSE (double mse)
 	{
 		n_halt = mse;
+	}
+
+	int Iterations (void) const
+	{
+		return n_steps;
 	}
 
 	bool Step(const DataSet_t * const training, double &progress);

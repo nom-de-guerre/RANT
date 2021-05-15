@@ -25,8 +25,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef __NN_REGRESSION__H__
-#define __NN_REGRESSION__H__
+#ifndef __NN_SOFTMAX_H__
+#define __NN_SOFTMAX_H__
 
 #include <math.h>
 
@@ -133,7 +133,7 @@ double Softmax_t::bprop (const TrainingRow_t &x)
 	double loss;
 	int answer = static_cast<int> (x[n_Nin]);
 
-	int result = Compute (x); // forces computation of Softmax Pi
+	int result = Compute (x); // forces computation of Softmax
 	if (result == answer)
 		++c_Correct;
 	++c_seen;
@@ -146,36 +146,29 @@ double Softmax_t::bprop (const TrainingRow_t &x)
 	double dAct;
 	double dL;
 
-	stratum_t *p = n_strata[n_levels - 1];
+	stratum_t *me = n_strata[n_levels - 1];
 	stratum_t *ante = n_strata[n_levels - 2];
-	double *pdL = p->s_dL.raw ();
+	double *pdL = me->s_dL.raw ();
 
 	for (int output_i = 0; output_i < n_Nout; ++output_i)
 	{
-		y = p->s_response.sm_data[output_i];
+		y = me->s_response.sm_data[output_i];
 
 		dL = c_P[output_i];
 		if (output_i == answer)
 			dL -= 1;
 
-#ifdef __RELU
-		if (outlayer->RELU ()
-			dAct = SIGMOID_FN (outlayer->p_iprod);
-		else
-			dAct = DERIVATIVE_FN (y);
-#else
 		dAct = DERIVATIVE_FN (y);
-#endif
  
 		delta_k = dL * dAct;
-		p->s_delta.sm_data[output_i] = delta_k;
+		me->s_delta.sm_data[output_i] = delta_k;
 
 		/*
 		 * initiate the recurrence
 		 *
 		 */
 		*pdL++ += delta_k;						// the bias
-		for (int i = 1; i < p->s_Nin; ++i)
+		for (int i = 1; i < me->s_Nin; ++i)
 			*pdL++ += delta_k * ante->s_response.sm_data[i - 1];
 	}
 
