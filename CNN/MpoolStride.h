@@ -25,8 +25,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef __DJS_MAXPOOL__H__
-#define __DJS_MAXPOOL__H__
+#ifndef __DJS_MAXPOOLSTRIDE__H__
+#define __DJS_MAXPOOLSTRIDE__H__
 
 #include <layer.h>
 
