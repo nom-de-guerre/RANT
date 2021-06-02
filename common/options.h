@@ -25,6 +25,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
+#include <time.h>
 #include <unistd.h>
 
 struct RunOptions_t
@@ -35,7 +36,7 @@ struct RunOptions_t
 	int				ro_maxIterations;
 
 	RunOptions_t () :
-		ro_seed (rand ()),
+		ro_seed (time (NULL)),
 		ro_Nsamples (5000),
 		ro_haltCondition (0.95),
 		ro_maxIterations (100)
