@@ -60,8 +60,8 @@ void Run (RunOptions_t &params)
 	int layers [] = { -1, 20, 10 };
 
 	MNIST_t data (
-		"../../Data/NIST/train-images.idx3-ubyte",
-		"../../Data/NIST/train-labels.idx1-ubyte");
+		"../../../Data/NIST/train-images.idx3-ubyte",
+		"../../../Data/NIST/train-labels.idx1-ubyte");
 
 	CNN_t CNN (IMAGEDIM, IMAGEDIM, 3, 10);
 	CNN.setSGDSamples (params.ro_Nsamples);
@@ -98,7 +98,6 @@ void Run (RunOptions_t &params)
 			CNN.DumpMaps (1);
 		}
 #endif
-		// if (k != (*data.mn_datap)[i][IMAGEBYTES])
 		if (k != data.mn_datap->Answer (i))
 			++incorrect;
 	}
