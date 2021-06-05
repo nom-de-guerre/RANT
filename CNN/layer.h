@@ -143,7 +143,7 @@ struct mapAPI_t
 #include <full.h>
 #include <filter.h>
 #include <MpoolStride.h>
-// #include <Mpool.h>
+#include <Mpool.h>
 
 class layer_t
 {
