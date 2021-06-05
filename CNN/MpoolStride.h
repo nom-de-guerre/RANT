@@ -30,7 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <layer.h>
 
-class Mpool_t : public mapAPI_t
+class MpoolSlide_t : public mapAPI_t
 {
 	int				mp_fwidth;		// only square filters currently supported
 	plane_t			mp_grad;		// gradient
@@ -42,7 +42,7 @@ public:
 	 * We need the pool width and the input map width.
 	 *
 	 */
-	Mpool_t (const int fwidth, const int iwidth) : 
+	MpoolSlide_t (const int fwidth, const int iwidth) : 
 		mapAPI_t (iwidth - fwidth + 1),
 		mp_fwidth (fwidth),
 		mp_grad (iwidth, iwidth),
@@ -50,7 +50,7 @@ public:
 	{
 	}
 
-	~Mpool_t (void)
+	~MpoolSlide_t (void)
 	{
 	}
 
@@ -100,7 +100,7 @@ public:
 	bool ComputeGradient (plane_t const * const datap);
 };
 
-bool Mpool_t::Pool (plane_t const * const datap)
+bool MpoolSlide_t::Pool (plane_t const * const datap)
 {
 	__restrict double *omap = ma_map.raw ();
 	__restrict double *rindex = mp_rindex.raw ();
@@ -134,52 +134,7 @@ bool Mpool_t::Pool (plane_t const * const datap)
 	return true;
 }
 
-/*
-bool Mpool_t::Pool (plane_t const * const datap)
-{
-	__restrict double *omap = ma_map.raw ();
-	__restrict double *rindexp = mp_rindex.raw ();
-	__restrict double *imagep = datap->raw ();
-
-	int idim = datap->rows ();
-	int mdim = ma_map.rows ();
-	int stride = idim - mp_fwidth;
-
-	for (int start = 0, index = 0, i = 0;
-		i < mdim;
-		++i, start = mp_fwidth *i * idim)
-
-		for (int i_idx = 0, j = 0;
-			j < mdim;
-			++j, ++index, start += mp_fwidth)
-		{
-			omap[index] = -10000000;
-			i_idx = start;
-
-			for (int k = 0; k < mp_fwidth; ++k, i_idx += stride)
-				for (int l = 0; l < mp_fwidth; ++l, ++i_idx)
-					if (omap[index] < imagep[i_idx])
-					{
-						omap[index] = imagep[i_idx];
-						rindexp[index] = i_idx;
-					}
-		}
-
-#ifdef MAX_DEBUG
-	ma_map.display ("Mpool");
-	for (int i = 0; i < MapSize () ; ++i)
-{
-		printf ("%d  ", (int) rindexp[i]);
-assert (rindexp[i] < 676);
-}
-	printf ("\n");
-#endif
-
-	return true;
-}
-*/
-
-bool Mpool_t::ComputeGradient (plane_t const * const datap)
+bool MpoolSlide_t::ComputeGradient (plane_t const * const datap)
 {
 	__restrict double *gradp = mp_grad.raw ();
 	__restrict double *rindexp = mp_rindex.raw ();
