@@ -149,12 +149,9 @@ public:
 	 * class specific helper functions.
 	 *
 	 */
-//	bool Convolve (plane_t const * const datap);
 	bool ComputeDerivatives (int);
 	void ComputeGradient (int);
-
 	bool Convolve (plane_t const * const, double const * const);
-	bool ComputeDerivativesStriped (plane_t const * const, double *, int);
 };
 
 bool filter_t::Convolve (plane_t const * const datap, double const * const pW)
@@ -200,8 +197,6 @@ void filter_t::ComputeGradient (int pidx)
 	int idim = ff_input[0]->rows ();
 	int stride = idim - ff_width;
 	int mdim = ma_map.rows ();
-
-//	memset (ma_map.raw (), ma_map.N (), ma_map.N () * sizeof (double));
 
 	for (int start = 0, index = 0, i = 0; i < mdim; ++i, start = i * idim)
 		for (int i_idx = 0, j = 0; j < mdim; ++j, ++index, ++start)
