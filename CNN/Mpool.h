@@ -123,16 +123,6 @@ bool Mpool_t::Pool (plane_t const * const datap)
 					}
 		}
 
-#ifdef MAX_DEBUG
-	ma_map.display ("Mpool");
-	for (int i = 0; i < MapSize () ; ++i)
-{
-		printf ("%d  ", (int) rindexp[i]);
-assert (rindexp[i] < 676);
-}
-	printf ("\n");
-#endif
-
 	return true;
 }
 

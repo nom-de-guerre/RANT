@@ -66,6 +66,7 @@ void Run (RunOptions_t &params)
 	CNN_t CNN (IMAGEDIM, IMAGEDIM, 3, 10);
 	CNN.setSGDSamples (params.ro_Nsamples);
 	CNN.setHaltMetric (params.ro_haltCondition);
+	CNN.setMaxIterations (params.ro_maxIterations);
 
 #define NMAPS	6
 
