@@ -103,33 +103,6 @@ public:
 		return cn_layers[layer]->mapDim ();
 	}
 
-#if 0
-	int AddConvolutionLayerStriped (
-		int N, 					// Number of maps in this layer
-		const int Nin,			// Number of maps in previous layer
-		const int fwidth, 		// filter width
-		const int mwidth)		// size of maps in previous layer (square)
-	{
-		assert (cn_N < cn_Nlayers);
-		const int layer = cn_N++;
-
-		cn_layers[layer] = new layer_t (N, 
-			Nin, 
-			layer_t::CONVOLVE, 
-			fwidth, 
-			mwidth, 
-			NULL);
-
-		return cn_layers[layer]->mapDim ();
-	}
-We need 3 different functions.  (1) All:All (2) Default (3) Provided
-
-		const int * const program = (stripeProgram == NULL ?
-										BuildDefaultProgram (Nin, N) :
-										stripeProgram);
-
-#endif
-
 	int AddConvolutionLayerProgram (
 		int Nprograms, 
 		const int Nin,
@@ -197,6 +170,7 @@ We need 3 different functions.  (1) All:All (2) Default (3) Provided
 	bool Train (DataSet_t *p)
 	{
 		bool halt = false;
+		cn_steps = 0;		// to support restart
 
 		while (!halt && cn_steps < cn_maxIterations)
 		{
@@ -246,6 +220,11 @@ We need 3 different functions.  (1) All:All (2) Default (3) Provided
 	int Steps (void) const
 	{
 		return cn_steps;
+	}
+
+	double Loss (void)
+	{
+		return cn_layers[cn_N - 1]->Loss () >= cn_haltMetric;
 	}
 
 	int *BuildDefaultProgram (int, int);
