@@ -184,7 +184,7 @@ public:
 				cn_layers[i]->UpdateWeights ();
 		}
 
-		return true;
+		return halt; // true --> converged
 	}
 
 	bool TrainingStep (DataSet_t *p)
