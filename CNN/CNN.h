@@ -122,6 +122,25 @@ public:
 		return cn_layers[layer]->mapDim ();
 	}
 
+	int AddMaxPoolSlideLayer (
+		const int N, 
+		const int fwidth, 
+		const int mwidth)
+	{
+		assert (cn_N < cn_Nlayers);
+		const int layer = cn_N++;
+
+		if (layer && N > 1)
+			assert (cn_layers[layer - 1]->N () == N);
+
+		cn_layers[layer] = new layer_t (N, 
+			layer_t::MAXPOOLSLIDE, 
+			fwidth, 
+			mwidth);
+
+		return cn_layers[layer]->mapDim ();
+	}
+
 	int AddMaxPoolLayer (
 		const int N, 
 		const int fwidth, 
@@ -134,7 +153,6 @@ public:
 			assert (cn_layers[layer - 1]->N () == N);
 
 		cn_layers[layer] = new layer_t (N, layer_t::MAXPOOL, fwidth, mwidth);
-
 
 		return cn_layers[layer]->mapDim ();
 	}

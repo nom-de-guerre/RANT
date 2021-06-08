@@ -148,7 +148,7 @@ struct mapAPI_t
 class layer_t
 {
 public:
-	typedef enum { CONVOLVE, STRIPED, MAXPOOL, FULL } Ltype_e;
+	typedef enum { CONVOLVE, STRIPED, MAXPOOLSLIDE, MAXPOOL, FULL } Ltype_e;
 	typedef enum { INVALID, DIRECT, MANY_TO_1, PROGRAM, ALL_TO_ALL } Ldegree_e;
 
 private:
@@ -187,6 +187,9 @@ public:
 			case CONVOLVE:
 				ll_maps[i] = new filter_t (subsample, input);
 				break;
+
+			case MAXPOOLSLIDE:
+				ll_maps[i] = new MpoolSlide_t (subsample, input);
 
 			case MAXPOOL:
 				ll_maps[i] = new Mpool_t (subsample, input);
@@ -488,7 +491,7 @@ bool layer_t::BackwardTraining (layer_t *post)
 	{
 	case PROGRAM:
 
-		assert (ll_type == MAXPOOL);
+		assert (ll_type == MAXPOOL || ll_type == MAXPOOLSLIDE);
 		assert (post->ll_type == CONVOLVE);
 
 		for (int i = 0; i < Nout; ++i)
