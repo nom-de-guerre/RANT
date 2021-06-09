@@ -65,8 +65,7 @@ public:
 
 	bool Train (arg_t &arg, double answer)
 	{
-		int Nentries = mp_grad.N ();
-		memset (mp_grad.raw (), 0, Nentries * sizeof (double));
+		mp_grad.Reset ();
 
 		Pool (arg.a_args[0]);
 

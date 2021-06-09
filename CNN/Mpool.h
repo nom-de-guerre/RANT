@@ -65,7 +65,8 @@ public:
 
 	bool Train (arg_t &arg, double answer)
 	{
-		memset (mp_grad.raw (), 0, mp_grad.N () * sizeof (double));
+		mp_grad.Reset ();
+
 		Pool (arg.a_args[0]);
 
 		return true;

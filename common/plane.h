@@ -60,6 +60,11 @@ struct plane_t
 	{
 	}
 
+	void Reset (void)
+	{
+		memset (dd_datap, 0, sizeof (double) * N ());
+	}
+
 	int rows (void) const
 	{
 		return dd_rows;
