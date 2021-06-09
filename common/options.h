@@ -84,7 +84,7 @@ int RunOptions_t::Parse (int argc, char *argv[])
 		case 'h':
 		default:
 
-			printf ("usage: %s [-s seed] [-n samples] [-t halt condition]\n",
+			printf ("usage: %s [-i iterations] [-s seed] [-n samples] [-t halt condition]\n",
 				argv[0]);
 			exit (-1);
 		}
