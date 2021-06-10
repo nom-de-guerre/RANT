@@ -112,13 +112,13 @@ public:
 
 	double Loss (void)
 	{
-printf ("DJS Loss Ratio\t%f,\n", re_net->ratio ());
+printf ("DJS Loss Ratio\t%f\n", re_net->ratio ());
 		return re_net->ratio ();
 	}
 
 	bool Halt (void)
 	{
-printf ("DJS Halt Ratio\t%f,\n", re_net->ratio ());
+printf ("DJS Halt Ratio\t%f\n", re_net->ratio ());
 		if (re_net->ratio () >= 0.85)
 			return true;
 
