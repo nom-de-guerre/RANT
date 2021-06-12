@@ -34,7 +34,7 @@ class Mpool_t : public mapAPI_t
 {
 	int				mp_width;		// only square filters currently supported
 	plane_t			mp_grad;		// gradient
-	plane_t			mp_rindex;		// reverse index, source of max
+	int				*mp_rindex;		// reverse index, source of max
 
 public:
 
@@ -46,12 +46,13 @@ public:
 		mapAPI_t (iwidth - mwidth + 1),
 		mp_width (mwidth),
 		mp_grad (iwidth, iwidth),
-		mp_rindex (iwidth, iwidth)
+		mp_rindex (new int [iwidth * iwidth])
 	{
 	}
 
 	~Mpool_t (void)
 	{
+		delete [] mp_rindex;
 	}
 
 	/*
@@ -60,11 +61,15 @@ public:
 	 */
 	bool Forward (arg_t &arg)
 	{
+		assert (arg.a_N == 1);
+
 		return Pool (arg.a_args[0]);
 	}
 
 	bool Train (arg_t &arg, double answer)
 	{
+		assert (arg.a_N == 1);
+
 		mp_grad.Reset ();
 
 		Pool (arg.a_args[0]);
@@ -102,7 +107,7 @@ public:
 bool Mpool_t::Pool (plane_t const * const datap)
 {
 	__restrict double *omap = ma_map.raw ();
-	__restrict double *rindexp = mp_rindex.raw ();
+	__restrict int *rindexp = mp_rindex;
 	__restrict double *imagep = datap->raw ();
 
 	int idim = datap->rows ();
@@ -130,12 +135,12 @@ bool Mpool_t::Pool (plane_t const * const datap)
 bool Mpool_t::ComputeGradient (plane_t const * const datap)
 {
 	__restrict double *gradp = mp_grad.raw ();
-	__restrict double *rindexp = mp_rindex.raw ();
+	__restrict int *rindexp = mp_rindex;
 	__restrict double *deltap = datap->raw ();
 	int halt = mp_grad.N ();
 
 	for (int i = 0; i < halt; ++i)
-		gradp[(int) rindexp[i]] += deltap[i];
+		gradp[rindexp[i]] += deltap[i];
 
 	return true;
 }

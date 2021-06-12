@@ -31,9 +31,9 @@ stratum_t::bprop (stratum_t &next, double *yi)
 	/*
 	 * Compute per node total derivative for node at layer i - 1.
 	 *
-	 * ∂L     ∂L   ∂wi
-	 * --   = --   ---
-	 * ∂y     ∂wi  ∂y
+	 * ∂L   ∂L  ∂w
+	 * -- = --  --
+	 * ∂y   ∂w  ∂y
 	 *
 	 */
 	s_delta.TransposeMatrixVectorMult (next.s_W, next.s_delta.raw ());
@@ -48,9 +48,9 @@ stratum_t::bprop (stratum_t &next, double *yi)
 	double delta;
 
 	/*
-	 * ∂L   ∂y  ∂∑
-	 * -- = --  --
-	 * ∂w   ∂∑  ∂w
+	 * ∂L     ∂y  ∂∑
+	 * -- = 𝛿 --  --
+	 * ∂w     ∂∑  ∂w
 	 *
 	 */
 	for (int i = 0; i < s_Nperceptrons; ++i)

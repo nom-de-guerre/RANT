@@ -147,6 +147,7 @@ public:
 
 	plane_t *fetchGradient (int index)
 	{
+		ff_flux->Reset ();
 		ComputeGradient (index);
 
 		return ff_flux;
@@ -205,18 +206,11 @@ void filter_t::ComputeGradient (int pidx)
 	int stride = idim - ff_width;
 	int mdim = ma_map.rows ();
 
-	ff_flux->Reset ();
-
 	for (int start = 0, index = 0, i = 0; i < mdim; ++i, start = i * idim)
 		for (int i_idx = 0, j = 0; j < mdim; ++j, ++index, ++start)
 		{
 			i_idx = start;
-//			gradientp[i_idx] = 0; // no bias contribution
 
-			/*
-			 * No bias is passed in, so f_idx starts at 0
-			 *
-			 */
 			for (int f_idx = 0, k = 0; k < ff_width; ++k, i_idx += stride)
 				for (int l = 0; l < ff_width; ++l, ++f_idx, ++i_idx)
 					gradientp[i_idx] += i_gradp[index] * filterp[f_idx];
@@ -234,9 +228,10 @@ void filter_t::ComputeGradient (int pidx)
 bool filter_t::ComputeDerivatives (int pidx)
 {
 	int blockSize = ff_width * ff_width;
-	__restrict double * filterp = 1 + blockSize * pidx + ff_filter->s_dL.raw ();
-	__restrict double * gradientp = ff_G->raw ();
-	__restrict double *dO = ff_input[pidx]->raw ();
+	__restrict double * dW = 1 + blockSize * pidx + ff_filter->s_dL.raw ();
+	__restrict double * dO = ff_G->raw ();
+	__restrict double *input = ff_input[pidx]->raw ();
+	double *bias = ff_filter->s_dL.raw ();
 	int idim = ff_G->rows ();
 	int stride = idim - ff_width;
 	int mdim = ma_map.rows ();
@@ -245,10 +240,12 @@ bool filter_t::ComputeDerivatives (int pidx)
 		for (int i_idx = 0, j = 0; j < mdim; ++j, ++index, ++start)
 		{
 			i_idx = start;
+			*bias += dO[index];
 
 			for (int f_idx = 0, k = 0; k < ff_width; ++k, i_idx += stride)
 				for (int l = 0; l < ff_width; ++l, ++f_idx, ++i_idx)
-					filterp[f_idx] += dO[i_idx] * gradientp[index];
+					dW[f_idx] += dO[index] * input[i_idx];
+			//      ∂L/∂f =   ∑   (∂L/∂O)  • ∂O/∂f 
 		}
 
 	return true;

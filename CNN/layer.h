@@ -498,9 +498,10 @@ bool layer_t::BackwardTraining (layer_t *post)
 		{
 			ll_args.a_N = 1;
 			int *program = post->ll_maps[i]->ma_program;
+			int bprops = post->ll_maps[i]->ma_stripeN;
 
 			// in reverse we have to call antecendents more than once.
-			for (int j = 0; j < post->ll_maps[i]->ma_stripeN; ++j)
+			for (int j = 0; j < bprops; ++j)
 			{
 				ll_args.a_args[0] = post->ll_maps[i]->fetchGradient (j);
 				ll_maps[program[j]]->Backward (ll_args);
@@ -515,6 +516,7 @@ bool layer_t::BackwardTraining (layer_t *post)
 
 		blockSize = ll_maps[0]->MapSize ();
 		pGrad = post->ll_maps[0]->fetchGradient ();
+		assert ((pGrad->N () % blockSize) == 0);
 		dummy.dd_rows = dummy.dd_columns = 1;
 		dummy.dd_datap = pGrad->raw ();
 
