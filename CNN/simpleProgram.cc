@@ -73,23 +73,32 @@ int main (int argc, char *argv[])
 void Run (RunOptions_t &params)
 {
 	int Nlayers = 4;
-	int layers [] = { -1, 100, 40, 10 };
+	int layers [] = { -1, 50, 30, 10 };
 
 	MNIST_t data (
-		"../../Data/NIST/train-images.idx3-ubyte",
-		"../../Data/NIST/train-labels.idx1-ubyte");
+		"../../../Data/NIST/train-images.idx3-ubyte",
+		"../../../Data/NIST/train-labels.idx1-ubyte");
 
 	CNN_t CNN (IMAGEDIM, IMAGEDIM, 5, 10);
 	CNN.setSGDSamples (params.ro_Nsamples);
 	CNN.setHaltMetric (params.ro_haltCondition);
+	CNN.setMaxIterations (params.ro_maxIterations);
 
 #define NMAPS	6
 
+	printf ("%d -> ", IMAGEDIM);
 	int dim = CNN.AddConvolutionLayer (NMAPS, 3, IMAGEDIM);
+	printf ("%d -> ", dim);
 	dim = CNN.AddMaxPoolLayer (NMAPS, 3, dim);
-	dim = CNN.AddConvolutionLayerProgram (13, NMAPS, 2, dim, Cross);
+	printf ("%d -> ", dim);
+	dim = CNN.AddConvolutionLayerProgram (13, NMAPS, 3, dim, Cross);
+	printf ("%d -> ", dim);
 	dim = CNN.AddMaxPoolLayer (13, 3, dim);
+	printf ("%d -> ", dim);
+	printf ("%d\n", layers[1]);
 	CNN.AddFullLayer (layers, Nlayers);
+
+	printf ("Training initiated.\n");
 
 	CNN.Train (data.mn_datap);
 
@@ -112,8 +121,8 @@ void Run (RunOptions_t &params)
 		if (i >= base && i < (base + 10))
 		{
 			obj.display ();
-			CNN.DumpMaps (0);
-			CNN.DumpMaps (1);
+			CNN.DumpMaps (2);
+			CNN.DumpMaps (3);
 		}
 #endif
 		// if (k != (*data.mn_datap)[i][IMAGEBYTES])
