@@ -36,6 +36,7 @@ class filter_t : public mapAPI_t
 	int				ff_width;		// only square filters currently supported
 	stratum_t		*ff_filter;
 	plane_t			**ff_input;		// Xi from the ante layer
+	plane_t			*ff_flux;		// gradient we propagate backwards
 	plane_t			const * ff_G;	// gradient from post layer
 
 public:
@@ -49,6 +50,7 @@ public:
 		ff_width (fwidth),
 		ff_filter (new stratum_t (1, fwidth * fwidth)),
 		ff_input (new plane_t *),
+		ff_flux (new plane_t (mwidth, mwidth)),
 		ff_G (NULL)
 	{
 		ff_filter->init (mwidth * mwidth); // on that order, used for Glorot
@@ -59,6 +61,7 @@ public:
 		ff_width (fwidth),
 		ff_filter (new stratum_t (1, ma_stripeN * ff_width * ff_width)),
 		ff_input (new plane_t * [Nin]),
+		ff_flux (new plane_t (mwidth, mwidth)),
 		ff_G (NULL)
 	{
 		ff_filter->init (mwidth * mwidth * Nin);
@@ -68,6 +71,7 @@ public:
 	{
 		delete ff_filter;
 		delete [] ff_input;
+		delete ff_flux;
 	}
 
 	/*
@@ -114,6 +118,9 @@ public:
 
 		ff_G = arg.a_args[0];
 
+		assert (arg.a_N == 1);
+		assert (ff_G->rows () == ma_map.rows ());
+
 		for (int i = 0; i < blockSize; ++i)
 			*bias += gradientp[i];
 
@@ -142,7 +149,7 @@ public:
 	{
 		ComputeGradient (index);
 
-		return &ma_map;
+		return ff_flux;
 	}
 
 	/*
@@ -156,7 +163,7 @@ public:
 
 bool filter_t::Convolve (plane_t const * const datap, double const * const pW)
 {
-	__restrict double const * const filterp = pW; // ff_filter->s_W.raw ();
+	__restrict double const * const filterp = pW;
 	__restrict double * imagep = datap->raw ();
 	__restrict double *omap = ma_map.raw ();
 	int idim = datap->rows ();
@@ -193,16 +200,18 @@ void filter_t::ComputeGradient (int pidx)
 	int blockSize = ff_width * ff_width;
 	__restrict double * filterp = 1 + blockSize * pidx + ff_filter->s_W.raw ();
 	__restrict double * i_gradp = ff_G->raw ();
-	__restrict double *gradientp = ma_map.raw (); // contains gradient from next
+	__restrict double *gradientp = ff_flux->raw ();
 	int idim = ff_input[0]->rows ();
 	int stride = idim - ff_width;
 	int mdim = ma_map.rows ();
+
+	ff_flux->Reset ();
 
 	for (int start = 0, index = 0, i = 0; i < mdim; ++i, start = i * idim)
 		for (int i_idx = 0, j = 0; j < mdim; ++j, ++index, ++start)
 		{
 			i_idx = start;
-			gradientp[i_idx] = 0; // no bias contribution
+//			gradientp[i_idx] = 0; // no bias contribution
 
 			/*
 			 * No bias is passed in, so f_idx starts at 0
@@ -211,7 +220,7 @@ void filter_t::ComputeGradient (int pidx)
 			for (int f_idx = 0, k = 0; k < ff_width; ++k, i_idx += stride)
 				for (int l = 0; l < ff_width; ++l, ++f_idx, ++i_idx)
 					gradientp[i_idx] += i_gradp[index] * filterp[f_idx];
-			//      ∂O/∂x =             ∑G •             ∂O/∂x 
+			//      ∂L/∂x =          ∑      G (∂L/∂O)  • ∂O/∂x 
 		}
 }
 
