@@ -51,6 +51,19 @@ const int Cross [] = {
 1, 1, 0, 0, 1, 1,
 };
 
+#define NPROGRAMS		13
+
+#if 0
+const int Direct [] = {
+1, 0, 0, 0, 0, 0,
+0, 1, 0, 0, 0, 0,
+0, 0, 1, 0, 0, 0,
+0, 0, 0, 1, 0, 0,
+0, 0, 0, 0, 1, 0,
+0, 0, 0, 0, 0, 1,
+};
+#endif
+
 void Run (RunOptions_t &);
 
 int main (int argc, char *argv[])
@@ -73,7 +86,7 @@ int main (int argc, char *argv[])
 void Run (RunOptions_t &params)
 {
 	int Nlayers = 4;
-	int layers [] = { -1, 50, 30, 10 };
+	int layers [] = { -1, 120, 70, 10 };
 
 	MNIST_t data (
 		"../../../Data/NIST/train-images.idx3-ubyte",
@@ -87,13 +100,20 @@ void Run (RunOptions_t &params)
 #define NMAPS	6
 
 	printf ("%d -> ", IMAGEDIM);
-	int dim = CNN.AddConvolutionLayer (NMAPS, 3, IMAGEDIM);
+	int dim = CNN.AddConvolutionLayer (NMAPS, 5, IMAGEDIM);
+	printf ("%d -> ", dim);
+	dim = CNN.AddMaxPoolLayer (NMAPS, 2, dim);
+	printf ("%d -> ", dim);
+	dim = CNN.AddConvolutionLayerProgram (NPROGRAMS, NMAPS, 2, dim, Cross);
+	printf ("%d -> ", dim);
+	dim = CNN.AddMaxPoolLayer (NPROGRAMS, 2, dim);
+
+#if 0
+	int dim = CNN.AddConvolutionLayerProgram (NMAPS, NMAPS, 3, IMAGEDIM, Direct);
 	printf ("%d -> ", dim);
 	dim = CNN.AddMaxPoolLayer (NMAPS, 3, dim);
-	printf ("%d -> ", dim);
-	dim = CNN.AddConvolutionLayerProgram (13, NMAPS, 3, dim, Cross);
-	printf ("%d -> ", dim);
-	dim = CNN.AddMaxPoolLayer (13, 3, dim);
+#endif
+
 	printf ("%d -> ", dim);
 	printf ("%d\n", layers[1]);
 	CNN.AddFullLayer (layers, Nlayers);

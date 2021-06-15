@@ -68,13 +68,9 @@ public:
 
 	bool Train (arg_t &arg, double answer)
 	{
-		assert (arg.a_N == 1);
-
 		mp_grad.Reset ();
 
-		Pool (arg.a_args[0]);
-
-		return true;
+		return Forward (arg);
 	}
 
 	bool Backward (arg_t &arg)

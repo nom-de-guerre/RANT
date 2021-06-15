@@ -112,7 +112,7 @@ public:
 
 	double Loss (void)
 	{
-printf ("DJS Loss Ratio\t%f\n", re_net->ratio ());
+printf ("DJS Loss Ratio %f\n", re_net->ratio ());
 		return re_net->ratio ();
 	}
 

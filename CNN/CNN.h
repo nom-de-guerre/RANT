@@ -75,6 +75,11 @@ public:
 		delete [] cn_layers;
 	}
 
+	/*
+	 * Meta parameters.
+	 *
+	 */
+
 	void setSGDSamples (const int N)
 	{
 		cn_Nsubsamples = N;
@@ -89,6 +94,11 @@ public:
 	{
 		cn_haltMetric = metric;
 	}
+
+	/*
+	 * CNN construction.
+	 *
+	 */
 
 	int AddConvolutionLayer (
 		const int N, 
@@ -171,6 +181,11 @@ public:
 		return true;
 	}
 
+	/*
+	 * CNN commands.
+	 *
+	 */
+
 	int Classify (plane_t *datap)
 	{
 		cn_layers[0]->f (datap);
@@ -230,10 +245,26 @@ public:
 		return success;
 	}
 
+	int LayerRows (const int level) const
+	{
+		if (level >= cn_N)
+			return -1;
+
+		return cn_layers[level]->mapDim ();
+	}
+
 	void DumpMaps (const int level)
 	{
+		if (level >= cn_N)
+			return;
+
 		cn_layers[level]->DumpMaps ();
 	}
+
+	/*
+	 * Info.
+	 *
+	 */
 
 	int Steps (void) const
 	{

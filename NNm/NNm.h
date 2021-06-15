@@ -220,6 +220,11 @@ printf ("CONFIG:\t%d\t%d\t%d\n", n_Nin, n_Nout, n_Nweights);
 		return n_error;
 	}
 
+	int Steps (void) const
+	{
+		return n_steps;
+	}
+
 	double Compute (double *);
 	inline double Loss (DataSet_t const *);
 

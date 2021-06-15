@@ -311,7 +311,7 @@ public:
 		return ll_maps[ll_N - 1]->Signal ();
 	}
 
-	int mapDim (void)
+	int mapDim (void) const
 	{
 		return ll_maps[0]->ma_map.rows ();
 	}

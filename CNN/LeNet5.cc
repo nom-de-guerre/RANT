@@ -82,8 +82,8 @@ void Run (RunOptions_t &params)
 	int layers [] = { -1, 120, 84, 10 };
 
 	MNIST_t data (
-		"../../Data/NIST/train-images.idx3-ubyte",
-		"../../Data/NIST/train-labels.idx1-ubyte");
+		"../../../Data/NIST/train-images.idx3-ubyte",
+		"../../../Data/NIST/train-labels.idx1-ubyte");
 
 	CNN_t CNN (IMAGEDIM, IMAGEDIM, 5, 10);
 
@@ -92,13 +92,12 @@ void Run (RunOptions_t &params)
 	CNN.setHaltMetric (params.ro_haltCondition);
 
 #define NMAPS	6
-#define FSIZE	3
+#define FSIZE	5
 
 	int dim = CNN.AddConvolutionLayer (NMAPS, FSIZE, IMAGEDIM);
 	dim = CNN.AddMaxPoolLayer (NMAPS, 2, dim);
 	dim = CNN.AddConvolutionLayerProgram (16, NMAPS, FSIZE, dim, LeNetC3);
 	dim = CNN.AddMaxPoolLayer (16, 2, dim);
-//	dim = CNN.AddConvolutionLayerStriped (120, 16, 5, dim);
 	CNN.AddFullLayer (layers, Nlayers);
 
 	CNN.Train (data.mn_datap);

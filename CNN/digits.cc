@@ -70,8 +70,8 @@ void Run (RunOptions_t &params)
 
 #define NMAPS	6
 
-	int dim = CNN.AddConvolutionLayer (NMAPS, 3, IMAGEDIM);
-	dim = CNN.AddMaxPoolLayer (NMAPS, 3, dim);
+	int dim = CNN.AddConvolutionLayer (NMAPS, 5, IMAGEDIM);
+	dim = CNN.AddMaxPoolLayer (NMAPS, 2, dim);
 	CNN.AddFullLayer (layers, Nlayers);
 
 	CNN.Train (data.mn_datap);
