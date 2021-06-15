@@ -1,16 +1,15 @@
 OPTIONS= $(OUTSIDE)
 CC=g++
-# DEBUG=-O0 -g
-# DEBUG=-O3 -mavx
 DEBUG=-O3 
-CFLAGS=-Wall -I. $(OPTIONS) $(DEBUG)
-HDEPS = NNm.h NNm.tcc data.h NeuralM.h
+INCLUDES=-I../NNm -I../common
+CFLAGS=-Wall -I. $(OPTIONS) $(DEBUG) $(INCLUDES)
+HDEPS = $(wildcard *.h) $(wildcard ../common/*h) $(wildcard ../NNm/*)
 DEPS = Makefile $(HDEPS)
 
-classify: classify.cc $(DEPS) softmax.h
+classify: classify.cc $(DEPS) $(HDEPS)
 	$(CC) -o $@ $(CFLAGS) classify.cc
 
-sine: sine.cc $(DEPS) regression.h
+sine: sine.cc $(DEPS) $(HDEPS)
 	$(CC) -o $@ $(CFLAGS) sine.cc
 
 all: sine classify
