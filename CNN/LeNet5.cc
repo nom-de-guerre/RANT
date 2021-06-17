@@ -82,8 +82,8 @@ void Run (RunOptions_t &params)
 	int layers [] = { -1, 120, 84, 10 };
 
 	MNIST_t data (
-		"../../../Data/NIST/train-images.idx3-ubyte",
-		"../../../Data/NIST/train-labels.idx1-ubyte");
+		"../../../Data/MNIST/train-images.idx3-ubyte",
+		"../../../Data/MNIST/train-labels.idx1-ubyte");
 
 	CNN_t CNN (IMAGEDIM, IMAGEDIM, 5, 10);
 
@@ -99,6 +99,10 @@ void Run (RunOptions_t &params)
 	dim = CNN.AddConvolutionLayerProgram (16, NMAPS, FSIZE, dim, LeNetC3);
 	dim = CNN.AddMaxPoolLayer (16, 2, dim);
 	CNN.AddFullLayer (layers, Nlayers);
+
+	for (int i = 0; i < 5; ++i)
+		printf ("%d %s\t", CNN.LayerRows (i), (i + 1 != 5 ? " ⟶" : ""));
+	printf ("\n");
 
 	CNN.Train (data.mn_datap);
 

@@ -37,8 +37,8 @@ struct RunOptions_t
 
 	RunOptions_t () :
 		ro_seed (time (NULL)),
-		ro_Nsamples (5000),
-		ro_haltCondition (0.95),
+		ro_Nsamples (1000),
+		ro_haltCondition (0.93),
 		ro_maxIterations (100)
 	{}
 

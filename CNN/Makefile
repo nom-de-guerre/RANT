@@ -17,7 +17,7 @@ simpleProgram: simpleProgram.cc $(DEPS)
 digits: digits.cc $(DEPS)
 	$(CC) -o $@ $(CFLAGS) digits.cc
 
-all: LeNet5 digits
+all: LeNet5 digits simpleProgram
 
 clean:
 	rm digits
