@@ -102,6 +102,11 @@ struct MNIST_t
 	{
 		return mn_datap->N ();
 	}
+
+	DataSet_t * Data (void)
+	{
+		return mn_datap;
+	}
 };
 
 #endif // header inclusion

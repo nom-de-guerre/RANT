@@ -273,7 +273,7 @@ public:
 
 	double Loss (void)
 	{
-		return cn_layers[cn_N - 1]->Loss () >= cn_haltMetric;
+		return cn_layers[cn_N - 1]->Loss ();
 	}
 
 	int *BuildDefaultProgram (int, int);
