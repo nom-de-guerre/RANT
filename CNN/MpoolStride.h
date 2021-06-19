@@ -34,7 +34,7 @@ class MpoolSlide_t : public mapAPI_t
 {
 	int				mp_fwidth;		// only square filters currently supported
 	plane_t			mp_grad;		// gradient
-	plane_t			mp_rindex;		// reverse index, source of max
+	int				*mp_rindex;		// reverse index, source of max
 
 public:
 
@@ -46,12 +46,13 @@ public:
 		mapAPI_t (iwidth - fwidth + 1),
 		mp_fwidth (fwidth),
 		mp_grad (iwidth, iwidth),
-		mp_rindex (iwidth, iwidth)
+		mp_rindex (new int [mp_grad.N ()])
 	{
 	}
 
 	~MpoolSlide_t (void)
 	{
+		delete [] mp_rindex;
 	}
 
 	/*
@@ -67,9 +68,7 @@ public:
 	{
 		mp_grad.Reset ();
 
-		Pool (arg.a_args[0]);
-
-		return true;
+		return Forward (arg);
 	}
 
 	bool Backward (arg_t &arg)
@@ -102,11 +101,11 @@ public:
 bool MpoolSlide_t::Pool (plane_t const * const datap)
 {
 	__restrict double *omap = ma_map.raw ();
-	__restrict double *rindex = mp_rindex.raw ();
+	__restrict int *rindex = mp_rindex;
 	__restrict double *image = datap->raw ();
 
-	int idim = datap->rows ();
-	int mdim = ma_map.rows ();
+	int idim = datap->rows (); // input image
+	int mdim = ma_map.rows (); // output map
 	int stride = idim - mp_fwidth;
 
 	for (int start = 0, index = 0, i = 0; 
@@ -136,7 +135,7 @@ bool MpoolSlide_t::Pool (plane_t const * const datap)
 bool MpoolSlide_t::ComputeGradient (plane_t const * const datap)
 {
 	__restrict double *gradp = mp_grad.raw ();
-	__restrict double *rindexp = mp_rindex.raw ();
+	__restrict int *rindexp = mp_rindex;
 	__restrict double *deltap = datap->raw ();
 	int halt = mp_grad.N ();
 

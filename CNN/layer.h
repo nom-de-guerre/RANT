@@ -190,6 +190,7 @@ public:
 
 			case MAXPOOLSLIDE:
 				ll_maps[i] = new MpoolSlide_t (subsample, input);
+				break;
 
 			case MAXPOOL:
 				ll_maps[i] = new Mpool_t (subsample, input);

@@ -32,7 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 class Mpool_t : public mapAPI_t
 {
-	int				mp_width;		// only square filters currently supported
+	int				mp_fwidth;		// only square filters currently supported
 	plane_t			mp_grad;		// gradient
 	int				*mp_rindex;		// reverse index, source of max
 
@@ -43,11 +43,12 @@ public:
 	 *
 	 */
 	Mpool_t (const int mwidth, const int iwidth) : 
-		mapAPI_t (iwidth - mwidth + 1),
-		mp_width (mwidth),
+		mapAPI_t (iwidth / mwidth),
+		mp_fwidth (mwidth),
 		mp_grad (iwidth, iwidth),
-		mp_rindex (new int [iwidth * iwidth])
+		mp_rindex (new int [mp_grad.N ()])
 	{
+		assert ((iwidth % mwidth) == 0);
 	}
 
 	~Mpool_t (void)
@@ -108,16 +109,19 @@ bool Mpool_t::Pool (plane_t const * const datap)
 
 	int idim = datap->rows ();
 	int mdim = ma_map.rows ();
-	int stride = idim - mp_width;
+	int stride = idim - mp_fwidth;
 
-	for (int start = 0, index = 0, i = 0; i < mdim; ++i, start = i * idim)
-		for (int i_idx = 0, j = 0; j < mdim; ++j, ++index, ++start)
+	for (int start = 0, index = 0, i = 0;
+		i < mdim;
+		++i, start = mp_fwidth * i * idim)
+
+		for (int i_idx = 0, j = 0; j < mdim; ++j, ++index, start += mp_fwidth)
 		{
 			omap[index] = -DBL_MAX;
 			i_idx = start;
 
-			for (int k = 0; k < mp_width; ++k, i_idx += stride)
-				for (int l = 0; l < mp_width; ++l, ++i_idx)
+			for (int frow = 0; frow < mp_fwidth; ++frow, i_idx += stride)
+				for (int fcol = 0; fcol < mp_fwidth; ++fcol, ++i_idx)
 					if (omap[index] < imagep[i_idx])
 					{
 						omap[index] = imagep[i_idx];
