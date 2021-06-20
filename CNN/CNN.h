@@ -220,7 +220,7 @@ public:
 		return halt; // true --> converged
 	}
 
-	bool TrainingStep (DataSet_t *p)
+	bool TrainingStep (DataSet_t *p) // this should be private...
 	{
 		bool success = false;
 
@@ -245,6 +245,11 @@ public:
 		return success;
 	}
 
+	/*
+	 * Info.
+	 *
+	 */
+
 	int LayerRows (const int level) const
 	{
 		if (level >= cn_N)
@@ -261,10 +266,10 @@ public:
 		cn_layers[level]->DumpMaps ();
 	}
 
-	/*
-	 * Info.
-	 *
-	 */
+	int ActiveLayers (void) const
+	{
+		return cn_N;
+	}
 
 	int Steps (void) const
 	{
