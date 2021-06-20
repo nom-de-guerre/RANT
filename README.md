@@ -1,13 +1,15 @@
-There are two directories.  
+There are four directories.  
 
-NNm, which is a very simple implementation of a RPROP+ neural network.  It 
-includes an example of regression and classification.  Make all will produce
-sine and classify.  The commoand line for both accepts the network architecture.
-The number of inputs are implicit as they are determined by the program.
+NNm, which is a very simple implementation of a RPROP+ neural network.  There
+ are simple examples of its use in the Examples directory.  There are two
+ examples: regression and classification.  Make all will produce
+sine and classify.  The command line for both accepts the network architecture.
+Try 4 3 1 for sine and 7 4 4 for classify.  The number of inputs are implicit
+ as they are determined by the program.
 
-CNN is a primitive convolutional network.  The example, digits.cc, trains
-with the MNIST data set and then verifies.  It approximates the LeNet-5
-CNN (C1, S2, C3, S4 and F5).  1:1 filter to maxpool, specified maxpool to 
-filter, and fully connected to a classifier neural network.
-
+CNN is a primitive convolutional network.  It includes a few examples that
+train with the MNIST data set.  There are 3 examples.  digits.cc,
+simpleProgram.cc and LeNet5.cc.  The latter is a crude approximation.  In
+particular it uses Softmax, not radial functions, and C5 is a NN, not a
+convolutional layer.
 
