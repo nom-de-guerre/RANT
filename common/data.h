@@ -82,11 +82,19 @@ struct DataSet_t
 		return t_N;
 	}
 
+	void FeatureIteration (int feature, int &stride, double *&base)
+	{
+		stride = t_Nin + t_Nout; // the data are stored row order
+		base = t_data + feature;
+	}
+
 	double Max (const int feature)
 	{
 		double best = -DBL_MAX;
-		int stride = t_Nin + t_Nout;
-		double *column = t_data + feature;
+		int stride;
+		double *column;
+
+		FeatureIteration (feature, stride, column);
 
 		for (int i = 0; i < t_N; ++i, column += stride)
 			if (best < *column)
@@ -98,8 +106,10 @@ struct DataSet_t
 	double Min (const int feature)
 	{
 		double best = DBL_MAX;
-		int stride = t_Nin + t_Nout;
-		double *column = t_data + feature;
+		int stride;
+		double *column;
+
+		FeatureIteration (feature, stride, column);
 
 		for (int i = 0; i < t_N; ++i, column += stride)
 			if (best > *column)
@@ -111,8 +121,10 @@ struct DataSet_t
 	double Mean (const int feature)
 	{
 		double sum = 0;
-		int stride = t_Nin + t_Nout;
-		double *column = t_data + feature;
+		int stride;
+		double *column;
+
+		FeatureIteration (feature, stride, column);
 
 		for (int i = 0; i < t_N; ++i, column += stride)
 			sum += *column;
@@ -125,8 +137,10 @@ struct DataSet_t
 		double sum = 0;
 		double sumsq = 0;
 		double var;
-		int stride = t_Nin + t_Nout;
-		double *column = t_data + feature;
+		int stride;
+		double *column;
+
+		FeatureIteration (feature, stride, column);
 
 		for (int i = 0; i < t_N; ++i, column += stride)
 		{
@@ -145,15 +159,30 @@ struct DataSet_t
 	void Center (const int feature)
 	{
 		double centre = Mean (feature);
-		int stride = t_Nin + t_Nout;
-		double *column = t_data + feature;
+		int stride;
+		double *column;
+
+		FeatureIteration (feature, stride, column);
 
 		for (int i = 0; i < t_N; ++i, column += stride)
 			*column -= centre;
 	}
 
-	void Zscore (const int feature)
+	void Zscore (const int feature, bool centre = true)
 	{
+		double stddev = sqrt (Variance (feature));
+		double mean = (centre ? Mean (feature) : nan (NULL));
+		int stride;
+		double *column;
+
+		FeatureIteration (feature, stride, column);
+
+		for (int i = 0; i < t_N; ++i, column += stride)
+		{
+			if (centre)
+				*column -= mean;
+			*column /= stddev;
+		}
 	}
 };
 

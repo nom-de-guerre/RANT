@@ -158,6 +158,13 @@ double Softmax_t::bprop (const TrainingRow_t &x)
 		if (output_i == answer)
 			dL -= 1;
 
+		/*
+		 * ∂L   ∂y   ∂L
+		 * -- · -- = -- = 𝛅 = delta_k
+		 * ∂y   ∂∑   ∂∑
+		 *
+		 */
+
 #ifdef __RELU
 		if (outlayer->RELU ()
 			dAct = SIGMOID_FN (outlayer->p_iprod);
@@ -173,6 +180,10 @@ double Softmax_t::bprop (const TrainingRow_t &x)
 		/*
 		 * initiate the recurrence
 		 *
+		 * ∂L   ∂∑   ∂L
+		 * -- · -- = -- = 𝛅 · y(i-1)
+		 * ∂∑   ∂w   ∂w
+		 *
 		 */
 		*pdL++ += delta_k;						// the bias
 		for (int i = 1; i < p->s_Nin; ++i)
@@ -184,9 +195,7 @@ double Softmax_t::bprop (const TrainingRow_t &x)
 
 double Softmax_t::error (DataSet_t const * tp)
 {
-	double loss = 0;
-
-	return loss;
+	return c_Loss / c_seen;
 }
 
 void Softmax_t::Cycle (void)
