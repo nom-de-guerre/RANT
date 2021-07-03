@@ -70,7 +70,6 @@ double Regression_t::bprop (const TrainingRow_t &x)
 
 	double y; 			// y = ak below
 	double delta_k;
-	double aj;
 	double dAct;
 	stratum_t *p = n_strata[n_levels - 1];
 	stratum_t *ante = n_strata[n_levels - 2];
@@ -82,8 +81,6 @@ double Regression_t::bprop (const TrainingRow_t &x)
 	dAct = DERIVATIVE_FN (y);
  
 	delta_k = error * dAct;
-
-	aj = 1; // the bias
 
 	p->s_delta.sm_data[0] = delta_k;
 
