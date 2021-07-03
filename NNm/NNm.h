@@ -127,7 +127,6 @@ struct stratum_t
 	}
 
 	void bprop (stratum_t &, double *);
-	void bprop (double *);
 	void RPROP (void);
 	void RPROP (int);
 	double *f (double *);
@@ -146,7 +145,6 @@ protected:
 	int					n_levels;
 	int					*n_width;		// array of lengths of n_nn
 	stratum_t			**n_strata;
-	double				*n_loss;
 
 	int					n_Nweights;
 
@@ -154,9 +152,6 @@ protected:
 	double				n_error;
 
 	enum e_tcodes { WORKING, FINISHED, STALLED };
-
-	void PresentExamples (const DataSet_t * const, bool);
-	double PresentExamplesLoss (const DataSet_t * const, bool);
 
 	bool Halt (DataSet_t const * const);
 	
@@ -173,7 +168,6 @@ public:
 		n_Nin (width[0]),
 		n_Nout (width[levels - 1]),
 		n_levels (levels - 1), // no state for input
-		n_loss (NULL),
 		n_halt (1e-5),
 		n_error (nan (NULL))
 	{
@@ -211,7 +205,7 @@ printf ("CONFIG:\t%d\t%d\t%d\n", n_Nin, n_Nout, n_Nweights);
 		n_halt = mse;
 	}
 
-	bool Step(const DataSet_t * const training, double &progress);
+	bool Step(const DataSet_t * const training);
 	bool Train (const DataSet_t * const, int);
 	bool TrainWork (const DataSet_t * const, int);
 
