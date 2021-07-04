@@ -50,14 +50,12 @@ public:
 	}
 
 	bool Test (DataSet_t const * const);
-	double metric (void)
-	{
-		return n_error;
-	}
 };
 
 double Regression_t::f (double *x)
 {
+	x = n_strata[n_levels - 1]->f (x);
+
 	return x[0];
 }
 
@@ -80,9 +78,22 @@ double Regression_t::bprop (const TrainingRow_t &x)
 
 	dAct = DERIVATIVE_FN (y);
  
-	delta_k = error * dAct;
+	/*
+	 * ∂L   ∂y   ∂L
+	 * -- · -- = -- = 𝛅 = delta_k
+	 * ∂y   ∂∑   ∂∑
+	 *
+	 */
 
+	delta_k = error * dAct;
 	p->s_delta.sm_data[0] = delta_k;
+
+	/*
+	 *  ∂L   ∂y   ∂L
+	 *  -- · -- = -- = 𝛅 · y(i-1)
+	 *  ∂∑   ∂w   ∂w
+	 *
+	 */
 
 	p->s_dL.sm_data[0] += delta_k;			// the bias
 	for (int i = 1; i < p->s_Nin; ++i)

@@ -37,7 +37,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 class Softmax_t : public NNet_t<Softmax_t>
 {
 	double			*c_P;
-	double			c_Loss;
+	double			n_error;
 	int				c_Correct;
 	int				c_seen;
 
@@ -57,18 +57,13 @@ public:
 
 	double bprop (const TrainingRow_t &);
 	double f (double *);
-	double error (DataSet_t const *);
+	double Error (DataSet_t const *);
 	void Cycle (void);
 	bool Test (DataSet_t const * const);
 
 	int ComputeSoftmax (void);
 
-	double metric (void)
-	{
-		return c_Correct;
-	}
-
-	double ratio (void)
+	double Accuracy (void) const
 	{
 		double right = c_Correct;
 		return right / (double) c_seen;
@@ -76,12 +71,14 @@ public:
 
 	double Loss (void) const
 	{
-		return c_Loss / (double) c_seen;
+		return n_error / (double) c_seen;
 	}
 };
 
 double Softmax_t::f (double *x)
 {
+	x = n_strata[n_levels - 1]->f (x, false);
+
 	for (int i = 0; i < n_Nout; ++i)
 		c_P[i] = x[i];
 
@@ -139,16 +136,16 @@ double Softmax_t::bprop (const TrainingRow_t &x)
 	++c_seen;
 
 	loss = -log (c_P[answer]);
-	c_Loss += loss;
+	n_error += loss;
 
 	double y; 			// y = ak below
-	double delta_k;
-	double dAct;
 	double dL;
 
 	stratum_t *p = n_strata[n_levels - 1];
 	stratum_t *ante = n_strata[n_levels - 2];
-	double *pdL = p->s_dL.raw ();
+	double *pdL = p->s_dL.raw (); // Done here as it is row order
+
+	assert (n_Nout == p->s_Nperceptrons);
 
 	for (int output_i = 0; output_i < n_Nout; ++output_i)
 	{
@@ -159,57 +156,47 @@ double Softmax_t::bprop (const TrainingRow_t &x)
 			dL -= 1;
 
 		/*
-		 * ∂L   ∂y   ∂L
-		 * -- · -- = -- = 𝛅 = delta_k
-		 * ∂y   ∂∑   ∂∑
+		 * ∂L
+		 * -- = q - p = 𝛅 = dL
+		 * ∂y
 		 *
 		 */
 
-#ifdef __RELU
-		if (outlayer->RELU ()
-			dAct = SIGMOID_FN (outlayer->p_iprod);
-		else
-			dAct = DERIVATIVE_FN (y);
-#else
-		dAct = DERIVATIVE_FN (y);
-#endif
- 
-		delta_k = dL * dAct;
-		p->s_delta.sm_data[output_i] = delta_k;
+		p->s_delta.sm_data[output_i] = dL;
 
 		/*
 		 * initiate the recurrence
 		 *
-		 * ∂L   ∂∑   ∂L
+		 * ∂L   ∂y   ∂L
 		 * -- · -- = -- = 𝛅 · y(i-1)
-		 * ∂∑   ∂w   ∂w
+		 * ∂y   ∂w   ∂w
 		 *
 		 */
-		*pdL++ += delta_k;						// the bias
+		*pdL++ += dL;						// the bias
 		for (int i = 1; i < p->s_Nin; ++i)
-			*pdL++ += delta_k * ante->s_response.sm_data[i - 1];
+			*pdL++ += dL * ante->s_response.sm_data[i - 1];
 	}
 
 	return loss;
 }
 
-double Softmax_t::error (DataSet_t const * tp)
+double Softmax_t::Error (DataSet_t const * tp)
 {
-	return c_Loss / c_seen;
+	return n_error / c_seen;
 }
 
 void Softmax_t::Cycle (void)
 {
-	c_Loss = 0;
+	n_error = 0;
 	c_Correct = 0;
 	c_seen = 0;
 }
 
 bool Softmax_t::Test (DataSet_t const * const tp)
 {
-	double ratio = c_Correct / (double) tp->t_N;
+	double Loss = Error (NULL);
 
-	return (ratio >= 0.95 ? true : false);
+	return (Loss <= n_halt ? true : false);
 }
 
 #endif // header inclusion
