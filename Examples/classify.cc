@@ -112,6 +112,8 @@ void Run (int *layers)
 
 	Np = new Softmax_t (layers + 1, layers[0]);
 
+	Np->SetHalt (1e-2);
+
 	try {
 
 		Np->Train (O, 10000);
@@ -119,11 +121,12 @@ void Run (int *layers)
 	} catch (const char *excep) {
 
 		printf ("ERROR: %s\n", excep);
-
-		exit (-1);
 	}
 
-	printf (" *** Loss\t%f\n", Np->Loss ());
+	printf (" *** Loss\t%f\t%f\t%d\n",
+		Np->Loss (),
+		Np->Accuracy (),
+		Np->Steps ());
 
 	bool accept_soln = true;
 	bool correct;

@@ -129,7 +129,7 @@ struct stratum_t
 	void bprop (stratum_t &, double *);
 	void RPROP (void);
 	void RPROP (int);
-	double *f (double *);
+	double *f (double *, bool = true);
 	double *f (double *, double *);
 };
 
@@ -151,8 +151,8 @@ protected:
 	double				n_halt;			// solution accuracy (sumsq, not derivs)
 	double				n_error;
 
-	enum e_tcodes { WORKING, FINISHED, STALLED };
-
+	bool TrainWork (const DataSet_t * const, int);
+	bool Step(const DataSet_t * const training);
 	bool Halt (DataSet_t const * const);
 	
 public:
@@ -200,19 +200,12 @@ printf ("CONFIG:\t%d\t%d\t%d\n", n_Nin, n_Nout, n_Nweights);
 		delete [] n_strata;
 	}
 
-	void setMSE (double mse)
+	void SetHalt (double mse)
 	{
 		n_halt = mse;
 	}
 
-	bool Step(const DataSet_t * const training);
 	bool Train (const DataSet_t * const, int);
-	bool TrainWork (const DataSet_t * const, int);
-
-	double error (void)
-	{
-		return n_error;
-	}
 
 	int Steps (void) const
 	{

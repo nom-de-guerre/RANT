@@ -127,14 +127,19 @@ stratum_t::RPROP (int index)
 }
 
 double *
-stratum_t::f (double *xi)
+stratum_t::f (double *xi, bool activate)
 {
 	s_dot.MatrixVectorMult (s_W, xi);
 
 	double *p = s_response.sm_data;
 	double *dot = s_dot.sm_data;
-	for (int i = 0; i < s_Nperceptrons; ++i)
-		*p++ = ACTIVATION_FN (*dot++);
+
+	if (activate)
+		for (int i = 0; i < s_Nperceptrons; ++i)
+			*p++ = ACTIVATION_FN (*dot++);
+	else
+		for (int i = 0; i < s_Nperceptrons; ++i)
+			*p++ = *dot++;
 
 	return s_response.sm_data;
 }
@@ -146,8 +151,6 @@ stratum_t::f (double *xi)
 template<typename T> void 
 NNet_t<T>::Start (void)
 {
-	n_error = 0.0;
-
 	// Starting a new batch
 	return static_cast<T *> (this)->Cycle ();
 }
@@ -165,18 +168,6 @@ NNet_t<T>::Loss (DataSet_t const *tp)
 	// The current value of the loss function
 	return static_cast<T *> (this)->error (tp);
 }
-
-/*
- * ∂L     ∂L  ∂ak  ∂net
- * --   = --  ---  ----
- * ∂wkj   ∂ak ∂net ∂wkj
- *
- * y = ak
- *
- * ∆k = (ak - t)ak(1 - ak)
- * wkj = ∆k(aj)
- *
- */
 
 template<typename T> double 
 NNet_t<T>::ComputeDerivative (const TrainingRow_t x)
@@ -202,7 +193,7 @@ NNet_t<T>::Compute (double *x)
 
 	ripple = x;
 
-	for (int layer = 0; layer < n_levels; ++layer)
+	for (int layer = 0; layer < n_levels - 1; ++layer)
 		ripple = n_strata[layer]->f (ripple);
 
 	/*
@@ -262,16 +253,7 @@ NNet_t<T>::Step (const DataSet_t * const training)
 	Start ();
 
 	for (int i = 0; i < training->t_N; ++i)
-	{
-#ifdef SHOW_GRADIENT
-		printf ("%d\t", i);
-#endif
 		ComputeDerivative (training->entry (i));
-
-#ifdef SHOW_GRADIENT
-		printf ("\n");
-#endif
-	}
 
 	UpdateWeights ();
 

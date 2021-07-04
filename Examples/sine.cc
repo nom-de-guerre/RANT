@@ -68,14 +68,14 @@ int main (int argc, char *argv[])
 
 void Run (int *layers)
 {
-	double soln_MSE = 5e-7;
+	double soln_MSE = 5e-8;
 
 	DataSet_t *O = BuildTrainingSet (N_POINTS);
 	Regression_t *Np = NULL;
 	double guess;
 
 	Np = new Regression_t (layers + 1, layers[0]);
-	Np->setMSE (soln_MSE);
+	Np->SetHalt (soln_MSE);
 
 	try {
 
