@@ -42,7 +42,7 @@ public:
 
 	double bprop (const TrainingRow_t &);
 	double f (double *);
-	double error (DataSet_t const *);
+	double Error (DataSet_t const *);
 
 	void Cycle (void) 
 	{
@@ -102,7 +102,7 @@ double Regression_t::bprop (const TrainingRow_t &x)
 	return y;
 }
 
-double Regression_t::error (DataSet_t const * tp)
+double Regression_t::Error (DataSet_t const * tp)
 {
 	return n_error / tp->t_N;
 }

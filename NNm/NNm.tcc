@@ -166,7 +166,7 @@ template<typename T> double
 NNet_t<T>::Loss (DataSet_t const *tp)
 {
 	// The current value of the loss function
-	return static_cast<T *> (this)->error (tp);
+	return static_cast<T *> (this)->Error (tp);
 }
 
 template<typename T> double 
