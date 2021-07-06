@@ -181,7 +181,8 @@ public:
 		n_strata = new stratum_t * [n_levels];
 		n_width = new int [n_levels];
 
-printf ("CONFIG:\t%d\t%d\t%d\n", n_Nin, n_Nout, n_Nweights);
+printf ("In\tOut\tTrainable\n");
+printf ("%d\t%d\t%d\n", n_Nin, n_Nout, n_Nweights);
 
 		// start at 1, ignore inputs
 		for (int i = 1; i <= n_levels; ++i)
