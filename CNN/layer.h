@@ -109,11 +109,6 @@ struct mapAPI_t
 		return nan (NULL);
 	}
 
-	virtual bool Halt (void)
-	{
-		assert (false);
-	}
-
 	int MapSize (void)
 	{
 		return ma_map.N ();
@@ -333,11 +328,6 @@ public:
 		printf ("%d\n", ll_N);
 		for (int i = 0; i < ll_N; ++i)
 			ll_maps[i]->ma_map.display ();
-	}
-
-	bool TestStop (void)
-	{
-		return ll_maps[0]->Halt ();
 	}
 
 	double Loss (void)

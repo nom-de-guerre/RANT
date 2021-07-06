@@ -107,8 +107,8 @@ bool Mpool_t::Pool (plane_t const * const datap)
 	__restrict int *rindexp = mp_rindex;
 	__restrict double *imagep = datap->raw ();
 
-	int idim = datap->rows ();
-	int mdim = ma_map.rows ();
+	int idim = datap->rows (); // input image
+	int mdim = ma_map.rows (); // output map
 	int stride = idim - mp_fwidth;
 
 	for (int start = 0, index = 0, i = 0;

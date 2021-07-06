@@ -38,11 +38,19 @@ struct RunOptions_t
 	RunOptions_t () :
 		ro_seed (time (NULL)),
 		ro_Nsamples (1000),
-		ro_haltCondition (0.93),
+		ro_haltCondition (1e-5),
 		ro_maxIterations (100)
 	{}
 
 	int Parse (int argc, char *argv[]);
+
+	void Display (void) const
+	{
+		printf ("Running with:\n# Samples\t%d\nIterations\t%d\nHalt\t\t%f\n",
+			ro_Nsamples,
+			ro_maxIterations,
+			ro_haltCondition);
+	}
 };
 
 int RunOptions_t::Parse (int argc, char *argv[])

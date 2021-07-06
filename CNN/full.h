@@ -112,17 +112,8 @@ public:
 
 	double Loss (void)
 	{
-printf ("DJS Loss Ratio %f\n", re_net->ratio ());
-		return re_net->ratio ();
-	}
-
-	bool Halt (void)
-	{
-printf ("DJS Halt Ratio\t%f\n", re_net->ratio ());
-		if (re_net->ratio () >= 0.85)
-			return true;
-
-		return false;
+printf ("DJS PROGRESS\t%f\t%f\n", re_net->Loss (), re_net->Accuracy ());
+		return re_net->Error (NULL);
 	}
 
 	plane_t *fetchGradient (void)

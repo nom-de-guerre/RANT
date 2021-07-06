@@ -211,7 +211,7 @@ public:
 
 			TrainingStep (p);
 
-			halt = cn_layers[cn_N - 1]->Loss () >= cn_haltMetric;
+			halt = cn_layers[cn_N - 1]->Loss () < cn_haltMetric;
 
 			for (int i = 0; i < cn_N; ++i)
 				cn_layers[i]->UpdateWeights ();

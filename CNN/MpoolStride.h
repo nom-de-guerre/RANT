@@ -101,8 +101,8 @@ public:
 bool MpoolSlide_t::Pool (plane_t const * const datap)
 {
 	__restrict double *omap = ma_map.raw ();
-	__restrict int *rindex = mp_rindex;
-	__restrict double *image = datap->raw ();
+	__restrict int *rindexp = mp_rindex;
+	__restrict double *imagep = datap->raw ();
 
 	int idim = datap->rows (); // input image
 	int mdim = ma_map.rows (); // output map
@@ -112,19 +112,17 @@ bool MpoolSlide_t::Pool (plane_t const * const datap)
 		i < mdim; 
 		++i, start = i * idim)
 	{
-		for (int i_idx = 0, j = 0; 
-			j < mdim; 
-			++j, ++index, ++start)
+		for (int i_idx = 0, j = 0; j < mdim; ++j, ++index, ++start)
 		{
 			omap[index] = -DBL_MAX;
 			i_idx = start;
 
 			for (int frow = 0; frow < mp_fwidth; ++frow, i_idx += stride)
 				for (int fcol = 0; fcol < mp_fwidth; ++fcol, ++i_idx)
-					if (omap[index] < image[i_idx])
+					if (omap[index] < imagep[i_idx])
 					{
-						omap[index] = image[i_idx];
-						rindex[index] = i_idx;
+						omap[index] = imagep[i_idx];
+						rindexp[index] = i_idx;
 					}
 		}
 	}
