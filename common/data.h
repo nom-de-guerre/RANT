@@ -26,6 +26,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #ifndef __DataSetN_H__
+#define __DataSetN_H__
 
 #include <float.h>
 #include <math.h>
@@ -70,6 +71,30 @@ struct DataSet_t
 	TrainingRow_t operator[] (int index) const
 	{
 		return entry (index);
+	}
+
+	DataSet_t *Subset (int N, int indices [])
+	{
+		DataSet_t *p = new DataSet_t (N, t_Nin, t_Nout);
+		size_t Nentries = t_Nin + t_Nout;
+		size_t len = sizeof (double) * Nentries;
+		TrainingRow_t from, to;
+
+		to = p->Raw ();
+
+		for (int i = 0; i < N; ++i)
+		{
+			from = entry (indices[i]);
+			memcpy (to, from, len);
+			to += Nentries;
+		}
+
+		return p;
+	}
+
+	double * Raw (void)
+	{
+		return t_data;
 	}
 
 	double Answer (const int index) const

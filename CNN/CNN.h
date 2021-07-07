@@ -28,6 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef __DJS_CNN__H__
 #define __DJS_CNN__H__
 
+#include <sampling.h>
 #include <plane.h>
 #include <layer.h>
 
@@ -42,6 +43,8 @@ class CNN_t
 	int					cn_maxIterations;
 	int					cn_steps;
 	double				cn_haltMetric;
+
+	NoReplacementSamples_t	*cn_order;
 
 	layer_t				**cn_layers;
 
@@ -60,6 +63,7 @@ public:
 		cn_maxIterations (200),
 		cn_steps (0),
 		cn_haltMetric (0.70),
+		cn_order (NULL),
 		cn_layers (new layer_t * [Nlayers])
 	{
 		for (int i = 0; i < cn_Nlayers; ++i)
@@ -73,6 +77,8 @@ public:
 				delete cn_layers[i];
 
 		delete [] cn_layers;
+		if (cn_order)
+			delete cn_order;
 	}
 
 	/*
@@ -205,6 +211,15 @@ public:
 		bool halt = false;
 		cn_steps = 0;		// to support restart
 
+		if (cn_order && cn_order->N () != p->N ())
+		{
+			delete cn_order;
+			cn_order = NULL;
+		}
+
+		if (cn_order == NULL)
+			cn_order = new NoReplacementSamples_t (p->N ());
+
 		while (!halt && cn_steps < cn_maxIterations)
 		{
 			++cn_steps;
@@ -226,7 +241,7 @@ public:
 
 		for (int i = 0; i < cn_Nsubsamples; ++i)
 		{
-			int index = rand () % p->t_N;
+			int index = cn_order->SampleAuto ();
 
 			plane_t example (cn_rows, cn_columns, p->entry (index));
 			double answer = p->Answer (index);

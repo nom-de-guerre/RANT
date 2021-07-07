@@ -31,15 +31,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <sys/types.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
-#include <fcntl.h>
 #include <unistd.h>
 #include <errno.h>
 #include <arpa/inet.h>
-#include <stdint.h>
 
 #include <string.h>
 
-#include <softmax.h>
+#include <data.h>
 #include <mfile.h>
 
 #define IMAGEDIM		28
