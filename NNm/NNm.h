@@ -181,8 +181,8 @@ public:
 		n_strata = new stratum_t * [n_levels];
 		n_width = new int [n_levels];
 
-printf ("In\tOut\tTrainable\n");
-printf ("%d\t%d\t%d\n", n_Nin, n_Nout, n_Nweights);
+		printf ("In\tOut\tTrainable\n");
+		printf ("%d\t%d\t%d\n", n_Nin, n_Nout, n_Nweights);
 
 		// start at 1, ignore inputs
 		for (int i = 1; i <= n_levels; ++i)
@@ -206,24 +206,36 @@ printf ("%d\t%d\t%d\n", n_Nin, n_Nout, n_Nweights);
 		n_halt = mse;
 	}
 
-	bool Train (const DataSet_t * const, int);
+	bool Train (const DataSet_t * const, int); // used only when stand-alone
 
 	int Steps (void) const
 	{
 		return n_steps;
 	}
 
-	double Compute (double *);
-	inline double Loss (DataSet_t const *);
+	double Loss (void) const
+	{
+		return n_error; // meaning depends on specialization.
+	}
 
-	double ComputeDerivative (const TrainingRow_t);
-	void Start (void);
-	bool ExposeGradient (NeuralM_t &);
+	/*
+	 * The next 4 call the specialization.  They are public as
+	 * CNN components need to access them to integrate training.
+	 *
+	 */
+	void Start (void);								// calls Cycle
+	double Compute (double *);						// calls f ()
+	inline double Loss (DataSet_t const *);			// calls Error
+	double ComputeDerivative (const TrainingRow_t);	// calls bprop
+
+	// The below are public so these objects can be integrated
 	void UpdateWeights (void)
 	{
 		for (int i = 0; i < n_levels; ++i)
 			n_strata[i]->RPROP ();
 	}
+
+	bool ExposeGradient (NeuralM_t &);
 };
 
 #include <NNm.tcc>
