@@ -27,29 +27,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <CNN.h>
 
-double Validate (CNN_t &model, DataSet_t *datap, bool display = false)
+double Validate (CNN_t &model, DataSet_t *datap)
 {
 	int incorrect = 0;
-	int base;
-
-	if (display) {
-
-		base = rand () % datap->N ();
-		if (base + 10 > datap->N ())
-			base -= 10 + rand () % 100;
-	}
 
 	for (int i = 0; i < datap->N (); ++i)
 	{
 		plane_t obj (IMAGEDIM, IMAGEDIM, datap->entry (i));
 
 		int k = model.Classify (&obj);
-
-		if (display && i >= base && i < base)
-		{
-			obj.display ();
-			model.DumpMaps (1);
-		}
 
 		if (k != datap->Answer (i))
 			++incorrect;
