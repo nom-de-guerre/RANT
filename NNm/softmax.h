@@ -37,7 +37,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 class Softmax_t : public NNet_t<Softmax_t>
 {
 	double			*c_P;
-	double			n_error;
 	int				c_Correct;
 	int				c_seen;
 
@@ -136,7 +135,10 @@ double Softmax_t::bprop (const TrainingRow_t &x)
 	++c_seen;
 
 	loss = -log (c_P[answer]);
-	n_error += loss;
+	if (isnan (loss) || isinf (loss))
+		n_error += 1000;
+	else
+		n_error += loss;
 
 	double y; 			// y = ak below
 	double dL;

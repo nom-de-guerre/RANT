@@ -83,6 +83,10 @@ stratum_t::RPROP (int index)
 	if (s_Ei.sm_data[index] == 0.0 || s_dL.sm_data[index] == 0.0)
 	{
 		delta = -SIGN (s_dL.sm_data[index]) * s_deltaW.sm_data[index];
+
+		if (isnan (delta))
+			throw ("Degenerate weight update");
+
 		s_W.sm_data[index] += delta;
 
 		s_Ei.sm_data[index] = s_dL.sm_data[index];
@@ -98,6 +102,9 @@ stratum_t::RPROP (int index)
 
 		// (2)
 		delta *= -(SIGN (s_dL.sm_data[index]));
+		if (isnan (delta))
+			throw ("Degenerate weight update");
+
 		// (3)
 		s_W.sm_data[index] += delta;
 
@@ -111,6 +118,9 @@ stratum_t::RPROP (int index)
 		delta = s_deltaW.sm_data[index] * ETA_MINUS;
 		if (delta < DELTA_MIN)
 			delta = DELTA_MIN;
+
+		if (isnan (delta))
+			throw ("Degenerate weight update");
 
 		s_deltaW.sm_data[index] = delta;
 

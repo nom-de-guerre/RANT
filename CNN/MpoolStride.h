@@ -61,6 +61,8 @@ public:
 	 */
 	bool Forward (arg_t &arg)
 	{
+		assert (arg.a_N == 1);
+
 		return Pool (arg.a_args[0]);
 	}
 
@@ -108,8 +110,8 @@ bool MpoolSlide_t::Pool (plane_t const * const datap)
 	int mdim = ma_map.rows (); // output map
 	int stride = idim - mp_fwidth;
 
-	for (int start = 0, index = 0, i = 0; 
-		i < mdim; 
+	for (int start = 0, index = 0, i = 0;
+		i < mdim;
 		++i, start = i * idim)
 	{
 		for (int i_idx = 0, j = 0; j < mdim; ++j, ++index, ++start)
@@ -138,7 +140,7 @@ bool MpoolSlide_t::ComputeGradient (plane_t const * const datap)
 	int halt = mp_grad.N ();
 
 	for (int i = 0; i < halt; ++i)
-		gradp[(int) rindexp[i]] += deltap[i];
+		gradp[rindexp[i]] += deltap[i];
 
 	return true;
 }

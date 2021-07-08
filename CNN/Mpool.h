@@ -42,13 +42,13 @@ public:
 	 * We need the pool width and the input map width.
 	 *
 	 */
-	Mpool_t (const int mwidth, const int iwidth) : 
-		mapAPI_t (iwidth / mwidth),
-		mp_fwidth (mwidth),
+	Mpool_t (const int fwidth, const int iwidth) : 
+		mapAPI_t (iwidth / fwidth),
+		mp_fwidth (fwidth),
 		mp_grad (iwidth, iwidth),
 		mp_rindex (new int [mp_grad.N ()])
 	{
-		assert ((iwidth % mwidth) == 0);
+		assert ((iwidth % fwidth) == 0);
 	}
 
 	~Mpool_t (void)
