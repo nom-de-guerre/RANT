@@ -43,7 +43,7 @@ public:
 	 *
 	 */
 	Mpool_t (const int fwidth, const int iwidth) : 
-		mapAPI_t (iwidth / fwidth),
+		mapAPI_t (iwidth / fwidth, iwidth),
 		mp_fwidth (fwidth),
 		mp_grad (iwidth, iwidth),
 		mp_rindex (new int [mp_grad.N ()])

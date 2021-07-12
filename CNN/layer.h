@@ -41,8 +41,8 @@ struct arg_t
 struct mapAPI_t
 {
 	int			ma_state;
-	int			ma_cache;
 	int			ma_signal;
+	int			ma_iwidth;			// input dim
 
 	plane_t		ma_map;
 
@@ -52,15 +52,15 @@ struct mapAPI_t
 	// Neural network layers
 	mapAPI_t () :
 		ma_state (0),
-		ma_cache (-1),
+		ma_iwidth (-1),
 		ma_stripeN (-1),
 		ma_program (NULL)
 	{
 	}
 
-	mapAPI_t (const int dim) :
+	mapAPI_t (const int dim, const int idim) :
 		ma_state (0),
-		ma_cache (-1),
+		ma_iwidth (idim),
 		ma_map (dim, dim),
 		ma_stripeN (-1),
 		ma_program (NULL)
@@ -69,7 +69,7 @@ struct mapAPI_t
 
 	mapAPI_t (const int dim, const int Nin, int *program) :
 		ma_state (0),
-		ma_cache (-1),
+		ma_iwidth (-1),
 		ma_map (dim, dim),
 		ma_stripeN (Nin),
 		ma_program (program)
@@ -102,11 +102,6 @@ struct mapAPI_t
 	int Signal (void)
 	{
 		return ma_signal;
-	}
-
-	virtual double Loss (void)
-	{
-		return nan (NULL);
 	}
 
 	int MapSize (void)
@@ -330,11 +325,20 @@ public:
 			ll_maps[i]->ma_map.display ();
 	}
 
+#if 0
 	double Loss (void)
 	{
 		assert (ll_N == 1); // or what does this mean?
 
 		return ll_maps[0]->Loss ();
+	}
+#endif
+
+	full_t *Bottom (void)
+	{
+		assert (ll_type == FULL);
+
+		return static_cast<full_t *> (ll_maps[0]);
 	}
 };
 

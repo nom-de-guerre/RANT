@@ -210,6 +210,7 @@ public:
 	{
 		bool halt = false;
 		cn_steps = 0;		// to support restart
+		full_t *finalp = cn_layers[cn_N - 1]->Bottom ();
 
 		if (cn_order && cn_order->N () != p->N ())
 		{
@@ -226,7 +227,13 @@ public:
 
 			TrainingStep (p);
 
-			halt = cn_layers[cn_N - 1]->Loss () < cn_haltMetric;
+			halt = finalp->Loss () < cn_haltMetric;
+
+			if ((cn_steps % 10) == 0)
+				printf ("%d: %f\t%f\n",
+					cn_steps,
+					finalp->Loss (),
+					finalp->Accuracy ());
 
 			for (int i = 0; i < cn_N; ++i)
 				cn_layers[i]->UpdateWeights ();
@@ -293,7 +300,7 @@ public:
 
 	double Loss (void)
 	{
-		return cn_layers[cn_N - 1]->Loss ();
+		return cn_layers[cn_N - 1]->Bottom ()-> Loss ();
 	}
 
 	int *BuildDefaultProgram (int, int);

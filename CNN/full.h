@@ -33,10 +33,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <softmax.h>
 #include <layer.h>
 
-class full_t : public mapAPI_t
+class full_t : public mapAPI_t, public Softmax_t
 {
-	Softmax_t		*re_net;
-
 	int				re_Nin;
 
 	double			*re_input;
@@ -45,9 +43,9 @@ class full_t : public mapAPI_t
 public:
 
 	full_t (const int * const layers, const int Nlayers) :
+		Softmax_t (layers, Nlayers),
 		re_Nin (layers[0])
 	{
-		re_net = new Softmax_t (layers, Nlayers);
 		re_input = new double [re_Nin + 1]; // + 1 for training - the answer
 		re_gradient = new NeuralM_t (re_Nin, 1);
 		ma_map.dd_rows = re_Nin;
@@ -57,7 +55,6 @@ public:
 
 	~full_t (void)
 	{
-		delete re_net;
 		delete [] re_input;
 		delete re_gradient;
 	}
@@ -65,7 +62,7 @@ public:
 	bool Forward (arg_t &arg)
 	{
 		Load (arg);
-		ma_signal = (int) re_net->Compute (re_input);
+		ma_signal = (int) Compute (re_input);
 
 		return true;
 	}
@@ -91,8 +88,8 @@ public:
 
 		re_input[len] = answer;
 
-		re_net->ComputeDerivative (re_input);
-		re_net->ExposeGradient (*re_gradient);
+		ComputeDerivative (re_input);
+		ExposeGradient (*re_gradient);
 
 		return true;
 	}
@@ -104,16 +101,10 @@ public:
 
 	bool Update (void)
 	{
-		re_net->UpdateWeights ();
-		re_net->Start ();
+		UpdateWeights ();
+		Start ();
 
 		return true;
-	}
-
-	double Loss (void)
-	{
-printf ("DJS PROGRESS\t%f\t%f\n", re_net->Loss (), re_net->Accuracy ());
-		return re_net->Error (NULL);
 	}
 
 	plane_t *fetchGradient (void)

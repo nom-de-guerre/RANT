@@ -46,7 +46,7 @@ public:
 	 *
 	 */
 	filter_t (const int fwidth, const int mwidth) :
-		mapAPI_t (mwidth - fwidth + 1),
+		mapAPI_t (mwidth - fwidth + 1, mwidth),
 		ff_width (fwidth),
 		ff_filter (new stratum_t (1, fwidth * fwidth)),
 		ff_input (new plane_t *),

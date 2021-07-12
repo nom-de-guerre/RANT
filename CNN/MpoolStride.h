@@ -43,7 +43,7 @@ public:
 	 *
 	 */
 	MpoolSlide_t (const int fwidth, const int iwidth) : 
-		mapAPI_t (iwidth - fwidth + 1),
+		mapAPI_t (iwidth - fwidth + 1, iwidth),
 		mp_fwidth (fwidth),
 		mp_grad (iwidth, iwidth),
 		mp_rindex (new int [mp_grad.N ()])
