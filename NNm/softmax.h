@@ -72,6 +72,11 @@ public:
 	{
 		return n_error / (double) c_seen;
 	}
+
+	double P (int x)
+	{
+		return c_P[x];
+	}
 };
 
 double Softmax_t::f (double *x)

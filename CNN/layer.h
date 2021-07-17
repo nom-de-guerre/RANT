@@ -50,9 +50,10 @@ struct mapAPI_t
 	int			*ma_program;
 
 	// Neural network layers
-	mapAPI_t () :
+	mapAPI_t (const int rows) :
 		ma_state (0),
 		ma_iwidth (-1),
+		ma_map (rows, 1),
 		ma_stripeN (-1),
 		ma_program (NULL)
 	{
@@ -325,14 +326,12 @@ public:
 			ll_maps[i]->ma_map.display ();
 	}
 
-#if 0
-	double Loss (void)
+	mapAPI_t *getModule (int index)
 	{
-		assert (ll_N == 1); // or what does this mean?
+		assert (index < ll_N);
 
-		return ll_maps[0]->Loss ();
+		return ll_maps[index];
 	}
-#endif
 
 	full_t *Bottom (void)
 	{
@@ -479,8 +478,9 @@ bool layer_t::BackwardTraining (layer_t *post)
 {
 	int Nout = post->ll_N;
 	int blockSize;
+	int base = 0;
+	plane_t dummy(1, 1, NULL);
 	plane_t *pGrad;
-	plane_t dummy;
 
 	switch (post->ll_degree)
 	{
@@ -511,17 +511,18 @@ bool layer_t::BackwardTraining (layer_t *post)
 
 		blockSize = ll_maps[0]->MapSize ();
 		pGrad = post->ll_maps[0]->fetchGradient ();
+		assert ((pGrad->N () / blockSize) == ll_N);
 		assert ((pGrad->N () % blockSize) == 0);
-		dummy.dd_rows = dummy.dd_columns = 1;
-		dummy.dd_datap = pGrad->raw ();
 
+		dummy.setRaw (pGrad->raw ());
 		ll_args.a_N = 1;
 		ll_args.a_args[0] = &dummy;
 
 		for (int i = 0; i < ll_N; ++i)
 		{
+			dummy.setRaw (pGrad->raw () + base);
 			ll_maps[i]->Backward (ll_args);
-			dummy.dd_datap += blockSize;
+			base += blockSize;
 		}
 
 		break;

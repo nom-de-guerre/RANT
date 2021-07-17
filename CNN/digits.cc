@@ -34,6 +34,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <CNN.h>
 #include <options.h>
+#include <validate.h>
 
 void Run (RunOptions_t &);
 
@@ -56,12 +57,16 @@ int main (int argc, char *argv[])
 
 void Run (RunOptions_t &params)
 {
-	int Nlayers = 3;
-	int layers [] = { -1, 20, 10 };
+	int Nlayers = 4;
+	int layers [] = { -1, 100, 50, 10 };
 
 	MNIST_t data (
-		"../../../Data/MNIST/train-images.idx3-ubyte",
-		"../../../Data/MNIST/train-labels.idx1-ubyte");
+		"../../Data/MNIST/train-images.idx3-ubyte",
+		"../../Data/MNIST/train-labels.idx1-ubyte");
+
+	MNIST_t test (
+		"../../Data/MNIST/t10k-images.idx3-ubyte",
+		"../../Data/MNIST/t10k-labels.idx1-ubyte");
 
 	CNN_t CNN (IMAGEDIM, IMAGEDIM, 3, 10);
 	CNN.setSGDSamples (params.ro_Nsamples);
@@ -71,8 +76,12 @@ void Run (RunOptions_t &params)
 #define NMAPS	6
 
 	int dim = CNN.AddConvolutionLayer (NMAPS, 5, IMAGEDIM);
-	dim = CNN.AddMaxPoolLayer (NMAPS, 2, dim);
+	dim = CNN.AddMaxPoolSlideLayer (NMAPS, 2, dim);
 	CNN.AddFullLayer (layers, Nlayers);
+
+	for (int i = 0; i < CNN.ActiveLayers (); ++i)
+		printf ("%d %s\t", CNN.LayerRows (i), (i + 1 != 3 ? " ⟶" : ""));
+	printf ("\n");
 
 	CNN.Train (data.mn_datap);
 
@@ -80,32 +89,7 @@ void Run (RunOptions_t &params)
 
 	printf ("Verifying...\n");
 
-	int incorrect = 0;
-
-	int base = rand () % data.N ();
-	if (base + 10 > data.N ())
-		base -= 10 + rand () % 100;
-
-	for (int i = 0; i < data.mn_datap->N (); ++i)
-	{
-		plane_t obj (IMAGEDIM, IMAGEDIM, data.mn_datap->entry (i));
-
-		int k = CNN.Classify (&obj);
-#ifdef SHOW_FILTERS
-		if (i >= base && i < (base + 10))
-		{
-			obj.display ();
-			CNN.DumpMaps (0);
-			CNN.DumpMaps (1);
-		}
-#endif
-		if (k != data.mn_datap->Answer (i))
-			++incorrect;
-	}
-
-	double ratio = (double) incorrect;
-	ratio /= (double) data.mn_datap->t_N;
-	ratio *= 100;
+	double ratio = Validate (CNN, test.mn_datap);
 
 	printf ("%.2f%% incorrect\n", ratio);
 }

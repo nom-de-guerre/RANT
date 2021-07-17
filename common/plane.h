@@ -33,13 +33,17 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
 
-struct plane_t
+class plane_t
 {
+	bool		dd_releaseMemory;
 	int			dd_rows;
 	int			dd_columns;
 	double		*dd_datap;
 
+public:
+
 	plane_t (void) :
+		dd_releaseMemory (false),
 		dd_rows (-1),
 		dd_columns (-1),
 		dd_datap (NULL)
@@ -47,6 +51,7 @@ struct plane_t
 	}
 
 	plane_t (const int rows, const int columns) :
+		dd_releaseMemory (true),
 		dd_rows (rows),
 		dd_columns (columns),
 		dd_datap (new double [rows * columns])
@@ -54,10 +59,26 @@ struct plane_t
 	}
 
 	plane_t (const int rows, const int columns, double *datap) :
+		dd_releaseMemory (false),
 		dd_rows (rows),
 		dd_columns (columns),
 		dd_datap (datap)
 	{
+	}
+
+	plane_t (const plane_t &Z) :
+		dd_releaseMemory (true),
+		dd_rows (Z.rows ()),
+		dd_columns (Z.columns ()),
+		dd_datap (new double [dd_rows * dd_columns])
+	{
+		memcpy (dd_datap, Z.raw (), sizeof (double) * N ());
+	}
+
+	~plane_t (void)
+	{
+		if (dd_releaseMemory && dd_datap)
+			delete [] dd_datap;
 	}
 
 	void Reset (void)
@@ -75,7 +96,7 @@ struct plane_t
 		return dd_columns;
 	}
 
-	int N (void)
+	int N (void) const
 	{
 		return dd_rows * dd_columns;
 	}
@@ -95,14 +116,15 @@ struct plane_t
 		return dd_datap + (row * dd_columns) + column;
 	}
 
+	void setRaw (double *datap)
+	{
+		dd_releaseMemory = false;
+		dd_datap = datap;
+	}
+
 	double &operator() (int row, int column) const
 	{
 		return dd_datap[(row * dd_columns) + column];
-	}
-
-	int Size (void) const
-	{
-		return dd_rows * dd_columns;
 	}
 
 	void display (const char * = NULL);

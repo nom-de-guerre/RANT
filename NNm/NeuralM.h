@@ -56,12 +56,14 @@ double DotProduct (const int N, double *x, double *y)
 
 struct NeuralM_t
 {
+	bool		sm_releaseMemory;
 	int			sm_rows;
 	int			sm_columns;
 	int			sm_len;
 	double		*sm_data;
 
 	NeuralM_t (void) :
+		sm_releaseMemory (false),
 		sm_rows (-1),
 		sm_columns (-1),
 		sm_len (-1),
@@ -70,6 +72,7 @@ struct NeuralM_t
 	}
 
 	NeuralM_t (const int rows, const int columns) :
+		sm_releaseMemory (true),
 		sm_rows (rows),
 		sm_columns (columns),
 		sm_len (rows * columns),
@@ -78,15 +81,17 @@ struct NeuralM_t
 	}
 
 	NeuralM_t (const int rows, const int columns, double *datap) :
+		sm_releaseMemory (false),
 		sm_rows (rows),
 		sm_columns (columns),
+		sm_len (rows * columns),
 		sm_data (datap)
 	{
 	}
 
 	~NeuralM_t (void)
 	{
-		if (sm_data)
+		if (sm_releaseMemory && sm_data)
 			delete [] sm_data;
 	}
 

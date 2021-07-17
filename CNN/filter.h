@@ -140,9 +140,7 @@ public:
 
 	plane_t *fetchGradient (void)
 	{
-		assert (false);
-
-		return NULL;
+		return fetchGradient (0);
 	}
 
 	plane_t *fetchGradient (int index)

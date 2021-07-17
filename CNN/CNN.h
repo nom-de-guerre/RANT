@@ -34,6 +34,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 class CNN_t
 {
+protected: // for inheritors to perform validation etc.
+
 	int					cn_Nlayers;			// Maximum layers supported
 	int					cn_N;				// Number of layers created
 	int					cn_Nclasses;
@@ -225,7 +227,7 @@ public:
 		{
 			++cn_steps;
 
-			TrainingStep (p);
+			TrainingEpoch (p);
 
 			halt = finalp->Loss () < cn_haltMetric;
 
@@ -242,7 +244,20 @@ public:
 		return halt; // true --> converged
 	}
 
-	bool TrainingStep (DataSet_t *p) // this should be private...
+	void TrainExample (plane_t &example, double answer)
+	{
+		cn_layers[0]->ForwardTraining (&example, answer);
+
+		for (int j = 1; j < cn_N; ++j)
+			cn_layers[j]->ForwardTraining (cn_layers[j - 1], answer);
+
+		cn_layers[cn_N - 1]->BackwardTraining ();
+
+		for (int j = cn_N - 1; j > 0; --j)
+			cn_layers[j - 1]->BackwardTraining (cn_layers[j]);
+	}
+
+	bool TrainingEpoch (DataSet_t *p) // this should be private...
 	{
 		bool success = false;
 
@@ -253,15 +268,7 @@ public:
 			plane_t example (cn_rows, cn_columns, p->entry (index));
 			double answer = p->Answer (index);
 
-			cn_layers[0]->ForwardTraining (&example, answer);
-
-			for (int j = 1; j < cn_N; ++j)
-				cn_layers[j]->ForwardTraining (cn_layers[j - 1], answer);
-
-			cn_layers[cn_N - 1]->BackwardTraining ();
-
-			for (int j = cn_N - 1; j > 0; --j)
-				cn_layers[j - 1]->BackwardTraining (cn_layers[j]);
+			TrainExample (example, answer);
 		}
 
 		return success;

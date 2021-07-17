@@ -46,7 +46,7 @@ public:
 		mapAPI_t (iwidth / fwidth, iwidth),
 		mp_fwidth (fwidth),
 		mp_grad (iwidth, iwidth),
-		mp_rindex (new int [mp_grad.N ()])
+		mp_rindex (new int [ma_map.N ()])
 	{
 		assert ((iwidth % fwidth) == 0);
 	}
@@ -137,7 +137,7 @@ bool Mpool_t::ComputeGradient (plane_t const * const datap)
 	__restrict double *gradp = mp_grad.raw ();
 	__restrict int *rindexp = mp_rindex;
 	__restrict double *deltap = datap->raw ();
-	int halt = mp_grad.N ();
+	int halt = ma_map.N ();
 
 	for (int i = 0; i < halt; ++i)
 		gradp[rindexp[i]] += deltap[i];

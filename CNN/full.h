@@ -28,35 +28,32 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef __DJS_FULL__H__
 #define __DJS_FULL__H__
 
-#include <sys/uio.h>
+#include <string.h>
 
 #include <softmax.h>
 #include <layer.h>
 
-class full_t : public mapAPI_t, public Softmax_t
+class full_t : public Softmax_t, public mapAPI_t
 {
 	int				re_Nin;
 
 	double			*re_input;
-	NeuralM_t		*re_gradient;
+	NeuralM_t		re_gradient;
 
 public:
 
 	full_t (const int * const layers, const int Nlayers) :
 		Softmax_t (layers, Nlayers),
-		re_Nin (layers[0])
+		mapAPI_t (layers[0]),
+		re_Nin (layers[0]),
+		re_input (new double [re_Nin + 1]), // + 1 for training - the answer
+		re_gradient (re_Nin, 1, ma_map.raw ())
 	{
-		re_input = new double [re_Nin + 1]; // + 1 for training - the answer
-		re_gradient = new NeuralM_t (re_Nin, 1);
-		ma_map.dd_rows = re_Nin;
-		ma_map.dd_columns = 1;
-		ma_map.dd_datap = re_gradient->raw ();
 	}
 
 	~full_t (void)
 	{
 		delete [] re_input;
-		delete re_gradient;
 	}
 
 	bool Forward (arg_t &arg)
@@ -89,7 +86,7 @@ public:
 		re_input[len] = answer;
 
 		ComputeDerivative (re_input);
-		ExposeGradient (*re_gradient);
+		ExposeGradient (re_gradient);
 
 		return true;
 	}
