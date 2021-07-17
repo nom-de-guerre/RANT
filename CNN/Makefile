@@ -11,14 +11,15 @@ DEPS = Makefile $(HDEPS) $(NN_DEPS)
 LeNet5: LeNet5.cc $(DEPS)
 	$(CC) -o $@ $(CFLAGS) LeNet5.cc
 
-simpleProgram: simpleProgram.cc $(DEPS)
-	$(CC) -o $@ $(CFLAGS) simpleProgram.cc
-
 digits: digits.cc $(DEPS)
 	$(CC) -o $@ $(CFLAGS) digits.cc
 
-all: LeNet5 digits simpleProgram
+checkGradient: checkGradient.cc $(DEPS)
+	$(CC) -o $@ $(CFLAGS) checkGradient.cc
+
+all: LeNet5 digits checkGradient
 
 clean:
 	rm digits
 	rm LeNet5
+	rm checkGradient
