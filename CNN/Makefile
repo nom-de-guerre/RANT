@@ -14,12 +14,8 @@ LeNet5: LeNet5.cc $(DEPS)
 digits: digits.cc $(DEPS)
 	$(CC) -o $@ $(CFLAGS) digits.cc
 
-checkGradient: checkGradient.cc $(DEPS)
-	$(CC) -o $@ $(CFLAGS) checkGradient.cc
-
-all: LeNet5 digits checkGradient
+all: LeNet5 digits
 
 clean:
 	rm digits
 	rm LeNet5
-	rm checkGradient
