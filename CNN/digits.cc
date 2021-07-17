@@ -25,7 +25,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include <time.h>
+#include <sys/param.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -55,18 +56,21 @@ int main (int argc, char *argv[])
 	}
 }
 
+char fullpath_data [MAXPATHLEN];
+char fullpath_labels [MAXPATHLEN];
+
 void Run (RunOptions_t &params)
 {
 	int Nlayers = 4;
 	int layers [] = { -1, 100, 50, 10 };
 
-	MNIST_t data (
-		"../../../Data/MNIST/train-images.idx3-ubyte",
-		"../../../Data/MNIST/train-labels.idx1-ubyte");
+	sprintf (fullpath_data, "%s/train-images.idx3-ubyte", params.ro_path);
+	sprintf (fullpath_labels, "%s/train-labels.idx1-ubyte", params.ro_path);
+	MNIST_t data (fullpath_data, fullpath_labels);
 
-	MNIST_t test (
-		"../../../Data/MNIST/t10k-images.idx3-ubyte",
-		"../../../Data/MNIST/t10k-labels.idx1-ubyte");
+	sprintf (fullpath_data, "%s/t10k-images.idx3-ubyte", params.ro_path);
+	sprintf (fullpath_labels, "%s/t10k-labels.idx1-ubyte", params.ro_path);
+	MNIST_t test (fullpath_data, fullpath_labels);
 
 	CNN_t CNN (IMAGEDIM, IMAGEDIM, 3, 10);
 	CNN.setSGDSamples (params.ro_Nsamples);

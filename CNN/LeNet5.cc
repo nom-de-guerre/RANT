@@ -25,6 +25,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
+#include <sys/param.h>
+
 #include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -35,6 +37,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <CNN.h>
 #include <options.h>
+#include <validate.h>
 
 void Run (RunOptions_t &);
 
@@ -76,14 +79,21 @@ const int LeNetC3 [] = {
 1, 1, 1, 1, 1, 1
 };
 
+char fullpath_data [MAXPATHLEN];
+char fullpath_labels [MAXPATHLEN];
+
 void Run (RunOptions_t &params)
 {
 	int Nlayers = 4;
 	int layers [] = { -1, 120, 84, 10 };
 
-	MNIST_t data (
-		"../../../Data/MNIST/train-images.idx3-ubyte",
-		"../../../Data/MNIST/train-labels.idx1-ubyte");
+	sprintf (fullpath_data, "%s/train-images.idx3-ubyte", params.ro_path);
+    sprintf (fullpath_labels, "%s/train-labels.idx1-ubyte", params.ro_path);
+    MNIST_t data (fullpath_data, fullpath_labels);
+
+    sprintf (fullpath_data, "%s/t10k-images.idx3-ubyte", params.ro_path);
+    sprintf (fullpath_labels, "%s/t10k-labels.idx1-ubyte", params.ro_path);
+    MNIST_t test (fullpath_data, fullpath_labels);
 
 	CNN_t CNN (IMAGEDIM, IMAGEDIM, 5, 10);
 
@@ -108,28 +118,7 @@ void Run (RunOptions_t &params)
 
 	printf ("Verifying...\n");
 
-	int incorrect = 0;
-
-	for (int i = 0; i < data.mn_datap->N (); ++i)
-	{
-		plane_t obj (IMAGEDIM, IMAGEDIM, data.mn_datap->entry (i));
-
-		int k = CNN.Classify (&obj);
-#ifdef SHOW_FILTERS
-		if (i > 1700 && i < 1710)
-		{
-			obj.display ();
-			CNN.DumpMaps (1);
-		}
-#endif
-		// if (k != (*data.mn_datap)[i][IMAGEBYTES])
-		if (k != data.mn_datap->Answer (i))
-			++incorrect;
-	}
-
-	double ratio = (double) incorrect;
-	ratio /= (double) data.mn_datap->t_N;
-	ratio *= 100;
+	double ratio = Validate (CNN, test.mn_datap);
 
 	printf ("%.2f%% incorrect\n", ratio);
 }

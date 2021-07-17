@@ -1,6 +1,9 @@
 CNN/digits
 CNN/LeNet5
 CNN/simpleProgram
+misc/show
+misc/ensemble
+misc/checkGradient
 Examples/sine
 Examples/classify
 **/.DS_Store

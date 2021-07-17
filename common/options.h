@@ -27,6 +27,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <time.h>
 #include <unistd.h>
+#include <string.h>
+
+#define DEFAULT_PATH	"../../../Data/MNIST/"
 
 struct RunOptions_t
 {
@@ -34,12 +37,14 @@ struct RunOptions_t
 	int				ro_Nsamples;
 	double			ro_haltCondition;
 	int				ro_maxIterations;
+	char			*ro_path;
 
 	RunOptions_t () :
 		ro_seed (time (NULL)),
 		ro_Nsamples (1000),
 		ro_haltCondition (1e-5),
-		ro_maxIterations (100)
+		ro_maxIterations (100),
+		ro_path ((char *) DEFAULT_PATH)
 	{}
 
 	int Parse (int argc, char *argv[]);
@@ -86,6 +91,12 @@ int RunOptions_t::Parse (int argc, char *argv[])
 		case 'i':
 
 			ro_maxIterations = atoi (optarg);
+			++count;
+			break;
+
+		case 'p':
+
+			ro_path = strdup (optarg);
 			++count;
 			break;
 
