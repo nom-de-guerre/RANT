@@ -61,12 +61,12 @@ void Run (RunOptions_t &params)
 	int layers [] = { -1, 100, 50, 10 };
 
 	MNIST_t data (
-		"../../Data/MNIST/train-images.idx3-ubyte",
-		"../../Data/MNIST/train-labels.idx1-ubyte");
+		"../../../Data/MNIST/train-images.idx3-ubyte",
+		"../../../Data/MNIST/train-labels.idx1-ubyte");
 
 	MNIST_t test (
-		"../../Data/MNIST/t10k-images.idx3-ubyte",
-		"../../Data/MNIST/t10k-labels.idx1-ubyte");
+		"../../../Data/MNIST/t10k-images.idx3-ubyte",
+		"../../../Data/MNIST/t10k-labels.idx1-ubyte");
 
 	CNN_t CNN (IMAGEDIM, IMAGEDIM, 3, 10);
 	CNN.setSGDSamples (params.ro_Nsamples);
