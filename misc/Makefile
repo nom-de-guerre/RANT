@@ -4,7 +4,7 @@ CC=g++
 DEBUG=-O3 
 #DEBUG=-O0 -g
 CFLAGS=-Wall -I. $(NN_INCLUDES) $(OPTIONS) $(DEBUG)
-NN_DEPS = $(wildcard *.h) $(wildcard ../common/*h) $(wildcard ../NNm/*)
+NN_DEPS = $(wildcard *.h) $(wildcard ../common/*h) $(wildcard ../NNm/*) $(wildcard ../CNN/*h)
 
 DEPS = Makefile $(HDEPS) $(NN_DEPS)
 
