@@ -85,7 +85,7 @@ char fullpath_labels [MAXPATHLEN];
 void Run (RunOptions_t &params)
 {
 	int Nlayers = 4;
-	int layers [] = { -1, 120, 84, 10 };
+	int layers [] = { -1, 200, 100, 10 };
 
 	sprintf (fullpath_data, "%s/train-images.idx3-ubyte", params.ro_path);
     sprintf (fullpath_labels, "%s/train-labels.idx1-ubyte", params.ro_path);
