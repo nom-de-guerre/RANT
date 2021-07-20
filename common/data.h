@@ -29,6 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define __DataSetN_H__
 
 #include <float.h>
+#include <string.h>
 #include <math.h>
 #include <assert.h>
 
