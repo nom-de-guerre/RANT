@@ -95,29 +95,47 @@ struct NeuralM_t
 			delete [] sm_data;
 	}
 
+	bool Copy (void)
+	{
+		if (sm_releaseMemory || sm_data == NULL)
+			return false;
+
+		double *datap = new double [N ()];
+		memcpy (datap, sm_data, sizeof (double) * N ());
+		sm_data = datap;
+		sm_releaseMemory = true;
+
+		return true;
+	}
+
 	double *raw (void)
 	{
 		return sm_data;
 	}
 
-	int N (void)
+	int N (void) const
 	{
 		return sm_rows * sm_columns;
 	}
 
-	int rows (void)
+	int rows (void) const
 	{
 		return sm_rows;
 	}
 
-	int columns (void)
+	int columns (void) const
 	{
 		return sm_columns;
 	}
 
-	int stride (void)
+	int stride (void) const
 	{
 		return columns ();
+	}
+
+	double &operator() (const int row, const int column)
+	{
+		return *(sm_data + (row * sm_columns) + column);
 	}
 
 	/*

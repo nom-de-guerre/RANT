@@ -70,15 +70,15 @@ struct stratum_t
 	int						s_Nin; 				// # weights, includes bias
 
 	// Matrices - per weight, s_Nperceptrons x s_Nin
-	NeuralM_t					s_W;
-	NeuralM_t					s_Ei;
-	NeuralM_t					s_dL;
-	NeuralM_t					s_deltaW;
+	NeuralM_t				s_W;
+	NeuralM_t				s_Ei;
+	NeuralM_t				s_dL;
+	NeuralM_t				s_deltaW;
 
 	// Vectors - per perceptron (node)
-	NeuralM_t					s_delta;
-	NeuralM_t					s_dot;
-	NeuralM_t					s_response;
+	NeuralM_t				s_delta;
+	NeuralM_t				s_dot;
+	NeuralM_t				s_response;
 
 	stratum_t (const int N, const int Nin) :
 		s_Nperceptrons (N),

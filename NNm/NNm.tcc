@@ -26,14 +26,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 void 
-stratum_t::bprop (stratum_t &next, double *yi)
+stratum_t::bprop (stratum_t &next, double *xi)
 {
 	/*
-	 * Compute per node total derivative for node at layer i - 1.
+	 * Compute per node total derivative for the layer.
 	 *
 	 * ∂L           ∂∑
-	 * -- = ∑ ( 𝛿 · -- )
-	 * ∂y           ∂y
+	 * -- = ∑ ( 𝛿 · -- ), the right-hand side referring to the next level
+	 * ∂y           ∂x
 	 *
 	 */
 	s_delta.TransposeMatrixVectorMult (next.s_W, next.s_delta.raw ());
@@ -48,9 +48,9 @@ stratum_t::bprop (stratum_t &next, double *yi)
 	double delta;
 
 	/*
-	 * ∂L     ∂y  ∂∑
-	 * -- = 𝛿 --  --
-	 * ∂w     ∂∑  ∂w
+	 * ∂L     ∂∑
+	 * -- = 𝛿 --
+	 * ∂w     ∂w
 	 *
 	 */
 	for (int i = 0; i < s_Nperceptrons; ++i)
@@ -59,7 +59,7 @@ stratum_t::bprop (stratum_t &next, double *yi)
 		*dL++ += delta; // the Bias
 
 		for (int j = 1; j < s_Nin; ++j)
-			*dL++ += delta * yi[j - 1];
+			*dL++ += delta * xi[j - 1];
 	}
 }
 

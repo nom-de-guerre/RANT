@@ -64,15 +64,13 @@ double Regression_t::bprop (const TrainingRow_t &x)
 	double Result;
 	double error = 0;
 
-	Result = Compute (x);
+	double y = Compute (x);
 
-	double y; 			// y = ak below
-	double delta_k;
+	double delta;
 	double dAct;
 	stratum_t *p = n_strata[n_levels - 1];
 	stratum_t *ante = n_strata[n_levels - 2];
 
-	y = Result; // s[output_i];
 	error = y - x[n_Nin];
 	n_error += error * error;
 
@@ -80,13 +78,13 @@ double Regression_t::bprop (const TrainingRow_t &x)
  
 	/*
 	 * ∂L   ∂y   ∂L
-	 * -- · -- = -- = 𝛅 = delta_k
+	 * -- · -- = -- = 𝛅 = delta
 	 * ∂y   ∂∑   ∂∑
 	 *
 	 */
 
-	delta_k = error * dAct;
-	p->s_delta.sm_data[0] = delta_k;
+	delta = error * dAct;
+	p->s_delta.sm_data[0] = delta;
 
 	/*
 	 *  ∂L   ∂y   ∂L
@@ -95,9 +93,9 @@ double Regression_t::bprop (const TrainingRow_t &x)
 	 *
 	 */
 
-	p->s_dL.sm_data[0] += delta_k;			// the bias
+	p->s_dL.sm_data[0] += delta;			// the bias
 	for (int i = 1; i < p->s_Nin; ++i)
-		p->s_dL.sm_data[i] += delta_k * ante->s_response.sm_data[i - 1];
+		p->s_dL.sm_data[i] += delta * ante->s_response.sm_data[i - 1];
 
 	return y;
 }
