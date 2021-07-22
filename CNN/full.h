@@ -58,7 +58,9 @@ public:
 
 	bool Forward (arg_t &arg)
 	{
-		Load (arg);
+		int len = Load (arg);
+		assert (len == re_Nin);
+
 		ma_signal = (int) Compute (re_input);
 
 		return true;
@@ -80,7 +82,6 @@ public:
 	bool Train (arg_t &arg, double answer)
 	{
 		int len = Load (arg);
-
 		assert (len == re_Nin);
 
 		re_input[len] = answer;

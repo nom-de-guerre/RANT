@@ -182,7 +182,7 @@ public:
 		assert (cn_N < cn_Nlayers);
 		const int layer = cn_N++;
 
-		layers[0] = cn_layers[layer - 1]->Nout ();
+		layers[0] = cn_layers[layer - 1]->TotalOut ();
 
 		cn_layers[layer] = new layer_t (layers, Nlayers);
 

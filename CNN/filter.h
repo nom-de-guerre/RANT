@@ -64,6 +64,7 @@ public:
 		ff_flux (new plane_t (mwidth, mwidth)),
 		ff_G (NULL)
 	{
+		ma_iwidth = mwidth;
 		ff_filter->init (mwidth * mwidth * Nin);
 	}
 

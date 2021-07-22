@@ -40,7 +40,6 @@ struct arg_t
 
 struct mapAPI_t
 {
-	int			ma_state;
 	int			ma_signal;
 	int			ma_iwidth;			// input dim
 
@@ -51,8 +50,7 @@ struct mapAPI_t
 
 	// Neural network layers
 	mapAPI_t (const int rows) :
-		ma_state (0),
-		ma_iwidth (-1),
+		ma_iwidth (rows),
 		ma_map (rows, 1),
 		ma_stripeN (-1),
 		ma_program (NULL)
@@ -60,7 +58,6 @@ struct mapAPI_t
 	}
 
 	mapAPI_t (const int dim, const int idim) :
-		ma_state (0),
 		ma_iwidth (idim),
 		ma_map (dim, dim),
 		ma_stripeN (-1),
@@ -69,7 +66,6 @@ struct mapAPI_t
 	}
 
 	mapAPI_t (const int dim, const int Nin, int *program) :
-		ma_state (0),
 		ma_iwidth (-1),
 		ma_map (dim, dim),
 		ma_stripeN (Nin),
@@ -100,14 +96,19 @@ struct mapAPI_t
 		return ma_stripeN;
 	}
 
-	int Signal (void)
+	int Signal (void) const
 	{
 		return ma_signal;
 	}
 
-	int MapSize (void)
+	int MapSize (void) const
 	{
 		return ma_map.N ();
+	}
+
+	int inputSize (void) const
+	{
+		return ma_iwidth;
 	}
 
 	plane_t *getMap (void)
@@ -148,6 +149,8 @@ private:
 	int				ll_N;			// # of components
 	Ltype_e			ll_type;
 	Ldegree_e		ll_degree;
+
+	int				ll_Nin;
 
 	mapAPI_t		**ll_maps;
 	arg_t			ll_args;
@@ -192,6 +195,8 @@ public:
 				assert (false);
 			}
 		}
+
+		ll_Nin = input;
 	}
 
 	layer_t (const int N, 
@@ -219,6 +224,8 @@ public:
 
 			ll_maps[i] = new filter_t (subsample, sample, p_index, program);
 		}
+
+		ll_Nin = Nin;
 	}
 
 	layer_t (const int * const layers, const int Nlayers) :
@@ -231,6 +238,8 @@ public:
 
 		ll_maps = new mapAPI_t *;
 		ll_maps[0] = new full_t (layers, Nlayers);
+
+		ll_Nin = layers[0];
 	}
 
 	~layer_t (void)
@@ -293,9 +302,9 @@ public:
 
 	bool BackwardTraining (layer_t *lp);
 
-	int Nout (void)
+	int TotalOut (void)
 	{
-		return ll_N * ll_maps[0]->MapSize ();
+		return ll_N * ll_maps[0]->MapSize ();;
 	}
 
 	int Signal (void)
