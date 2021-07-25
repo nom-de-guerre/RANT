@@ -29,6 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <math.h>
 
 #include <regression.h>
 
@@ -68,7 +69,7 @@ int main (int argc, char *argv[])
 
 void Run (int *layers)
 {
-	double soln_MSE = 5e-8;
+	double soln_MSE = 5e-7;
 
 	DataSet_t *O = BuildTrainingSet (N_POINTS);
 	Regression_t *Np = NULL;
@@ -114,15 +115,20 @@ void Run (int *layers)
 		printf ("Accuracy not achieved: %e\t%e\n", MSE, soln_MSE);
 
 #if 1
+	MSE = 0.0;
 	O = BuildTrainingSet (64);
 	for (int i = 0; i < O->t_N; ++i)
 	{
 		guess = Np->Compute ((*O)[i]);
+		error = guess - sin ((*O)[i][0]);
+		MSE += error * error;
 		printf ("DJS_INFER\t%1.8f\t%1.8f\t%1.8f\n",
 			(*O)[i][0],
 			(*O)[i][1],
 			guess);
 	}
+
+	printf ("Test MSE: %e\n", MSE / O->t_N);
 #endif
 
 	if (accept_soln)
