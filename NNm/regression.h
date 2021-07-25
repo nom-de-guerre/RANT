@@ -61,7 +61,6 @@ double Regression_t::f (double *x)
 
 double Regression_t::bprop (const TrainingRow_t &x)
 {
-	double Result;
 	double error = 0;
 
 	double y = Compute (x);
