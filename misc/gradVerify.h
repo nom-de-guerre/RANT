@@ -48,73 +48,97 @@ public:
 
 	void f_diff (int level)
 	{
-		if (!level)
-		{
-			cn_layers[0]->f (cg_example);
-			++level;
-		}
-		
 		for (int i = level; i < cn_N; ++i)
 			cn_layers[i]->f (cn_layers[i - 1]);
 	}
 
-	void VerifyGradientWork (int level, double h)
+	void VerifyGradient (int level, double h, plane_t &Xi, double answer)
 	{
-		plane_t *Xi = (level ? (*cn_layers[level - 1])[0] : cg_example);
-		int Nentries = Xi->N ();
-		double *rawp = Xi->raw ();
-		plane_t *gradp;
-		double L0, L1;
-		double dL_diff, dL_bp;
+		assert (level >= 0 && level < cn_N);
 
-		for (int i = 0; i < Nentries; ++i)
-		{
-			rawp[i] += h;
-
-			cg_softmaxp->Cycle ();
-//			f_diff (level);
-Classify (cg_example);
-			L0 = -log (cg_softmaxp->P ((int) cg_answer));
-
-			rawp[i] -= 2 * h;
-
-			cg_softmaxp->Cycle ();
-	//		f_diff (level);
-Classify (cg_example);
-			L1 = -log (cg_softmaxp->P ((int) cg_answer));
-
-			dL_diff = (L0 - L1) / (2 * h);
-
-			rawp[i] += h;
-
-			cg_softmaxp->Cycle ();
-			TrainExample (*cg_example, cg_answer);
-
-			gradp = cn_layers[level]->getModule (0)->fetchGradient ();
-
-			dL_bp = gradp->raw () [i];
-
-			printf ("DJS\t%f\t%f\t%f\n",
-				dL_diff,
-				dL_bp,
-				fabs (dL_diff - dL_bp) / (fabs (dL_diff) + fabs (dL_bp)));
-		}
-	}
-
-	void VerifyGradient (int level, double h, plane_t Xi, double answer)
-	{
-		assert (level < cn_N);
 		cg_example = &Xi;
 		cg_answer = answer;
 		cg_softmaxp = cn_layers[cn_N - 1]->Bottom ();
 
-		if (level)
-			cn_layers[0]->f (&Xi);
+		int Nentries = cn_layers[level]->mapDim ();
+
+		printf ("Level %d\tDim\t%d\n", level, Nentries);
+
+		Nentries *= Nentries;
+
+		plane_t BPROP (
+			Nentries,
+			Nentries,
+			ComputeBPROP_entry (level + 1)->raw ());
+		BPROP.Copy ();
+		double *dL_bprop_flux = BPROP.raw ();
+
+		double dL_diff;
+		double dL_bp;
+		double ratio;
+
+		printf ("\tBPROP\t\tDiff\t\tRatio\n");
+
+		for (int i = 0; i < Nentries; ++i)
+		{
+			dL_diff = ComputeDifference (level, i, h);
+			dL_bp = dL_bprop_flux[i];
+
+			ratio = (fabs (dL_diff) - fabs (dL_bp)) /
+				(fabs (dL_diff) + fabs (dL_bp));
+
+			printf ("%d\t%f\t%f\t%f\t%s\n",
+				i,
+				dL_bp,
+				dL_diff,
+				ratio,
+				(fabs ((dL_diff * 2) - dL_bp) < 1e-6 ? "Z" : ""));
+		}
+	}
+
+	double ComputeDifference (int level, int entry, double h)
+	{
+		plane_t *Yi = (*cn_layers[level])[0];
+		double *rawp = Yi->raw ();
+		double save_entry;
+		double dL_diff;
+		double L0, L1;
+
+		cn_layers[0]->f (cg_example);
 		
-		for (int i = 1; i < level; ++i)
+		for (int i = 1; i <= level; ++i)
 			cn_layers[i]->f (cn_layers[i - 1]);
 
-		VerifyGradientWork (level, h);
+		save_entry = rawp[entry];
+
+		rawp[entry] += h;
+
+		cg_softmaxp->Cycle ();
+		f_diff (level + 1);
+		L0 = -log (cg_softmaxp->P ((int) cg_answer));
+
+		rawp[entry] -= 2 * h;
+
+		cg_softmaxp->Cycle ();
+		f_diff (level + 1);
+		L1 = -log (cg_softmaxp->P ((int) cg_answer));
+
+		dL_diff = (L0 - L1) / (2 * h);
+
+		rawp[entry] = save_entry; // safer, no odd effects.
+
+		return dL_diff;
+	}
+
+	plane_t *ComputeBPROP_entry (int level)
+	{
+		cg_softmaxp->Cycle ();
+		plane_t *Gp = cn_layers[level]->getModule (0)->fetchGradient ();
+		memset (Gp->raw (), 0, sizeof (double) * Gp->N ());
+
+		TrainExample (*cg_example, cg_answer);
+
+		return cn_layers[level]->getModule (0)->fetchGradient ();
 	}
 };
 
