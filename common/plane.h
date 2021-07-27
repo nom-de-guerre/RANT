@@ -81,6 +81,21 @@ public:
 			delete [] dd_datap;
 	}
 
+	bool Copy (void)
+	{
+		if (dd_releaseMemory || dd_datap == NULL)
+			return false;
+
+		double *home = new double [N ()];
+
+		memcpy (home, dd_datap, N () * sizeof (double));
+
+		dd_datap = home;
+		dd_releaseMemory = true;
+
+		return true;
+	}
+
 	void Reset (void)
 	{
 		memset (dd_datap, 0, sizeof (double) * N ());
