@@ -302,12 +302,17 @@ public:
 
 	bool BackwardTraining (layer_t *lp);
 
-	int TotalOut (void)
+	int Nin (void) const
+	{
+		return ll_Nin;
+	}
+
+	int TotalOut (void) const
 	{
 		return ll_N * ll_maps[0]->MapSize ();;
 	}
 
-	int Signal (void)
+	int Signal (void) const
 	{
 		return ll_maps[ll_N - 1]->Signal ();
 	}
@@ -328,7 +333,7 @@ public:
 			ll_maps[i]->Update ();
 	}
 
-	void DumpMaps (void)
+	void DumpMaps (void) const
 	{
 		printf ("%d\n", ll_N);
 		for (int i = 0; i < ll_N; ++i)
