@@ -134,7 +134,9 @@ public:
 	bool Update (void)
 	{
 		ff_filter->RPROP ();
+#ifndef __SAVE_G_FOR_VERIFICATION
 		ff_G = NULL;
+#endif
 
 		return true;
 	}
@@ -175,10 +177,7 @@ bool filter_t::Convolve (plane_t const * const datap, double const * const pW)
 		{
 			i_idx = start;
 
-			/*
-			 * No bias is passed in, so f_idx starts at 0
-			 *
-			 */
+			// bias set prior to call to Convolve ().
 			for (int f_idx = 0, k = 0; k < ff_width; ++k, i_idx += stride)
 				for (int l = 0; l < ff_width; ++l, ++f_idx, ++i_idx)
 					omap[index] += filterp[f_idx] * imagep[i_idx];
@@ -196,12 +195,11 @@ bool filter_t::Convolve (plane_t const * const datap, double const * const pW)
 
 void filter_t::ComputeGradient (int pidx)
 {
-	// __restrict double const * const filterp = pW; // ff_filter->s_W.raw ();
 	int blockSize = ff_width * ff_width;
 	__restrict double * filterp = 1 + blockSize * pidx + ff_filter->s_W.raw ();
 	__restrict double * i_gradp = ff_G->raw ();
 	__restrict double *gradientp = ff_flux->raw ();
-	int idim = ff_input[0]->rows ();
+	int idim = inputSize ();
 	int stride = idim - ff_width;
 	int mdim = ma_map.rows ();
 
@@ -213,7 +211,7 @@ void filter_t::ComputeGradient (int pidx)
 			for (int f_idx = 0, k = 0; k < ff_width; ++k, i_idx += stride)
 				for (int l = 0; l < ff_width; ++l, ++f_idx, ++i_idx)
 					gradientp[i_idx] += i_gradp[index] * filterp[f_idx];
-			//      ∂L/∂x =          ∑      G (∂L/∂O)  • ∂O/∂x 
+			//      ∂L/∂x =          ∑       G (∂L/∂O) • ∂O/∂x
 		}
 }
 
@@ -244,7 +242,7 @@ bool filter_t::ComputeDerivatives (int pidx)
 			for (int f_idx = 0, k = 0; k < ff_width; ++k, i_idx += stride)
 				for (int l = 0; l < ff_width; ++l, ++f_idx, ++i_idx)
 					dW[f_idx] += dO[index] * input[i_idx];
-			//      ∂L/∂f =   ∑   (∂L/∂O)  • ∂O/∂f 
+			//      ∂L/∂f =   ∑   (∂L/∂O)  • ∂O/∂f
 		}
 
 	return true;
