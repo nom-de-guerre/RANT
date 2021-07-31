@@ -48,6 +48,12 @@ public:
 
 	void f_diff (int level)
 	{
+		if (!level)
+		{
+			cn_layers[0]->f (cg_example);
+			level = 1;
+		}
+
 		for (int i = level; i < cn_N; ++i)
 			cn_layers[i]->f (cn_layers[i - 1]);
 	}
@@ -60,22 +66,16 @@ public:
 		cg_answer = answer;
 		cg_softmaxp = cn_layers[cn_N - 1]->Bottom ();
 
-		int Nentries = cn_layers[level]->mapDim ();
+		plane_t BPROP = *ComputeBPROP (level);
+		int Nentries = BPROP.N ();
+		double *dL_bprop_flux = BPROP.raw ();
 
 		printf ("Level %d\tDim\t%d\n", level, Nentries);
-
-		Nentries *= Nentries;
-
-		plane_t BPROP (
-			Nentries,
-			Nentries,
-			ComputeBPROP_entry (level + 1)->raw ());
-		BPROP.Copy ();
-		double *dL_bprop_flux = BPROP.raw ();
 
 		double dL_diff;
 		double dL_bp;
 		double ratio;
+		double denom;
 
 		printf ("\tBPROP\t\tDiff\t\tRatio\n");
 
@@ -84,27 +84,37 @@ public:
 			dL_diff = ComputeDifference (level, i, h);
 			dL_bp = dL_bprop_flux[i];
 
-			ratio = (fabs (dL_diff) - fabs (dL_bp)) /
-				(fabs (dL_diff) + fabs (dL_bp));
+			denom = fabs (dL_diff) + fabs (dL_bp);
+			ratio = (fabs (dL_diff) - fabs (dL_bp)) / denom;
 
 			printf ("%d\t%f\t%f\t%f\t%s\n",
 				i,
 				dL_bp,
 				dL_diff,
 				ratio,
-				(fabs ((dL_diff * 2) - dL_bp) < 1e-6 ? "Z" : ""));
+				(fabs (ratio) < 1e-4 ? "" : "X"));
 		}
 	}
 
+	/*
+	 * This will compare the gradient computed with BPROP at the
+	 * specified level with differencing.
+	 *
+	 * When using differencing beware of disconinuities (e.g. max pooling).
+	 *
+	 */
 	double ComputeDifference (int level, int entry, double h)
 	{
-		plane_t *Yi = (*cn_layers[level])[0];
+		plane_t *Yi = (level ? 
+			(*cn_layers[level - 1])[0] :
+			cg_example);
 		double *rawp = Yi->raw ();
 		double save_entry;
 		double dL_diff;
 		double L0, L1;
 
-		cn_layers[0]->f (cg_example);
+		if (level)
+			cn_layers[0]->f (cg_example);
 		
 		for (int i = 1; i <= level; ++i)
 			cn_layers[i]->f (cn_layers[i - 1]);
@@ -114,13 +124,13 @@ public:
 		rawp[entry] += h;
 
 		cg_softmaxp->Cycle ();
-		f_diff (level + 1);
+		f_diff (level);
 		L0 = -log (cg_softmaxp->P ((int) cg_answer));
 
 		rawp[entry] -= 2 * h;
 
 		cg_softmaxp->Cycle ();
-		f_diff (level + 1);
+		f_diff (level);
 		L1 = -log (cg_softmaxp->P ((int) cg_answer));
 
 		dL_diff = (L0 - L1) / (2 * h);
@@ -130,11 +140,11 @@ public:
 		return dL_diff;
 	}
 
-	plane_t *ComputeBPROP_entry (int level)
+	plane_t *ComputeBPROP (int level)
 	{
 		cg_softmaxp->Cycle ();
 		plane_t *Gp = cn_layers[level]->getModule (0)->fetchGradient ();
-		memset (Gp->raw (), 0, sizeof (double) * Gp->N ());
+		Gp->Reset ();
 
 		TrainExample (*cg_example, cg_answer);
 

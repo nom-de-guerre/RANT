@@ -25,6 +25,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
+#include <sys/param.h>
 #include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -42,6 +43,9 @@ int main (int argc, char *argv[])
 {
 	RunOptions_t params;
 
+	params.ro_Nsamples = 50;
+	params.ro_maxIterations = 10;
+
 	params.Parse (argc, argv);
 
 	printf ("Seed %ld\n", params.ro_seed);
@@ -55,14 +59,17 @@ int main (int argc, char *argv[])
 	}
 }
 
+char fullpath_data [MAXPATHLEN];
+char fullpath_labels [MAXPATHLEN];
+
 void Run (RunOptions_t &params)
 {
 	int Nlayers = 3;
 	int layers [] = { -1, 50, 10 };
 
-	MNIST_t data (
-		"../../../Data/MNIST/train-images.idx3-ubyte",
-		"../../../Data/MNIST/train-labels.idx1-ubyte");
+	sprintf (fullpath_data, "%s/train-images.idx3-ubyte", params.ro_path);
+	sprintf (fullpath_labels, "%s/train-labels.idx1-ubyte", params.ro_path);
+	MNIST_t data (fullpath_data, fullpath_labels);
 
 	Gradient_t CNN (IMAGEDIM, IMAGEDIM, 3, 10);
 	CNN.setSGDSamples (params.ro_Nsamples);
@@ -71,12 +78,12 @@ void Run (RunOptions_t &params)
 
 #define NMAPS	1
 
-	int dim = CNN.AddConvolutionLayer (NMAPS, 5, IMAGEDIM);
-	dim = CNN.AddMaxPoolLayer (NMAPS, 2, dim);
+	CNN.AddConvolutionLayer (NMAPS, 5, IMAGEDIM);
 	CNN.AddFullLayer (layers, Nlayers);
 
-	for (int i = 0; i < CNN.ActiveLayers (); ++i)
-		printf ("%d %s\t", CNN.LayerRows (i), (i + 1 != 3 ? " ⟶" : ""));
+	int N = CNN.ActiveLayers ();
+	for (int i = 0; i < N; ++i)
+		printf ("%d %s\t", CNN.LayerRows (i), (i + 1 != N ? " ⟶" : ""));
 	printf ("\n");
 
 	CNN.Train (data.mn_datap);
@@ -85,6 +92,9 @@ void Run (RunOptions_t &params)
 	plane_t example (IMAGEDIM, IMAGEDIM, data.mn_datap->entry (index));
 	double answer = data.mn_datap->Answer (index);
 
-	CNN.VerifyGradient (0, 1e-7, example, answer);
+	printf ("Digit %d at %d\n", (int) answer, index);
+
+	CNN.VerifyGradient (0, 1e-7, example, answer); // convolutional
+	CNN.VerifyGradient (1, 1e-7, example, answer); // softmax
 }
 
