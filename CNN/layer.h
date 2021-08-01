@@ -322,6 +322,11 @@ public:
 		return ll_maps[0]->ma_map.rows ();
 	}
 
+	int Nplanes (void) const
+	{
+		return ll_N;
+	}
+
 	plane_t *operator[] (const int index)
 	{
 		return ll_maps[index]->getMap ();

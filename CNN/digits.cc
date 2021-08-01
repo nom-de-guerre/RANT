@@ -83,8 +83,12 @@ void Run (RunOptions_t &params)
 	dim = CNN.AddMaxPoolSlideLayer (NMAPS, 2, dim);
 	CNN.AddFullLayer (layers, Nlayers);
 
-	for (int i = 0; i < CNN.ActiveLayers (); ++i)
-		printf ("%d %s\t", CNN.LayerRows (i), (i + 1 != 3 ? " ⟶" : ""));
+	int Nmodules = CNN.ActiveLayers ();
+	for (int i = 0; i < Nmodules; ++i)
+		printf ("(%d):%d %s\t",
+			CNN.Nplanes (i),
+			CNN.LayerRows (i),
+			(i + 1 != Nmodules ? " ⟶" : ""));
 	printf ("\n");
 
 	CNN.Train (data.mn_datap);

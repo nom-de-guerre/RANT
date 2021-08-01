@@ -287,6 +287,14 @@ public:
 		return cn_layers[level]->mapDim ();
 	}
 
+	int Nplanes (const int level) const
+	{
+		if (level >= cn_N)
+			return -1;
+
+		return cn_layers[level]->Nplanes ();
+	}
+
 	void DumpMaps (const int level)
 	{
 		if (level >= cn_N)
@@ -307,33 +315,9 @@ public:
 
 	double Loss (void)
 	{
-		return cn_layers[cn_N - 1]->Bottom ()-> Loss ();
+		return cn_layers[cn_N - 1]->Bottom ()->Loss ();
 	}
-
-	int *BuildDefaultProgram (int, int);
 };
-
-int *CNN_t::BuildDefaultProgram (int Nin, int N)
-{
-	int *program = new int [Nin * N];
-	memset (program, 0, Nin * N * sizeof (int));
-
-	assert (Nin == 6 && N == 13);
-
-	for (int i = 0, base = 0; i < 6; ++i, base += Nin)
-		for (int j = i; j < (i + 3); ++j)
-			program[base + (j % Nin)] = 1;
-
-	for (int i = 0, base = Nin * 6; i < 6; ++i, base += Nin)
-		for (int j = i; j < (i + 4); ++j)
-			program[base + (j % Nin)] = 1;
-
-	for (int i = 0, base = Nin * 12; i < Nin; ++i)
-		program[base + i] = 1;
-
-	return program;
-}
-
 
 #endif
 
