@@ -39,6 +39,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <stratum.h>
 #include <RPROP.h>
+#include <ADAM.h>
 
 template<typename T> class NNet_t
 {
