@@ -110,7 +110,7 @@ void Run (int *layers)
 	Softmax_t *Np = NULL;
 	double guess;
 
-	Np = new Softmax_t (layers + 1, layers[0]);
+	Np = new Softmax_t (layers + 1, layers[0], RPROP);
 
 	Np->SetHalt (1e-2);
 

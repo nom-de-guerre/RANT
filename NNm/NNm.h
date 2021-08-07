@@ -37,101 +37,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <data.h>
 #include <NeuralM.h>
 
-#define RECTIFIER(X) log (1 + exp (X))
-#define SIGMOID_FN(X) (1 / (1 + exp (-X))) // derivative of rectifier
-
-#ifdef __TANH_ACT_FN
-#define ACTIVATION_FN(X) tanh(X)
-#define DERIVATIVE_FN(Y) (1 - Y*Y)
-#else
-#define ACTIVATION_FN(X) SIGMOID_FN(X)
-#define DERIVATIVE_FN(Y) (Y * (1 - Y))
-#endif
-
-// RPROP+ update parameters
-#define DELTA0				1e-2
-#define DELTA_MIN			1e-8
-#define DELTA_MAX			50
-
-#define ETA_PLUS			1.2
-#define ETA_MINUS			0.5
-
-#ifndef SIGN
-#define SIGN(X) (signbit (X) != 0 ? -1.0 : 1.0)
-#endif
-
-/*
- * Implements a layer when training a neural network.
- *
- */
-struct stratum_t
-{
-	int						s_Nperceptrons;
-	int						s_Nin; 				// # weights, includes bias
-
-	// Matrices - per weight, s_Nperceptrons x s_Nin
-	NeuralM_t				s_W;
-	NeuralM_t				s_Ei;
-	NeuralM_t				s_dL;
-	NeuralM_t				s_deltaW;
-
-	// Vectors - per perceptron (node)
-	NeuralM_t				s_delta;
-	NeuralM_t				s_dot;
-	NeuralM_t				s_response;
-
-	stratum_t (const int N, const int Nin) :
-		s_Nperceptrons (N),
-		s_Nin (Nin + 1),				// account for bias
-		s_W (s_Nperceptrons, s_Nin),
-		s_Ei (s_Nperceptrons, s_Nin),
-		s_dL (s_Nperceptrons, s_Nin),
-		s_deltaW (s_Nperceptrons, s_Nin),
-		s_delta (s_Nperceptrons, 1),
-		s_dot (s_Nperceptrons, 1),
-		s_response (s_Nperceptrons, 1)
-	{
-		s_Ei.zero ();
-		s_dL.zero ();
-		s_deltaW.zero ();
-	}
-
-	~stratum_t (void)
-	{
-	}
-
-	void init (int Nout)
-	{
-		// Glorot, W ~ [-r, r]
-		double r = sqrt (6.0 / (Nout + s_Nin));
-		double *p = s_W.raw();
-		double *deltaW = s_deltaW.raw ();
-		double sample;
-
-		for (int i = s_W.rows () - 1; i >= 0; --i)
-			for (int j = s_W.columns () - 1; j >= 0; --j)
-			{
-				sample = (double) rand () / RAND_MAX;
-				sample *= r;
-				if (rand () % 2)
-					sample = -sample;
-				*p++ = sample;
-
-				*deltaW++ = DELTA0;
-			}
-	}
-
-	int N (void)
-	{
-		return s_Nperceptrons;
-	}
-
-	void bprop (stratum_t &, double *);
-	void RPROP (void);
-	void RPROP (int);
-	double *f (double *, bool = true);
-	double *f (double *, double *);
-};
+#include <stratum.h>
+#include <RPROP.h>
 
 template<typename T> class NNet_t
 {
@@ -163,7 +70,9 @@ public:
 	 * an SLP with a single input, 4 hidden and 1 output perceptron.
 	 *
 	 */
-	NNet_t (const int * const width, const int levels) :
+	NNet_t (const int * const width, 
+			const int levels,
+			stratum_t * (*alloc)(const int, const int)) :
 		n_steps (0),
 		n_Nin (width[0]),
 		n_Nout (width[levels - 1]),
@@ -188,7 +97,7 @@ public:
 		for (int i = 1; i <= n_levels; ++i)
 		{
 			n_width[i - 1] = width[i];
-			n_strata[i - 1] = new stratum_t (width[i], width[i - 1]);
+			n_strata[i - 1] = (*alloc)(width[i], width[i - 1]);
 			n_strata[i - 1]->init (i < n_levels ? width[i + 1] : width[i]);
 		}
 	}
@@ -227,7 +136,7 @@ public:
 	void UpdateWeights (void)
 	{
 		for (int i = 0; i < n_levels; ++i)
-			n_strata[i]->RPROP ();
+			n_strata[i]->Strategy ();
 	}
 
 	bool ExposeGradient (NeuralM_t &);

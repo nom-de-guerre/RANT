@@ -35,8 +35,10 @@ class Regression_t : public NNet_t<Regression_t>
 
 public:
 
-	Regression_t (int *width, int levels) :
-		NNet_t (width, levels)
+	Regression_t (int *width,
+				  int levels,
+				  stratum_t * (*alloc)(const int, const int)) :
+		NNet_t (width, levels, alloc)
 	{
 	}
 

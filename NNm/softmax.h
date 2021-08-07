@@ -42,8 +42,10 @@ class Softmax_t : public NNet_t<Softmax_t>
 
 public:
 
-	Softmax_t (const int * const width, const int levels) :
-		NNet_t (width, levels)
+	Softmax_t (const int * const width,
+			   const int levels,
+			   stratum_t * (*alloc)(const int, const int)) :
+		NNet_t (width, levels, alloc)
 	{
 		c_P = new double [n_Nout];
 		Cycle ();

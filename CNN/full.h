@@ -43,7 +43,7 @@ class full_t : public Softmax_t, public mapAPI_t
 public:
 
 	full_t (const int * const layers, const int Nlayers) :
-		Softmax_t (layers, Nlayers),
+		Softmax_t (layers, Nlayers, RPROP),
 		mapAPI_t (layers[0]),
 		re_Nin (layers[0]),
 		re_input (new double [re_Nin + 1]), // + 1 for training - the answer

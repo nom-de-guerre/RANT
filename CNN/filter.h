@@ -34,7 +34,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 class filter_t : public mapAPI_t
 {
 	int				ff_width;		// only square filters currently supported
-	stratum_t		*ff_filter;
+	RPROPStrategy_t	*ff_filter;
 	plane_t			**ff_input;		// Xi from the ante layer
 	plane_t			*ff_flux;		// gradient we propagate backwards
 	plane_t			const * ff_G;	// gradient from post layer
@@ -48,7 +48,7 @@ public:
 	filter_t (const int fwidth, const int mwidth) :
 		mapAPI_t (mwidth - fwidth + 1, mwidth),
 		ff_width (fwidth),
-		ff_filter (new stratum_t (1, fwidth * fwidth)),
+		ff_filter (new RPROPStrategy_t (1, fwidth * fwidth)),
 		ff_input (new plane_t *),
 		ff_flux (new plane_t (mwidth, mwidth)),
 		ff_G (NULL)
@@ -59,7 +59,7 @@ public:
 	filter_t (const int fwidth, const int mwidth, const int Nin, int *program) :
 		mapAPI_t (mwidth - fwidth + 1, Nin, program),
 		ff_width (fwidth),
-		ff_filter (new stratum_t (1, ma_stripeN * ff_width * ff_width)),
+		ff_filter (new RPROPStrategy_t (1, ma_stripeN * ff_width * ff_width)),
 		ff_input (new plane_t * [Nin]),
 		ff_flux (new plane_t (mwidth, mwidth)),
 		ff_G (NULL)
@@ -133,7 +133,7 @@ public:
 
 	bool Update (void)
 	{
-		ff_filter->RPROP ();
+		ff_filter->Strategy ();
 #ifndef __SAVE_G_FOR_VERIFICATION
 		ff_G = NULL;
 #endif

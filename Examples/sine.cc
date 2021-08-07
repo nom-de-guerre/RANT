@@ -75,7 +75,7 @@ void Run (int *layers)
 	Regression_t *Np = NULL;
 	double guess;
 
-	Np = new Regression_t (layers + 1, layers[0]);
+	Np = new Regression_t (layers + 1, layers[0], RPROP);
 	Np->SetHalt (soln_MSE);
 
 	try {

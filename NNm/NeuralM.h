@@ -185,6 +185,15 @@ struct NeuralM_t
 		memset (sm_data, 0, sm_len * sizeof (double));
 	}
 
+	void setValue (double x)
+	{
+		double *p = raw ();
+		int halt = N ();
+
+		for (int i = 0; i < halt; ++i)
+			*p++ = x;
+	}
+
 	void display (const char * const msgp = NULL) const
 	{
 		if (msgp)
