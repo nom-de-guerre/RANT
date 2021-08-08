@@ -85,7 +85,7 @@ char fullpath_labels [MAXPATHLEN];
 void Run (RunOptions_t &params)
 {
 	int Nlayers = 4;
-	int layers [] = { -1, 200, 100, 10 };
+	int layers [] = { -1, 200, 100, 15 };
 
 	sprintf (fullpath_data, "%s/train-images.idx3-ubyte", params.ro_path);
     sprintf (fullpath_labels, "%s/train-labels.idx1-ubyte", params.ro_path);
@@ -110,8 +110,9 @@ void Run (RunOptions_t &params)
 	dim = CNN.AddMaxPoolLayer (16, 2, dim);
 	CNN.AddFullLayer (layers, Nlayers);
 
-	for (int i = 0; i < 5; ++i)
-		printf ("%d %s\t", CNN.LayerRows (i), (i + 1 != 5 ? " ⟶" : ""));
+	int Nmodules = CNN.ActiveLayers ();
+	for (int i = 0; i < Nmodules; ++i)
+		printf ("%d %s\t", CNN.LayerRows (i), (i + 1 != Nmodules ? " ⟶" : ""));
 	printf ("\n");
 
 	CNN.Train (data.mn_datap);

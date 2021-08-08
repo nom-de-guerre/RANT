@@ -47,16 +47,20 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 struct ADAMStrategy_t : public stratum_t
 {
-	NeuralM_t				r_Mi;
-	NeuralM_t               r_Vi;
+	NeuralM_t				ad_Mi;
+	NeuralM_t               ad_Vi;
+	double					ad_beta1;
+	double 					ad_beta2;
 
 	ADAMStrategy_t (const int N, const int Nin) :
 		stratum_t (N, Nin),
-		r_Mi (s_Nperceptrons, s_Nin),
-		r_Vi (s_Nperceptrons, s_Nin)
+		ad_Mi (s_Nperceptrons, s_Nin),
+		ad_Vi (s_Nperceptrons, s_Nin),
+		ad_beta1 (BETA1),
+		ad_beta2 (BETA2)
 	{
-		r_Mi.zero ();
-		r_Vi.zero ();
+		ad_Mi.zero ();
+		ad_Vi.zero ();
 	}
 
 	~ADAMStrategy_t (void)
@@ -70,7 +74,7 @@ struct ADAMStrategy_t : public stratum_t
 void 
 ADAMStrategy_t::Strategy (void)
 {
-	int Nweights = s_Nperceptrons * s_Nin;
+	int Nweights = ad_Mi.N ();
 
 	for (int index = 0; index < Nweights; ++index)
 		ADAM (index);
@@ -84,13 +88,15 @@ ADAMStrategy_t::ADAM (int index)
 	double v;
 	double update;
 
-	r_Mi.sm_data[index] = BETA1 * r_Mi.sm_data[index] + (1 - BETA1) * g;
-	r_Vi.sm_data[index] = BETA2 * r_Vi.sm_data[index] + (1 - BETA2) * (g * g);
-	m = r_Mi.sm_data[index] / (1 - BETA1);
-	v = r_Vi.sm_data[index] / (1 - BETA2);
+	ad_Mi.sm_data[index] = BETA1 * ad_Mi.sm_data[index] + (1 - BETA1) * g;
+	ad_Vi.sm_data[index] = BETA2 * ad_Vi.sm_data[index] + (1 - BETA2) * (g * g);
+	m = ad_Mi.sm_data[index] / (1 - ad_beta1);
+	v = ad_Vi.sm_data[index] / (1 - ad_beta2);
 	update = m / (sqrt (v) + EPSILON);
 
 	s_W.sm_data[index] -= ALPHA * update;
+	ad_beta1 *= BETA1;
+	ad_beta2 *= BETA2;
 
 	s_dL.sm_data[index] = 0.0;
 }
