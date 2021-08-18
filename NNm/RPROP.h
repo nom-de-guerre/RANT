@@ -71,7 +71,7 @@ struct RPROPStrategy_t : public stratum_t
 	}
 
 	void Strategy (void);
-	void RPROP (int);
+	inline void RPROP (int);
 };
 
 void 

@@ -68,7 +68,7 @@ struct ADAMStrategy_t : public stratum_t
 	}
 
 	void Strategy (void);
-	void ADAM (int);
+	inline void ADAM (int);
 };
 
 void 
