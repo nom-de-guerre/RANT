@@ -85,10 +85,10 @@ void Run (int *layers)
 	} catch (const char *excep) {
 
 		printf ("ERROR: %s\n", excep);
-		exit (-1);
+
 	}
 
-	bool accept_soln = true;
+	int missed = 0;
 	double error;
 	double MSE = 0;
 
@@ -101,7 +101,7 @@ void Run (int *layers)
 		MSE += error;
 
 		if (error > soln_MSE)
-			accept_soln = false;
+			++missed;
 
 		printf ("DJS_RESULT\t%1.8f\t%1.8f\t%1.8f\t%s\n",
 			(*O)[i][0],
@@ -114,7 +114,6 @@ void Run (int *layers)
 	if (MSE > soln_MSE)
 		printf ("Accuracy not achieved: %e\t%e\n", MSE, soln_MSE);
 
-#if 1
 	MSE = 0.0;
 	O = BuildTrainingSet (64);
 	for (int i = 0; i < O->t_N; ++i)
@@ -129,13 +128,9 @@ void Run (int *layers)
 	}
 
 	printf ("Test MSE: %e\n", MSE / O->t_N);
-#endif
 
-	if (accept_soln)
-		printf (" *** Solution ACCEPTED.\n");
-	else
-		printf (" *** Solution REJECTED.\n");
-
+	if (missed)
+		printf ("Missed: %d\n", missed);
 }
 
 DataSet_t *BuildTrainingSet (int N)
