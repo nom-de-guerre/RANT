@@ -1,16 +1,31 @@
 
 ANT: Another Neural Tool
-
+<p>
 This is a minimal Neural Network library, written in C++, with the object of being easily understood.  It is a demonstration of implementation, consciously eschewing opacity in favour of plain and comprehensible code.  There are also examples of how to verify an implementation by reconciling gradients when training; this is an oft ignored aspect of demonstrating ANNs.
+</p>
 
+<p>
 ANT is written in C++ and bears CPU cachelines in mind.  As such it is better suited for embedded systems than GPUs.
+</p>
 
+<p>
+ANT is written in C++ and bears CPU cachelines in mind.  As such it is better suited for embedded systems than GPUs.
 There are five directories.
+</p>
 
+<p>
+ANT is written in C++ and bears CPU cachelines in mind.  As such it is better suited for embedded systems than GPUs.
 NNm: This is the core of the system.  This includes implementations of ADAM and RPROP+ trainers.  There are also two loss functions.  For regression there is mean squared error (MSE).  For classification there is an implementation of Softmax.
+</p>
 
+<p>
+ANT is written in C++ and bears CPU cachelines in mind.  As such it is better suited for embedded systems than GPUs.
 Examples: There are two trivial examples.  The first is a sine regression using RPROP+.  The second is an example of classification.  The command line for both accepts the network architecture; the input is implicit.  Try 4 3 1 for sine and 7 4 4 for classify.  The number of inputs are implicit as they are determined by the program.  There is also an example of gradient verification.
+</p>
 
+<p>
+ANT is written in C++ and bears CPU cachelines in mind.  As such it is better suited for embedded systems than GPUs.
 CNN: This directory contains a primitive convolutional network.  It includes a two examples that train with the MNIST data set.  They are digits and LeNet5.  The latter is a crude approximation.  In particular it uses Softmax, not radial functions, and C5 is a NN, not a convolutional layer.
+</p>
 
 
