@@ -77,8 +77,8 @@ struct DataSet_t
 	DataSet_t *Subset (int N, int indices [])
 	{
 		DataSet_t *p = new DataSet_t (N, t_Nin, t_Nout);
-		size_t Nentries = t_Nin + t_Nout;
-		size_t len = sizeof (double) * Nentries;
+		size_t entrySize = t_Nin + t_Nout;
+		size_t len = sizeof (double) * entrySize;
 		TrainingRow_t from, to;
 
 		to = p->Raw ();
@@ -87,13 +87,13 @@ struct DataSet_t
 		{
 			from = entry (indices[i]);
 			memcpy (to, from, len);
-			to += Nentries;
+			to += entrySize;
 		}
 
 		return p;
 	}
 
-	double * Raw (void)
+	double *Raw (void)
 	{
 		return t_data;
 	}

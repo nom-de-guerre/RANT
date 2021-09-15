@@ -84,23 +84,34 @@ NNet_t<T>::Compute (double *x)
 	return static_cast<T *>(this)->f (ripple);
 }
 
-template<typename T> bool 
-NNet_t<T>::Train (const DataSet_t * const training, int maxIterations)
+template<typename T> bool
+NNet_t<T>::Train (const DataSet_t * const training)
 {
 	bool rc;
 
-	rc = TrainWork (training, maxIterations);
+	rc = TrainWork (training);
 
 	return rc;
 }
 
 template<typename T> bool 
-NNet_t<T>::TrainWork (const DataSet_t * const training, int maxIterations)
+NNet_t<T>::Train (const DataSet_t * const training, int maxIterations)
+{
+	bool rc;
+
+	n_maxIterations = maxIterations;
+	rc = TrainWork (training);
+
+	return rc;
+}
+
+template<typename T> bool 
+NNet_t<T>::TrainWork (const DataSet_t * const training)
 {
 	bool solved = false;
 
-	for (n_steps = 0; 
-		(n_steps < maxIterations) && !solved; 
+	for (n_steps = 0;
+		(n_steps < n_maxIterations) && !solved;
 		++n_steps)
 	{
 		try {
@@ -111,14 +122,14 @@ NNet_t<T>::TrainWork (const DataSet_t * const training, int maxIterations)
 
 			printf ("%s\tstill %d steps to try.\n",
 				error,
-				maxIterations - n_steps);
+				n_maxIterations - n_steps);
 		}
 
 		if ((n_steps % 10000) == 0)
 			printf ("Training Loss: %e\n", n_error);
 	}
 
-	if (n_steps >= maxIterations)
+	if (n_steps >= n_maxIterations)
 		throw ("Exceeded Iterations");
 
 	printf ("Finished training: %d\t%e\n", 

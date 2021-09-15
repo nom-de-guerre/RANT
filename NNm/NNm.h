@@ -56,10 +56,11 @@ protected:
 
 	int					n_Nweights;
 
-	double				n_halt;			// solution accuracy (sumsq, not derivs)
-	double				n_error;
+	double				n_halt;			// target loss
+	double				n_error;		// current loss
+	int					n_maxIterations;
 
-	bool TrainWork (const DataSet_t * const, int);
+	bool TrainWork (const DataSet_t * const);
 	bool Step(const DataSet_t * const training);
 	bool Halt (DataSet_t const * const);
 	
@@ -79,7 +80,8 @@ public:
 		n_Nout (width[levels - 1]),
 		n_levels (levels - 1), // no state for input
 		n_halt (1e-5),
-		n_error (nan (NULL))
+		n_error (nan (NULL)),
+		n_maxIterations (5000)
 	{
 		n_Nweights = 0;
 
@@ -111,11 +113,17 @@ public:
 		delete [] n_strata;
 	}
 
+	void SetMaxIterations (int maxIterations)
+	{
+		n_maxIterations = maxIterations;
+	}
+
 	void SetHalt (double mse)
 	{
 		n_halt = mse;
 	}
 
+	bool Train (const DataSet_t * const);
 	bool Train (const DataSet_t * const, int); // used only when stand-alone
 
 	int Steps (void) const
