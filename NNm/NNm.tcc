@@ -132,10 +132,6 @@ NNet_t<T>::TrainWork (const DataSet_t * const training)
 	if (n_steps >= n_maxIterations)
 		throw ("Exceeded Iterations");
 
-	printf ("Finished training: %d\t%e\n", 
-		n_steps, 
-		n_error);
-
 	return true;
 }
 

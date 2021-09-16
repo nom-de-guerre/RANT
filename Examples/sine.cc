@@ -88,6 +88,8 @@ void Run (int *layers)
 
 	}
 
+	printf ("Finished Training: %d\t%e\n", Np->Steps (), Np->Loss ());
+
 	int missed = 0;
 	double error;
 	double MSE = 0;

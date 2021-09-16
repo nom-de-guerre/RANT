@@ -131,6 +131,11 @@ public:
 		return n_steps;
 	}
 
+	double Loss (void)
+	{
+		return n_error;
+	}
+
 	/*
 	 * The next 4 call the specialization.  They are public as
 	 * CNN components need to access them to integrate training.
