@@ -144,6 +144,8 @@ stratum_t::bprop (stratum_t &next, double *xi)
 	 * -- = 𝛿 --
 	 * ∂w     ∂w
 	 *
+	 * W error = 𝛿 · transpose (x), but we do it here instead of NeuralM.
+	 *
 	 */
 	for (int i = 0; i < s_Nperceptrons; ++i)
 	{
