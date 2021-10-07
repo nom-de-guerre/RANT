@@ -47,10 +47,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define DERIVATIVE_FN(Y) (Y * (1 - Y))
 #endif
 
-#ifndef SIGN
-#define SIGN(X) (signbit (X) != 0 ? -1.0 : 1.0)
-#endif
-
 /*
  * Implements a layer when training a neural network.
  *
