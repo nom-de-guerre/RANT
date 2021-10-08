@@ -106,7 +106,7 @@ struct stratum_t
 		return s_Nperceptrons;
 	}
 
-	void bprop (stratum_t &, double *);
+	void bprop (stratum_t &, double *, bool = true);
 	double *f (double *, bool = true);
 	double *f (double *, double *);
 
@@ -114,7 +114,7 @@ struct stratum_t
 };
 
 void 
-stratum_t::bprop (stratum_t &next, double *xi)
+stratum_t::bprop (stratum_t &next, double *xi, bool activation)
 {
 	/*
 	 * Compute per node total derivative for the layer.
@@ -127,7 +127,7 @@ stratum_t::bprop (stratum_t &next, double *xi)
 	s_delta.TransposeMatrixVectorMult (next.s_W, next.s_delta.raw ());
 
 	// Compute per node delta
-	for (int i = 0; i < s_Nperceptrons; ++i)
+	for (int i = (activation ? 0 : s_Nperceptrons); i < s_Nperceptrons; ++i)
 		s_delta.sm_data[i] *= DERIVATIVE_FN (s_response.sm_data[i]);
 
 	// Apply the delta for per weight derivatives
