@@ -25,8 +25,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef __NN_REGRESSION__H__
-#define __NN_REGRESSION__H__
+#ifndef __NN_SOFTMAX__H__
+#define __NN_SOFTMAX__H__
 
 #include <math.h>
 
