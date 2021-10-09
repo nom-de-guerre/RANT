@@ -84,6 +84,11 @@ NNet_t<T>::Compute (double *x)
 	return static_cast<T *>(this)->f (ripple);
 }
 
+/*
+ * ------------- The Net that invokes the specialization ---------------
+ *
+ */
+
 template<typename T> bool
 NNet_t<T>::Train (const DataSet_t * const training)
 {
