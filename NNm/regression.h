@@ -42,26 +42,26 @@ public:
 	{
 	}
 
-	double bprop (const TrainingRow_t &);
-	double f (double *);
-	double Error (DataSet_t const *);
+	double _API_bprop (const TrainingRow_t &);
+	double _API_f (double *);
+	double _API_Error (DataSet_t const *);
 
-	void Cycle (void) 
+	void _API_Cycle (void) 
 	{
 		n_error = 0;
 	}
 
-	bool Test (DataSet_t const * const);
+	bool _API_Test (DataSet_t const * const);
 };
 
-double Regression_t::f (double *x)
+double Regression_t::_API_f (double *x)
 {
 	x = n_strata[n_levels - 1]->f (x);
 
 	return x[0];
 }
 
-double Regression_t::bprop (const TrainingRow_t &x)
+double Regression_t::_API_bprop (const TrainingRow_t &x)
 {
 	double error = 0;
 
@@ -101,12 +101,12 @@ double Regression_t::bprop (const TrainingRow_t &x)
 	return y;
 }
 
-double Regression_t::Error (DataSet_t const * tp)
+double Regression_t::_API_Error (DataSet_t const * tp)
 {
 	return n_error / tp->t_N;
 }
 
-bool Regression_t::Test (DataSet_t const * const tp)
+bool Regression_t::_API_Test (DataSet_t const * const tp)
 {
 	n_error /= tp->t_N;
 

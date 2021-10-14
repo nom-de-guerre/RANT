@@ -63,8 +63,8 @@ struct stratum_t
 
 	// Vectors - per perceptron (node)
 	NeuralM_t				s_delta;
-	NeuralM_t				s_dot;
-	NeuralM_t				s_response;
+	NeuralM_t				s_dot;			// Wx
+	NeuralM_t				s_response;		// activation (s_dot = Wx) = y
 
 	stratum_t (const int N, const int Nin) :
 		s_Nperceptrons (N),

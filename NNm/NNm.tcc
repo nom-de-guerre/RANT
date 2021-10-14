@@ -33,21 +33,21 @@ template<typename T> void
 NNet_t<T>::Start (void)
 {
 	// Starting a new batch
-	return static_cast<T *> (this)->Cycle ();
+	return static_cast<T *> (this)->_API_Cycle ();
 }
 
 template<typename T> bool
 NNet_t<T>::Halt (DataSet_t const * const tp)
 {
 	// Finished a batch, can we stop?
-	return static_cast<T *> (this)->Test (tp);
+	return static_cast<T *> (this)->_API_Test (tp);
 }
 
 template<typename T> double
 NNet_t<T>::Loss (DataSet_t const *tp)
 {
 	// The current value of the loss function
-	return static_cast<T *> (this)->Error (tp);
+	return static_cast<T *> (this)->_API_Error (tp);
 }
 
 template<typename T> double 
@@ -57,7 +57,7 @@ NNet_t<T>::ComputeDerivative (const TrainingRow_t x)
 	 * Initiate the recurrence by triggering the loss function.
 	 *
 	 */
-	double error = static_cast<T *>(this)->bprop (x);
+	double error = static_cast<T *>(this)->_API_bprop (x);
 
 	for (int level = n_levels - 2; level >= 0; --level)
 		n_strata[level]->bprop (
@@ -81,7 +81,7 @@ NNet_t<T>::Compute (double *x)
 	 * Compute the final result with the specialization
 	 *
 	 */
-	return static_cast<T *>(this)->f (ripple);
+	return static_cast<T *>(this)->_API_f (ripple);
 }
 
 /*

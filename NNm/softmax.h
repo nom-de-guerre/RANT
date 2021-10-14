@@ -48,7 +48,7 @@ public:
 		NNet_t (width, levels, alloc)
 	{
 		c_P = new double [n_Nout];
-		Cycle ();
+		_API_Cycle ();
 	}
 
 	~Softmax_t (void)
@@ -56,11 +56,11 @@ public:
 		delete [] c_P;
 	}
 
-	double bprop (const TrainingRow_t &);
-	double f (double *);
-	double Error (DataSet_t const *);
-	void Cycle (void);
-	bool Test (DataSet_t const * const);
+	double _API_bprop (const TrainingRow_t &);
+	double _API_f (double *);
+	double _API_Error (DataSet_t const *);
+	void _API_Cycle (void);
+	bool _API_Test (DataSet_t const * const);
 
 	int ComputeSoftmax (void);
 
@@ -81,7 +81,7 @@ public:
 	}
 };
 
-double Softmax_t::f (double *x)
+double Softmax_t::_API_f (double *x)
 {
 	x = n_strata[n_levels - 1]->f (x, false);
 
@@ -131,7 +131,7 @@ int Softmax_t::ComputeSoftmax ()
 	return factor;
 }
 
-double Softmax_t::bprop (const TrainingRow_t &x)
+double Softmax_t::_API_bprop (const TrainingRow_t &x)
 {
 	double loss;
 	int answer = static_cast<int> (x[n_Nin]);
@@ -189,21 +189,21 @@ double Softmax_t::bprop (const TrainingRow_t &x)
 	return loss;
 }
 
-double Softmax_t::Error (DataSet_t const * tp)
+double Softmax_t::_API_Error (DataSet_t const * tp)
 {
 	return n_error / c_seen;
 }
 
-void Softmax_t::Cycle (void)
+void Softmax_t::_API_Cycle (void)
 {
 	n_error = 0;
 	c_Correct = 0;
 	c_seen = 0;
 }
 
-bool Softmax_t::Test (DataSet_t const * const tp)
+bool Softmax_t::_API_Test (DataSet_t const * const tp)
 {
-	double Loss = Error (NULL);
+	double Loss = _API_Error (NULL);
 
 	return (Loss <= n_halt ? true : false);
 }
