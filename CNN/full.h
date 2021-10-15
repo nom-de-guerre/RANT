@@ -30,10 +30,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <string.h>
 
-#include <softmax.h>
+#include <softmaxNNm.h>
 #include <layer.h>
 
-class full_t : public Softmax_t, public mapAPI_t
+class full_t : public SoftmaxNNm_t, public mapAPI_t
 {
 	int				re_Nin;
 
@@ -43,7 +43,7 @@ class full_t : public Softmax_t, public mapAPI_t
 public:
 
 	full_t (const int * const layers, const int Nlayers) :
-		Softmax_t (layers, Nlayers, RPROP),
+		SoftmaxNNm_t (layers, Nlayers, RPROP),
 		mapAPI_t (layers[0]),
 		re_Nin (layers[0]),
 		re_input (new double [re_Nin + 1]), // + 1 for training - the answer

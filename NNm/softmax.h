@@ -32,135 +32,87 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <NNm.h>
 
-#define NATURAL_NUMBER		2.718281828459045
-
-class Softmax_t : public NNet_t<Softmax_t>
+class Softmax_t
 {
-	double			*c_P;
-	int				c_Correct;
-	int				c_seen;
+	int				so_Nin;
+	int				so_Nclasses;
+	double			*so_P;
 
 public:
 
-	Softmax_t (const int * const width,
-			   const int levels,
-			   stratum_t * (*alloc)(const int, const int)) :
-		NNet_t (width, levels, alloc)
+	Softmax_t (const int Nin, const int Nclasses) :
+		so_Nin (Nin),		// +1 for the bias
+		so_Nclasses (Nclasses),
+		so_P (new double [so_Nclasses])
 	{
-		c_P = new double [n_Nout];
-		_API_Cycle ();
 	}
 
 	~Softmax_t (void)
 	{
-		delete [] c_P;
+		delete [] so_P;
 	}
 
-	double _API_bprop (const TrainingRow_t &);
-	double _API_f (double *);
-	double _API_Error (DataSet_t const *);
-	void _API_Cycle (void);
-	bool _API_Test (DataSet_t const * const);
-
-	int ComputeSoftmax (void);
-
-	double Accuracy (void) const
-	{
-		double right = c_Correct;
-		return right / (double) c_seen;
-	}
-
-	double Loss (void) const
-	{
-		return n_error / (double) c_seen;
-	}
+	int ComputeSoftmax (double const * const);
+	void bprop (const int, double *, double *, double *);
 
 	double P (int x)
 	{
-		return c_P[x];
+		return so_P[x];
 	}
 };
 
-double Softmax_t::_API_f (double *x)
-{
-	x = n_strata[n_levels - 1]->f (x, false);
-
-	for (int i = 0; i < n_Nout; ++i)
-		c_P[i] = x[i];
-
-	return ComputeSoftmax ();
-}
-
 /*
- * Convert network outputs, c_P[], to softmax "probabilities"
+ * Convert network outputs, so_P[], to softmax "probabilities"
  *
  */
-int Softmax_t::ComputeSoftmax ()
+int Softmax_t::ComputeSoftmax (double const * const Xi)
 {
 	double denom = 0;
 	double max = -DBL_MAX;
 	int factor = -1;
 
-	for (int i = 0; i < n_Nout; ++i)
+	for (int i = 0; i < so_Nclasses; ++i)
 	{
-		if (c_P[i] > max)
-			max = c_P[i];
+		so_P[i] = Xi[i];
+		if (so_P[i] > max)
+			max = so_P[i];
 	}
 
-	for (int i = 0; i < n_Nout; ++i)
+	for (int i = 0; i < so_Nclasses; ++i)
 	{
-		c_P[i] = exp (c_P[i] - max);
-		denom += c_P[i];
+		so_P[i] = exp (so_P[i] - max);
+		denom += so_P[i];
 	}
 
 	max = -DBL_MAX;
-	for (int i = 0; i < n_Nout; ++i)
+	for (int i = 0; i < so_Nclasses; ++i)
 	{
-		c_P[i] /= denom;
+		so_P[i] /= denom;
 
-		if (c_P[i] > max)
+		if (so_P[i] > max)
 		{
-			max = c_P[i];
+			max = so_P[i];
 			factor = i;
 		}
 	}
 
 	assert (max >= 0.0 && max <= 1.0);
-	assert (factor > -1 && factor < n_Nout);
+	assert (factor > -1 && factor < so_Nclasses);
 
 	return factor;
 }
 
-double Softmax_t::_API_bprop (const TrainingRow_t &x)
+void Softmax_t::bprop (
+	const int answer,
+	double * deltap,
+	double * pdL,
+	double * Xi)
 {
-	double loss;
-	int answer = static_cast<int> (x[n_Nin]);
-
-	int result = Compute (x); // forces computation of Softmax Pi
-	if (result == answer)
-		++c_Correct;
-	++c_seen;
-
-	loss = -log (c_P[answer]);
-	if (isnan (loss) || isinf (loss))
-		n_error += 1000;
-	else
-		n_error += loss;
-
-	double y; 			// y = ak below
 	double dL;
 
-	stratum_t *p = n_strata[n_levels - 1];
-	stratum_t *ante = n_strata[n_levels - 2];
-	double *pdL = p->s_dL.raw (); // Done here as it is row order
-
-	assert (n_Nout == p->s_Nperceptrons);
-
-	for (int output_i = 0; output_i < n_Nout; ++output_i)
+	for (int output_i = 0; output_i < so_Nclasses; ++output_i)
 	{
-		y = p->s_response.sm_data[output_i];
-
-		dL = c_P[output_i];
+		dL = so_P[output_i];
 		if (output_i == answer)
 			dL -= 1;
 
@@ -171,7 +123,7 @@ double Softmax_t::_API_bprop (const TrainingRow_t &x)
 		 *
 		 */
 
-		p->s_delta.sm_data[output_i] = dL;
+		deltap[output_i] = dL;
 
 		/*
 		 * initiate the recurrence
@@ -182,30 +134,9 @@ double Softmax_t::_API_bprop (const TrainingRow_t &x)
 		 *
 		 */
 		*pdL++ += dL;						// the bias
-		for (int i = 1; i < p->s_Nin; ++i)
-			*pdL++ += dL * ante->s_response.sm_data[i - 1];
+		for (int i = 1; i < so_Nin; ++i)
+			*pdL++ += dL * Xi[i - 1];
 	}
-
-	return loss;
-}
-
-double Softmax_t::_API_Error (DataSet_t const * tp)
-{
-	return n_error / c_seen;
-}
-
-void Softmax_t::_API_Cycle (void)
-{
-	n_error = 0;
-	c_Correct = 0;
-	c_seen = 0;
-}
-
-bool Softmax_t::_API_Test (DataSet_t const * const tp)
-{
-	double Loss = _API_Error (NULL);
-
-	return (Loss <= n_halt ? true : false);
 }
 
 #endif // header inclusion

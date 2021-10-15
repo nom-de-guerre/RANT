@@ -30,7 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdlib.h>
 #include <stdint.h>
 
-#include <softmax.h>
+#include <softmaxNNm.h>
 
 #define N_POINTS	30
 
@@ -107,10 +107,10 @@ int main (int argc, char *argv[])
 void Run (int *layers)
 {
 	DataSet_t *O = BuildTrainingSet ();
-	Softmax_t *Np = NULL;
+	SoftmaxNNm_t *Np = NULL;
 	double guess;
 
-	Np = new Softmax_t (layers + 1, layers[0], RPROP);
+	Np = new SoftmaxNNm_t (layers + 1, layers[0], RPROP);
 
 	Np->SetHalt (1e-2);
 
