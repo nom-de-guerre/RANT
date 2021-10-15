@@ -136,11 +136,12 @@ stratum_t::bprop (stratum_t &next, double *xi, bool activation)
 	double delta;
 
 	/*
-	 * ∂L     ∂∑
-	 * -- = 𝛿 --
-	 * ∂w     ∂w
+	 * ∂L       ∂∑
+	 * -- = 𝛿 · -- = 𝛿 · Xi
+	 * ∂w       ∂w
 	 *
-	 * W error = 𝛿 · transpose (x), but we do it here instead of NeuralM.
+	 * ∆W = 𝛿 · transpose (Xi), this is an outer product, but we do 
+	 * it here instead of NeuralM.
 	 *
 	 */
 	for (int i = 0; i < s_Nperceptrons; ++i)
