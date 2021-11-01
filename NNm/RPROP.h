@@ -34,7 +34,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <math.h>
 #include <float.h>
 
-#include <NeuralM.h>
+#include <stratum.h>
 
 // RPROP+ update parameters
 #define DELTA0				1e-2
@@ -55,7 +55,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 struct RPROPStrategy_t : public stratum_t
 {
 	NeuralM_t				r_Ei;
-	NeuralM_t               r_deltaW;
+	NeuralM_t				r_deltaW;
 
 	RPROPStrategy_t (const int N, const int Nin) :
 		stratum_t (N, Nin),

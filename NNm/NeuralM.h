@@ -95,17 +95,36 @@ struct NeuralM_t
 			delete [] sm_data;
 	}
 
+	void newVector (int N)
+	{
+		assert (sm_data == NULL);
+
+		sm_releaseMemory = true;
+		sm_rows = N;
+		sm_columns = 1;
+		sm_len = N;
+		sm_data = new double [N];
+	}
+
 	bool Copy (void)
 	{
 		if (sm_releaseMemory || sm_data == NULL)
 			return false;
 
 		double *datap = new double [N ()];
-		memcpy (datap, sm_data, sizeof (double) * N ());
+		memcpy (datap, sm_data, sm_len);
 		sm_data = datap;
 		sm_releaseMemory = true;
 
 		return true;
+	}
+
+	void Copy (NeuralM_t &Z)
+	{
+		assert (sm_releaseMemory);
+		assert (sm_len == Z.sm_len);
+
+		memcpy (sm_data, Z.sm_data, sm_len);
 	}
 
 	double *raw (void)
@@ -131,6 +150,12 @@ struct NeuralM_t
 	int stride (void) const
 	{
 		return columns ();
+	}
+
+	// Introduced for vectors
+	inline double &operator[] (const int row)
+	{
+		return sm_data[row];
 	}
 
 	double &operator() (const int row, const int column)

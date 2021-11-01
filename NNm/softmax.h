@@ -73,14 +73,13 @@ int Softmax_t::ComputeSoftmax (double const * const Xi)
 
 	for (int i = 0; i < so_Nclasses; ++i)
 	{
-		so_P[i] = Xi[i];
-		if (so_P[i] > max)
-			max = so_P[i];
+		if (Xi[i] > max)
+			max = Xi[i];
 	}
 
 	for (int i = 0; i < so_Nclasses; ++i)
 	{
-		so_P[i] = exp (so_P[i] - max);
+		so_P[i] = exp (Xi[i] - max);
 		denom += so_P[i];
 	}
 

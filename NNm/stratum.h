@@ -54,12 +54,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 struct stratum_t
 {
 	int						s_Nperceptrons;
-	int						s_Nin; 				// # weights, includes bias
+	int						s_Nin; 			// # weights, includes bias
 
 	// Matrices - per weight, s_Nperceptrons x s_Nin
 	NeuralM_t				s_W;
 	NeuralM_t				s_dL;
-	NeuralM_t				s_deltaW;
 
 	// Vectors - per perceptron (node)
 	NeuralM_t				s_delta;
@@ -68,10 +67,9 @@ struct stratum_t
 
 	stratum_t (const int N, const int Nin) :
 		s_Nperceptrons (N),
-		s_Nin (Nin + 1),				// account for bias
+		s_Nin (Nin + 1),					// account for bias
 		s_W (s_Nperceptrons, s_Nin),
 		s_dL (s_Nperceptrons, s_Nin),
-		s_deltaW (s_Nperceptrons, s_Nin),
 		s_delta (s_Nperceptrons, 1),
 		s_dot (s_Nperceptrons, 1),
 		s_response (s_Nperceptrons, 1)
@@ -126,7 +124,7 @@ stratum_t::bprop (stratum_t &next, double *xi, bool activation)
 	 */
 	s_delta.TransposeMatrixVectorMult (next.s_W, next.s_delta.raw ());
 
-	// Compute per node delta
+	// Compute per node delta; skip if activation is the identity
 	for (int i = (activation ? 0 : s_Nperceptrons); i < s_Nperceptrons; ++i)
 		s_delta.sm_data[i] *= DERIVATIVE_FN (s_response.sm_data[i]);
 
