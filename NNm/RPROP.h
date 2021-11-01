@@ -81,8 +81,6 @@ RPROPStrategy_t::Strategy (void)
 
 	for (int index = 0; index < Nweights; ++index)
 		RPROP (index);
-
-	s_dL.zero ();
 }
 
 void 
