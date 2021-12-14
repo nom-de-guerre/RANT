@@ -6,6 +6,9 @@ CFLAGS=-Wall -I. $(OPTIONS) $(DEBUG) $(INCLUDES)
 HDEPS = $(wildcard *.h) $(wildcard ../common/*h) $(wildcard ../NNm/*)
 DEPS = Makefile $(HDEPS)
 
+iris: iris.cc $(DEPS) $(HDEPS)
+	$(CC) -o $@ $(CFLAGS) iris.cc
+
 classify: classify.cc $(DEPS) $(HDEPS)
 	$(CC) -o $@ $(CFLAGS) classify.cc
 
@@ -15,8 +18,10 @@ sine: sine.cc $(DEPS) $(HDEPS)
 sine_verify: sine_verify.cc $(DEPS) $(HDEPS)
 	$(CC) -o $@ $(CFLAGS) sine_verify.cc
 
-all: sine classify sine_verify
+all: sine classify iris sine_verify
 
 clean:
 	rm classify
 	rm sine
+	rm iris
+	rm sine_verify
