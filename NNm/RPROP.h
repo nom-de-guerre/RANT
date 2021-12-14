@@ -52,55 +52,57 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * RPROP strategy implementation.
  *
  */
-struct RPROPStrategy_t : public stratum_t
+
+struct RPROP_t
 {
 	NeuralM_t				r_Ei;
 	NeuralM_t				r_deltaW;
+	double					*r_W;
+	NeuralM_t				*r_dL;
 
-	RPROPStrategy_t (const int N, const int Nin) :
-		stratum_t (N, Nin),
-		r_Ei (s_Nperceptrons, s_Nin),
-		r_deltaW (s_Nperceptrons, s_Nin)
+	RPROP_t (const int N, const int Nin, double *W, NeuralM_t *dL) :
+		r_Ei (N, Nin),
+		r_deltaW (N, Nin),
+		r_W (W),
+		r_dL (dL)
 	{
 		r_Ei.zero ();
 		r_deltaW.setValue (DELTA0);
 	}
 
-	~RPROPStrategy_t (void)
+	~RPROP_t (void)
 	{
 	}
 
-	void Strategy (void);
+	void Strategy (void)
+	{
+		int Nweights = r_Ei.N ();
+
+		for (int index = 0; index < Nweights; ++index)
+			RPROP (index);
+	}
+
 	inline void RPROP (int);
 };
 
 void 
-RPROPStrategy_t::Strategy (void)
-{
-	int Nweights = s_Nperceptrons * s_Nin;
-
-	for (int index = 0; index < Nweights; ++index)
-		RPROP (index);
-}
-
-void 
-RPROPStrategy_t::RPROP (int index)
+RPROP_t::RPROP (int index)
 {
 	double delta;
 	double backtrack;
 
-	if (r_Ei.sm_data[index] == 0.0 || s_dL.sm_data[index] == 0.0)
+	if (r_Ei.sm_data[index] == 0.0 || r_dL->sm_data[index] == 0.0)
 	{
-		delta = -SIGN (s_dL.sm_data[index]) * r_deltaW.sm_data[index];
+		delta = -SIGN (r_dL->sm_data[index]) * r_deltaW.sm_data[index];
 
 		if (isnan (delta))
 			throw ("Degenerate weight update");
 
-		s_W.sm_data[index] += delta;
+		r_W[index] += delta;
 
-		r_Ei.sm_data[index] = s_dL.sm_data[index];
+		r_Ei.sm_data[index] = r_dL->sm_data[index];
 
-	} else if (signbit (s_dL.sm_data[index]) == signbit (r_Ei.sm_data[index])) {
+	} else if (signbit (r_dL->sm_data[index]) == signbit (r_Ei.sm_data[index])) {
 
 		// (1)
 		delta = r_deltaW.sm_data[index] * ETA_PLUS;
@@ -110,14 +112,14 @@ RPROPStrategy_t::RPROP (int index)
 		r_deltaW.sm_data[index] = delta;
 
 		// (2)
-		delta *= -(SIGN (s_dL.sm_data[index]));
+		delta *= -(SIGN (r_dL->sm_data[index]));
 		if (isnan (delta))
 			throw ("Degenerate weight update");
 
 		// (3)
-		s_W.sm_data[index] += delta;
+		r_W[index] += delta;
 
-		r_Ei.sm_data[index] = s_dL.sm_data[index];
+		r_Ei.sm_data[index] = r_dL->sm_data[index];
 
 	} else {
 
@@ -134,15 +136,36 @@ RPROPStrategy_t::RPROP (int index)
 		r_deltaW.sm_data[index] = delta;
 
 		// (2)
-		s_W.sm_data[index] += backtrack;
+		r_W[index] += backtrack;
 
 		// (3)
 		r_Ei.sm_data[index] = 0.0;
 	}
 
-	s_dL.sm_data[index] = 0.0;
+	r_dL->sm_data[index] = 0.0;
 
 	assert (r_deltaW.sm_data[index] > 0);
+}
+
+struct RPROPStrategy_t : public stratum_t, private RPROP_t
+{
+	RPROPStrategy_t (const int N, const int Nin) :
+		stratum_t (N, Nin),
+		RPROP_t (N, Nin + 1, s_W.raw (), &s_dL)
+	{
+	}
+
+	~RPROPStrategy_t (void)
+	{
+	}
+
+	void Strategy (void);
+};
+
+void 
+RPROPStrategy_t::Strategy (void)
+{
+	RPROP_t::Strategy ();
 }
 
 stratum_t * AllocateRPROP (const int N, const int Nin);

@@ -1,6 +1,6 @@
 NN_INCLUDES = -I../NNm -I../common
 OPTIONS= $(OUTSIDE)
-CC=g++
+CC=g++ -std=c++17
 DEBUG=-O3 
 #DEBUG=-O0 -g
 CFLAGS=-Wall -I. $(NN_INCLUDES) $(OPTIONS) $(DEBUG)

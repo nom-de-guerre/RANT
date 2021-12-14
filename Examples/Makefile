@@ -1,5 +1,5 @@
 OPTIONS= $(OUTSIDE)
-CC=g++
+CC=g++ -std=c++17
 DEBUG=-O3 
 INCLUDES=-I../NNm -I../common
 CFLAGS=-Wall -I. $(OPTIONS) $(DEBUG) $(INCLUDES)
@@ -12,7 +12,10 @@ classify: classify.cc $(DEPS) $(HDEPS)
 sine: sine.cc $(DEPS) $(HDEPS)
 	$(CC) -o $@ $(CFLAGS) sine.cc
 
-all: sine classify
+sine_verify: sine_verify.cc $(DEPS) $(HDEPS)
+	$(CC) -o $@ $(CFLAGS) sine_verify.cc
+
+all: sine classify sine_verify
 
 clean:
 	rm classify

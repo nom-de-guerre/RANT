@@ -130,7 +130,7 @@ NNet_t<T>::TrainWork (const DataSet_t * const training)
 				n_maxIterations - n_steps);
 		}
 
-		if ((n_steps % 10000) == 0)
+		if (n_steps && (n_steps % 10000) == 0)
 			printf ("Training Loss: %e\n", n_error);
 	}
 

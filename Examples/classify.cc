@@ -123,7 +123,8 @@ void Run (int *layers)
 		printf ("ERROR: %s\n", excep);
 	}
 
-	printf (" *** Loss\t%f\t%f\t%d\n",
+	printf ("\n\tLoss\t\tAccuracy\tSteps\n");
+	printf ("\t%f\t%f\t%d\n\n",
 		Np->Loss (),
 		Np->Accuracy (),
 		Np->Steps ());

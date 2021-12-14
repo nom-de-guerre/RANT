@@ -40,12 +40,15 @@ struct DataSet_t
 	int						t_N;
 	int						t_Nin;
 	int						t_Nout;
+	int						t_columns;
+
 	TrainingRow_t			t_data;
 
 	DataSet_t (int N, int Nin, int Nout) :
 		t_N (N),
 		t_Nin (Nin),
 		t_Nout (Nout),
+		t_columns (Nin + Nout),
 		t_data (new double [N * Nin + N * Nout])
 	{
 		assert (t_Nout == 1);
@@ -55,6 +58,7 @@ struct DataSet_t
 		t_N (N),
 		t_Nin (Nin),
 		t_Nout (Nout),
+		t_columns (Nin + Nout),
 		t_data (datap)
 	{
 	}
@@ -62,6 +66,27 @@ struct DataSet_t
 	~DataSet_t (void)
 	{
 		delete [] t_data;
+	}
+
+	int Stride (void) const
+	{
+		return t_Nin + t_Nout;
+	}
+
+	void * FeatureBase (const int feature)
+	{
+		return t_data + feature;
+	}
+
+	void Display (void)
+	{
+		for (int i = 0, index = 0; i < t_N; ++i)
+		{
+			for (int j = 0; j < t_columns; ++j, ++index)
+				printf ("%f\t", t_data[index]);
+
+			printf ("\n");
+		}
 	}
 
 	TrainingRow_t entry (const int index) const
@@ -110,7 +135,8 @@ struct DataSet_t
 
 	void FeatureIteration (int feature, int &stride, double *&base)
 	{
-		stride = t_Nin + t_Nout; // the data are stored row order
+		// the data are stored row order, and elements are assumed double
+		stride = t_columns;
 		base = t_data + feature;
 	}
 
@@ -211,6 +237,95 @@ struct DataSet_t
 		}
 	}
 };
+
+/*
+ * The code below is used for computing the classes for classification
+ * from non-numeric labels.
+ *
+ */
+
+#include <map>
+struct cmpStr
+{
+	bool operator()(const char *x, const char *y) const
+	{
+		return strcmp (x, y) < 0;
+	}
+};
+typedef std::map<const char *, int, cmpStr> unique_t;
+
+struct ClassDict_t
+{
+	int			cd_N;
+
+	struct dictVal_t
+	{
+		const char	*className;
+		int			classID;
+	};
+
+	dictVal_t	*cd_dict;
+
+	ClassDict_t (int N) :
+		cd_N (N),
+		cd_dict (new dictVal_t [N])
+	{
+	}
+
+	~ClassDict_t (void)
+	{
+		delete [] cd_dict;
+	}
+};
+
+ClassDict_t *
+ComputeClasses (
+	const int N,
+	const int Nfeatures,
+	const char *Table,
+	double *&Tset,
+	const int stride)
+{
+	unique_t dict;
+	int count = 0;
+	int classID;
+	const char *p = Table + (Nfeatures - 1) * sizeof (double);
+	double *csv;
+
+	Tset = new double [N * Nfeatures];
+
+	for (int i = 0, index = 0; i < N; ++i)
+	{
+		csv = (double *) Table;
+		for (int j = 0; j < Nfeatures - 1; ++j, ++index)
+			Tset[index] = csv[j];
+
+		auto rc = dict.find (p);
+		if (rc == dict.end ())
+		{
+			dict[strdup (p)] = count;
+			classID = count;
+			++count;
+		} else
+			classID = rc->second;
+
+		Tset[index] = classID;
+
+		Table += stride;
+		p += stride;
+		++index;
+	}
+
+	ClassDict_t *dictp = new ClassDict_t (count);
+
+	for (const auto& [key, value] : dict)
+	{
+		dictp->cd_dict[value].classID = value;
+		dictp->cd_dict[value].className = key;
+	}
+
+	return dictp;
+}
 
 #endif // header inclusion
 
