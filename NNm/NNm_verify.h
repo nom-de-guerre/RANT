@@ -54,7 +54,7 @@ class RegressionGrad_t : public Regression_t
 public:
 
 	RegressionGrad_t (int *width, int levels) :
-		Regression_t (width, levels)
+		Regression_t (width, levels, RPROP)
 	{
 	}
 
@@ -95,7 +95,7 @@ public:
 			for (int i = level + 1; i < n_levels - 1; ++i)
 				ripple = n_strata[i]->f (ripple);
 
-			error = static_cast<Regression_t *>(this)->f (ripple) - answer;
+			error = static_cast<Regression_t *>(this)->_API_f (ripple) - answer;
 			error = 0.5 * error * error;
 			dL_diff = error;
 
@@ -108,7 +108,7 @@ public:
 			for (int i = level + 1; i < n_levels - 1; ++i)
 				ripple = n_strata[i]->f (ripple);
 
-			error = static_cast<Regression_t *>(this)->f (ripple) - answer;
+			error = static_cast<Regression_t *>(this)->_API_f (ripple) - answer;
 			error = 0.5 * error * error;
 			dL_diff -= error;
 			dL_diff /= 2 * h;
