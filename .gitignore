@@ -6,5 +6,7 @@ misc/ensemble
 misc/checkGradient
 Examples/sine
 Examples/classify
+Examples/iris
+Examples/sine_verify
 **/.DS_Store
 **/*.swp
