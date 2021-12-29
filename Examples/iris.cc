@@ -33,51 +33,54 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <softmaxNNm.h>
 #include <read_csv.h>
 #include <data.h>
+#include <options.h>
 
-void Run (int *);
-DataSet_t *LoadData (void);
+void Run (NNmConfig_t &, int *);
+DataSet_t *LoadData (ClassDict_t *&);
 
 int main (int argc, char *argv[])
 {
-	if (argc < 2)
-	{
-		printf ("Usage: LoW hidden-layers output-layers\n");
-		exit (-1);
-	}
+	NNmConfig_t params;
 
-	long seed = time (0);
-	printf ("Seed %ld\n", seed);
+	int consumed = params.Parse (argc, argv);
 
-	srand (seed);
+	printf ("Seed %ld\n", params.ro_seed);
+	srand (params.ro_seed);
 
-	int N_layers = argc - 1;
+	argc -= consumed;
+	argv += consumed;
 
-	// widths plus length prefix, inputs
-	int *layers = new int [N_layers + 2];
+	int N_layers = argc;
 
-	layers[0] = N_layers + 1;
-	layers[1] = 4;							// 4 input
+	// { length, inputs,  ..., outputs }
+	int *layers = new int [N_layers + 3];
+
+	layers[0] = N_layers + 2;
+	layers[1] = 4;							// 4 inputs
+	layers[N_layers + 2] = 3;				// 3 outputs
+
 	for (int i = 0; i < N_layers; ++i)
-		layers[i + 2] = atoi (argv[i + 1]);
+		layers[i + 2] = atoi (argv[i]);
 
-	Run (layers);
+	Run (params, layers);
 
 	delete [] layers;
 }
 
-void Run (int *layers)
+void Run (NNmConfig_t &params, int *layers)
 {
-	DataSet_t *O = LoadData ();
+	ClassDict_t *dictp;
+	DataSet_t *O = LoadData (dictp);
 	SoftmaxNNm_t *Np = NULL;
 	double guess;
 
 	Np = new SoftmaxNNm_t (layers + 1, layers[0], ADAM);
 
-	Np->SetHalt (1e-2);
+	Np->SetHalt (params.ro_haltCondition);
 
 	try {
 
-		Np->Train (O, 20000);
+		Np->Train (O, params.ro_maxIterations);
 
 	} catch (const char *excep) {
 
@@ -93,7 +96,7 @@ void Run (int *layers)
 	bool accept_soln = true;
 	bool correct;
 
-	printf ("\t\tTrain\tGuess\tCorrect\n");
+	printf ("\t\tTrain\tGuess\t\tCorrect\n");
 
 	int N_POINTS = O->N ();
 	int wrong = 0;
@@ -110,10 +113,10 @@ void Run (int *layers)
 		}
 
 		if (!correct)
-			printf ("(%d)\tDJS_RESULT\t%d\t%d\t%c\n",
+			printf ("(%d)\tDJS_RESULT\t%s\t%s\t%c\n",
 				i,
-				(int) O->Answer (i),
-				(int) guess,
+				dictp->cd_dict[(int) guess].className,
+				dictp->cd_dict[(int) O->Answer (i)].className,
 				(correct ? ' ' : 'X'));
 	}
 
@@ -125,15 +128,14 @@ void Run (int *layers)
 
 }
 
-
 bool includeFeature[] = { false, true, true, true, true, true };
 
-DataSet_t *LoadData ()
+DataSet_t *LoadData (ClassDict_t *&dictp)
 {
 	LoadCSV_t Z ("../../../Data/iris.csv");
 
 	int rows;
-	void * datap = Z.Load (6, rows, includeFeature);
+	void *datap = Z.Load (6, rows, includeFeature);
 
 	int stride = 4 * sizeof (double) + STR_FEATURE;
 
@@ -141,8 +143,7 @@ DataSet_t *LoadData ()
 	startp += 4 * sizeof (double);
 
 	double *table;
-	// ClassDict_t *dictp = ComputeClasses (
-	(void) ComputeClasses (
+	dictp = ComputeClasses (
 		rows,
 		5,
 		(const char *) datap,

@@ -32,6 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <math.h>
 
 #include <regression.h>
+#include <options.h>
 
 #define N_POINTS	32
 
@@ -40,37 +41,34 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define PI_DELTA	(PI_2 / N_POINTS)
 
 DataSet_t *BuildTrainingSet (int);
-void Run (int *);
+void Run (NNmConfig_t &, int *);
 
 int main (int argc, char *argv[])
 {
-	if (argc < 2)
-	{
-		printf ("Usage: LoW hidden-layers output-layers\n");
-		exit (-1);
-	}
+	NNmConfig_t params;
 
-	long seed = time (0);
-	printf ("Seed %ld\n", seed);
+	int consumed = params.Parse (argc, argv);
 
-	srand (seed);
+	printf ("Seed %ld\n", params.ro_seed);
+	srand (params.ro_seed);
 
-	int N_layers = argc - 1;
+	argc -= consumed;
+	argv += consumed;
+
+	int N_layers = argc;
 	int *layers = new int [N_layers + 2];	// widths plus length prefix, inputs
 	layers[0] = N_layers + 1;
 	layers[1] = 1;							// one input
 	for (int i = 0; i < N_layers; ++i)
-		layers[i + 2] = atoi (argv[i + 1]);
+		layers[i + 2] = atoi (argv[i]);
 
-	Run (layers);
+	Run (params, layers);
 
 	delete [] layers;
 }
 
-void Run (int *layers)
+void Run (NNmConfig_t &params, int *layers)
 {
-	double soln_MSE = 5e-7;
-
 	DataSet_t *O = BuildTrainingSet (N_POINTS);
 	Regression_t *Np = NULL;
 	double guess;
@@ -78,9 +76,9 @@ void Run (int *layers)
 	try {
 
 		Np = new Regression_t (layers + 1, layers[0], RPROP);
-		Np->SetHalt (soln_MSE);
+		Np->SetHalt (params.ro_haltCondition);
 
-		Np->Train (O, 500000);
+		Np->Train (O, params.ro_maxIterations);
 
 	} catch (const char *excep) {
 
@@ -102,19 +100,19 @@ void Run (int *layers)
 		error *= error;
 		MSE += error;
 
-		if (error > soln_MSE)
+		if (error > params.ro_haltCondition)
 			++missed;
 
 		printf ("DJS_RESULT\t%1.8f\t%1.8f\t%1.8f\t%s\n",
 			(*O)[i][0],
 			(*O)[i][1],
 			guess,
-			(error > soln_MSE ? "X" : ""));
+			(error > params.ro_haltCondition ? "X" : ""));
 	}
 
 	MSE /= O->t_N;
-	if (MSE > soln_MSE)
-		printf ("Accuracy not achieved: %e\t%e\n", MSE, soln_MSE);
+	if (MSE > params.ro_haltCondition)
+		printf ("Accuracy not achieved: %e\t%e\n", MSE, params.ro_haltCondition);
 
 	MSE = 0.0;
 	O = BuildTrainingSet (64);

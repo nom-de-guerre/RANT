@@ -31,6 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdint.h>
 
 #include <softmaxNNm.h>
+#include <options.h>
 
 #define N_POINTS	30
 
@@ -77,34 +78,38 @@ double polarQ [] = {
 };
 
 DataSet_t *BuildTrainingSet (void);
-void Run (int *);
+void Run (NNmConfig_t &, int *);
 
 int main (int argc, char *argv[])
 {
-	if (argc < 2)
-	{
-		printf ("Usage: LoW hidden-layers output-layers\n");
-		exit (-1);
-	}
+	NNmConfig_t params;
 
-	long seed = time (0);
-	printf ("Seed %ld\n", seed);
+	int consumed = params.Parse (argc, argv);
 
-	srand (seed);
+	printf ("Seed %ld\n", params.ro_seed);
+	srand (params.ro_seed);
 
-	int N_layers = argc - 1;
-	int *layers = new int [N_layers + 2];	// widths plus length prefix, inputs
-	layers[0] = N_layers + 1;
-	layers[1] = 2;							// 2 input
+	argc -= consumed;
+	argv += consumed;
+
+	int N_layers = argc;
+
+	// { length, inputs,  ..., outputs }
+	int *layers = new int [N_layers + 3];
+
+	layers[0] = N_layers + 2;
+	layers[1] = 2;							// 2 inputs
+	layers[N_layers + 2] = 4;				// 4 outputs
+
 	for (int i = 0; i < N_layers; ++i)
-		layers[i + 2] = atoi (argv[i + 1]);
+		layers[i + 2] = atoi (argv[i]);
 
-	Run (layers);
+	Run (params, layers);
 
 	delete [] layers;
 }
 
-void Run (int *layers)
+void Run (NNmConfig_t &params, int *layers)
 {
 	DataSet_t *O = BuildTrainingSet ();
 	SoftmaxNNm_t *Np = NULL;
@@ -112,11 +117,11 @@ void Run (int *layers)
 
 	Np = new SoftmaxNNm_t (layers + 1, layers[0], RPROP);
 
-	Np->SetHalt (1e-2);
+	Np->SetHalt (params.ro_haltCondition);
 
 	try {
 
-		Np->Train (O, 10000);
+		Np->Train (O, params.ro_maxIterations);
 
 	} catch (const char *excep) {
 

@@ -37,11 +37,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <options.h>
 #include <validate.h>
 
-void Run (RunOptions_t &);
+void Run (NNmConfig_t &);
 
 int main (int argc, char *argv[])
 {
-	RunOptions_t params;
+	NNmConfig_t params;
 
 	params.Parse (argc, argv);
 
@@ -59,7 +59,7 @@ int main (int argc, char *argv[])
 char fullpath_data [MAXPATHLEN];
 char fullpath_labels [MAXPATHLEN];
 
-void Run (RunOptions_t &params)
+void Run (NNmConfig_t &params)
 {
 	int Nlayers = 4;
 	int layers [] = { -1, 100, 50, 10 };

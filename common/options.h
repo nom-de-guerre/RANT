@@ -31,7 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #define DEFAULT_PATH	"../../../Data/MNIST/"
 
-struct RunOptions_t
+struct NNmConfig_t
 {
 	long			ro_seed;
 	int				ro_Nsamples;
@@ -39,7 +39,7 @@ struct RunOptions_t
 	int				ro_maxIterations;
 	char			*ro_path;
 
-	RunOptions_t () :
+	NNmConfig_t () :
 		ro_seed (time (NULL)),
 		ro_Nsamples (1000),
 		ro_haltCondition (1e-5),
@@ -58,9 +58,9 @@ struct RunOptions_t
 	}
 };
 
-int RunOptions_t::Parse (int argc, char *argv[])
+int NNmConfig_t::Parse (int argc, char *argv[])
 {
-	int count = 0;
+	int count = 1; // the binary's name
 	char opt;
 
 	while (true)
@@ -73,39 +73,47 @@ int RunOptions_t::Parse (int argc, char *argv[])
 		case 's':
 
 			ro_seed = atoi (optarg);
-			++count;
+			count += 2;
+
 			break;
 
 		case 'n':
 
 			ro_Nsamples = atoi (optarg);
-			++count;
+			count += 2;
+
 			break;
 
 		case 't':
 
 			ro_haltCondition = atof (optarg);
-			++count;
+			count += 2;
+
 			break;
 
 		case 'i':
 
 			ro_maxIterations = atoi (optarg);
-			++count;
+			count += 2;
+
 			break;
 
 		case 'p':
 
 			ro_path = strdup (optarg);
-			++count;
+			count += 2;
+
 			break;
 
 		case 'h':
-		default:
 
-			printf ("usage: %s [-i iterations] [-s seed] [-n samples] [-t halt condition]\n",
+			printf ("usage: %s [-i iterations] [-s seed] [-n samples] [-t halt condition] [application options]\n",
 				argv[0]);
 			exit (-1);
+
+		default:
+
+			break; // we've consumed the options meant for us
 		}
 	}
 
