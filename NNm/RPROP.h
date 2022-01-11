@@ -102,7 +102,7 @@ RPROP_t::RPROP (int index)
 
 		r_Ei.sm_data[index] = r_dL->sm_data[index];
 
-	} else if (signbit (r_dL->sm_data[index]) == signbit (r_Ei.sm_data[index])) {
+	} else if (SIGN (r_dL->sm_data[index]) == SIGN (r_Ei.sm_data[index])) {
 
 		// (1)
 		delta = r_deltaW.sm_data[index] * ETA_PLUS;
