@@ -70,6 +70,11 @@ public:
 	{
 		return n_error / (double) c_seen;
 	}
+
+	double P (int index)
+	{
+		return c_softm.P (index);
+	}
 };
 
 double SoftmaxNNm_t::_API_f (double *x)

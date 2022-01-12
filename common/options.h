@@ -30,6 +30,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string.h>
 
 #define DEFAULT_PATH	"../../../Data/MNIST/"
+#define DISPLAY_VARINT(X) printf ("%s\t%d\n", #X, (int) X)
+#define DISPLAY_VARFLOAT(X) printf ("%s\t%f\n", #X, (double) X)
 
 struct NNmConfig_t
 {
@@ -51,10 +53,10 @@ struct NNmConfig_t
 
 	void Display (void) const
 	{
-		printf ("Running with:\n# Samples\t%d\nIterations\t%d\nHalt\t\t%f\n",
-			ro_Nsamples,
-			ro_maxIterations,
-			ro_haltCondition);
+		DISPLAY_VARINT (ro_seed);
+		DISPLAY_VARINT (ro_Nsamples);
+		DISPLAY_VARFLOAT (ro_haltCondition);
+		DISPLAY_VARINT (ro_maxIterations);
 	}
 };
 

@@ -78,7 +78,17 @@ ADAMStrategy_t::Strategy (void)
 
 	for (int index = 0; index < Nweights; ++index)
 		ADAM (index);
+
+	ad_beta1 *= BETA1;
+	ad_beta2 *= BETA2;
 }
+
+/*
+ * ADAM: A Method for Stochastic Optimization, ICLR 2015
+ *
+ * Be careful, many presentations gloss over the details.
+ *
+ */
 
 void 
 ADAMStrategy_t::ADAM (int index)
@@ -95,8 +105,6 @@ ADAMStrategy_t::ADAM (int index)
 	update = m / (sqrt (v) + EPSILON);
 
 	s_W.sm_data[index] -= ALPHA * update;
-	ad_beta1 *= BETA1;
-	ad_beta2 *= BETA2;
 
 	s_dL.sm_data[index] = 0.0;
 }
