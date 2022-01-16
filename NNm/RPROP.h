@@ -159,6 +159,11 @@ struct RPROPStrategy_t : public stratum_t, private RPROP_t
 	{
 	}
 
+	void StrategyMono (const int index)
+	{
+		RPROP (index);
+	}
+
 	void Strategy (void);
 };
 

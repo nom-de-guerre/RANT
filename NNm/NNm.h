@@ -58,6 +58,7 @@ protected:
 
 	double				n_halt;			// target loss
 	double				n_error;		// current loss
+	bool				n_accuracy;		// halt training
 	int					n_maxIterations;
 
 	bool TrainWork (const DataSet_t * const);
@@ -81,6 +82,7 @@ public:
 		n_levels (levels - 1), // no state for input
 		n_halt (1e-5),
 		n_error (nan (NULL)),
+		n_accuracy (true),
 		n_maxIterations (5000)
 	{
 		n_Nweights = 0;
@@ -134,6 +136,16 @@ public:
 	double Loss (void)
 	{
 		return n_error;
+	}
+
+	void SetAccuracy (void)
+	{
+		n_accuracy = true;
+	}
+
+	void TurnOffAccuracy (void)
+	{
+		n_accuracy = false;
 	}
 
 	/*

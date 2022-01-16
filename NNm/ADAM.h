@@ -68,6 +68,11 @@ struct ADAMStrategy_t : public stratum_t
 	}
 
 	void Strategy (void);
+	void StrategyMono (const int index)
+	{
+		ADAM (index);
+	}
+
 	inline void ADAM (int);
 };
 
