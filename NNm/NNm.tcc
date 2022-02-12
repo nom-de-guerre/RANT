@@ -85,7 +85,7 @@ NNet_t<T>::Compute (double *x)
 }
 
 /*
- * ------------- The Net that invokes the specialization ---------------
+ * ------------- The generic ANN Code ---------------
  *
  */
 
@@ -130,8 +130,8 @@ NNet_t<T>::TrainWork (const DataSet_t * const training)
 				n_maxIterations - n_steps);
 		}
 
-		if (n_steps && (n_steps % 10000) == 0)
-			printf ("Training Loss: %e\n", n_error);
+		if (n_steps && (n_steps % 1000) == 0)
+			printf ("Training Loss: %e\n", Loss ());
 	}
 
 	if (n_steps >= n_maxIterations)
@@ -154,7 +154,8 @@ NNet_t<T>::Step (const DataSet_t * const training)
 }
 
 /*
- * The below are used when a stratum is stand-alone trained (e.g. a filter).
+ * The below is used when the ANN has stuff before it in the graph (so the 
+ * gradient must continue through us).
  *
  */
 

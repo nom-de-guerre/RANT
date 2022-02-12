@@ -68,6 +68,15 @@ struct DataSet_t
 		delete [] t_data;
 	}
 
+	DataSet_t *Copy (void)
+	{
+		DataSet_t *replica = new DataSet_t (t_N, t_Nin, t_Nout);
+
+		memcpy (replica->t_data, t_data, t_Nin * t_Nout * sizeof (double));
+
+		return replica;
+	}
+
 	int Stride (void) const
 	{
 		return t_Nin + t_Nout;

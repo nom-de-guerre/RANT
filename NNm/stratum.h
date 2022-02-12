@@ -109,6 +109,10 @@ struct stratum_t
 	double *f (double *, double *);
 
 	virtual void Strategy (void) = 0;
+	virtual void StrategyMono (const int index)
+	{
+		return; // over-ride when debugging or instrumenting
+	}
 };
 
 void 
