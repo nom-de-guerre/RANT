@@ -39,9 +39,10 @@ int main (int argc, char *argv[])
 		"../../../Data/MNIST/train-images.idx3-ubyte",
 		"../../../Data/MNIST/train-labels.idx1-ubyte");
 
-	for (int i = argc - 1; i > 0; --i)
+	for (int i = 1; i < argc; ++i)
 	{
 		int digit = atoi (argv[i]);
+		printf ("Index\t%d\n", digit);
 		plane_t obj (IMAGEDIM, IMAGEDIM, data.mn_datap->entry (digit));
 		obj.displayImage ("");
 	}
