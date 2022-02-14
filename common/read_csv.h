@@ -74,7 +74,8 @@ public:
 		for (int i = 0; fs_titles && i < fs_columns; ++i)
 			free (fs_titles[i]);
 
-		delete [] fs_titles;
+		if (fs_titles)
+			delete [] fs_titles;
 	}
 
 	void * Load (const int Nfeatures,
@@ -94,12 +95,19 @@ public:
 		{
 			entries = fscanf (fs_fp, "%[^,],", buffer);
 			if (entries != 1)
+			{
+				for (int j = 0; j < i; ++j)
+					free (fs_titles[j]);
+
+				delete [] fs_titles;
+
 				return NULL;
+			}
 
 			fs_titles[i] = strdup (buffer);
 		}
 
-		if (header)
+		if (header) // need to consume new line
 		{
 			fscanf (fs_fp, "%s\n", buffer);
 			fs_titles [Nfeatures - 1] = strdup (buffer);
