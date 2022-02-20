@@ -137,7 +137,7 @@ struct DataSet_t
 		return *(t_data + index * (t_Nout + t_Nin) + t_Nin);
 	}
 
-	int N (void)
+	int N (void) const
 	{
 		return t_N;
 	}
