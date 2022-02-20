@@ -56,9 +56,12 @@ int main (int argc, char *argv[])
 	argv += consumed;
 
 	int N_layers = argc;
-	int *layers = new int [N_layers + 2];	// widths plus length prefix, inputs
-	layers[0] = N_layers + 1;
+	// length, # inputs (1), hidden widths (argc), output width (1)
+	int *layers = new int [N_layers + 3];
+	layers[0] = N_layers + 2;
 	layers[1] = 1;							// one input
+	layers[N_layers + 2] = 1;				// one output
+
 	for (int i = 0; i < N_layers; ++i)
 		layers[i + 2] = atoi (argv[i]);
 
