@@ -133,12 +133,6 @@ public:
 		return n_steps;
 	}
 
-/*
-	double Loss (void)
-	{
-		return n_error;
-	}
-*/
 	void SetAccuracy (void)
 	{
 		n_accuracy = true;
