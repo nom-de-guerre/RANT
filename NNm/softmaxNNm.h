@@ -56,7 +56,7 @@ public:
 
 	double _API_bprop (const TrainingRow_t &);
 	double _API_f (double *);
-	double _API_Error (DataSet_t const *);
+	double _API_Error (void);
 	void _API_Cycle (void);
 	bool _API_Test (DataSet_t const * const);
 
@@ -111,7 +111,7 @@ double SoftmaxNNm_t::_API_bprop (const TrainingRow_t &x)
 	return loss;
 }
 
-double SoftmaxNNm_t::_API_Error (DataSet_t const * tp)
+double SoftmaxNNm_t::_API_Error (void)
 {
 	return n_error / c_seen;
 }
@@ -125,7 +125,7 @@ void SoftmaxNNm_t::_API_Cycle (void)
 
 bool SoftmaxNNm_t::_API_Test (DataSet_t const * const tp)
 {
-	double Loss = _API_Error (NULL);
+	double Loss = _API_Error ();
 
 	return (Loss <= n_halt ? true : false);
 }

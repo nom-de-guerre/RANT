@@ -133,11 +133,12 @@ public:
 		return n_steps;
 	}
 
+/*
 	double Loss (void)
 	{
 		return n_error;
 	}
-
+*/
 	void SetAccuracy (void)
 	{
 		n_accuracy = true;
@@ -155,7 +156,7 @@ public:
 	 */
 	void Start (void);								// calls Cycle
 	double Compute (double *);						// calls f ()
-	inline double Loss (DataSet_t const *);			// calls Error
+	inline double Loss (void);						// calls Error
 	double ComputeDerivative (const TrainingRow_t);	// calls bprop
 
 	// The below are public so these objects can be integrated

@@ -44,10 +44,10 @@ NNet_t<T>::Halt (DataSet_t const * const tp)
 }
 
 template<typename T> double
-NNet_t<T>::Loss (DataSet_t const *tp)
+NNet_t<T>::Loss (void)
 {
 	// The current value of the loss function
-	return static_cast<T *> (this)->_API_Error (tp);
+	return static_cast<T *> (this)->_API_Error ();
 }
 
 template<typename T> double 
@@ -130,7 +130,7 @@ NNet_t<T>::TrainWork (const DataSet_t * const training)
 				n_maxIterations - n_steps);
 		}
 
-		if (n_steps && (n_steps % 1000) == 0)
+		if (n_steps && (n_steps % 10) == 0)
 			printf ("Training Loss: %e\n", Loss ());
 	}
 

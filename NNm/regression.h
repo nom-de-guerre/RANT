@@ -33,22 +33,26 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 class Regression_t : public NNet_t<Regression_t>
 {
 
+	int			r_seen;
+
 public:
 
 	Regression_t (int *width,
 				  int levels,
 				  stratum_t * (*alloc)(const int, const int)) :
-		NNet_t (width, levels, alloc)
+		NNet_t (width, levels, alloc),
+		r_seen (0)
 	{
 	}
 
 	double _API_bprop (const TrainingRow_t &);
 	double _API_f (double *);
-	double _API_Error (DataSet_t const *);
+	double _API_Error (void);
 
 	void _API_Cycle (void) 
 	{
 		n_error = 0;
+		r_seen = 0;
 	}
 
 	bool _API_Test (DataSet_t const * const);
@@ -98,22 +102,21 @@ double Regression_t::_API_bprop (const TrainingRow_t &x)
 	for (int i = 1; i < p->s_Nin; ++i)
 		p->s_dL.sm_data[i] += delta * ante->s_response.sm_data[i - 1];
 
+	++r_seen;
+
 	return y;
 }
 
-double Regression_t::_API_Error (DataSet_t const * tp)
+double Regression_t::_API_Error (void)
 {
-	return n_error / tp->t_N;
+	return n_error / r_seen;
 }
 
 bool Regression_t::_API_Test (DataSet_t const * const tp)
 {
-	n_error /= tp->t_N;
+	double Loss = _API_Error ();
 
-	if (n_error <= n_halt)
-		return true;
-
-	return false;
+	return (Loss <= n_halt ? true : false);
 }
 
 #endif // header inclusion
