@@ -74,9 +74,10 @@ void Run (NNmConfig_t &params, int *layers)
 	SoftmaxNNm_t *Np = NULL;
 	double guess;
 
-	Np = new SoftmaxNNm_t (layers + 1, layers[0], ADAM);
+	Np = new SoftmaxNNm_t (layers + 1, layers[0], RPROP);
 
 	Np->SetHalt (params.ro_haltCondition);
+	Np->SetAccuracy ();
 
 	try {
 

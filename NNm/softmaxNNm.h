@@ -127,6 +127,9 @@ bool SoftmaxNNm_t::_API_Test (DataSet_t const * const tp)
 {
 	double Loss = _API_Error ();
 
+	if (n_accuracy && c_Correct == c_seen)
+		return true;
+
 	return (Loss <= n_halt ? true : false);
 }
 
