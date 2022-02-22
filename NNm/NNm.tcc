@@ -115,6 +115,9 @@ NNet_t<T>::TrainWork (const DataSet_t * const training)
 {
 	bool solved = false;
 
+	if (n_useSGD)
+		n_SGDsamples = new NoReplacementSamples_t (training->N ());
+
 	for (n_steps = 0;
 		(n_steps < n_maxIterations) && !solved;
 		++n_steps)
@@ -130,7 +133,7 @@ NNet_t<T>::TrainWork (const DataSet_t * const training)
 				n_maxIterations - n_steps);
 		}
 
-		if (n_steps && (n_steps % 10) == 0)
+		if (n_steps && (n_steps % 1) == 0)
 			printf ("Training Loss: %e\n", Loss ());
 	}
 
@@ -143,14 +146,30 @@ NNet_t<T>::TrainWork (const DataSet_t * const training)
 template<typename T> bool 
 NNet_t<T>::Step (const DataSet_t * const training)
 {
+	int batch = training->N ();
+	int sample;
+	bool done;
+
 	Start ();
 
-	for (int i = 0; i < training->t_N; ++i)
-		ComputeDerivative (training->entry (i));
+	if (n_useSGD)
+	{
+		n_SGDsamples->Reset ();
+		batch = n_SGDn * batch;
+	}
 
-	UpdateWeights ();
+	for (int i = 0; i < batch; ++i)
+	{
+		(n_useSGD ? sample = n_SGDsamples->Sample () : sample = i);
+		assert (sample >= 0 && sample < training->N ());
+		ComputeDerivative (training->entry (sample));
+	}
 
-	return Halt (training);
+	done = Halt (training);
+	if (!done)
+		UpdateWeights ();
+
+	return done;
 }
 
 /*

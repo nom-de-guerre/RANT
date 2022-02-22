@@ -43,7 +43,7 @@ struct NNmConfig_t
 
 	NNmConfig_t () :
 		ro_seed (time (NULL)),
-		ro_Nsamples (1000),
+		ro_Nsamples (100),
 		ro_haltCondition (1e-5),
 		ro_maxIterations (100),
 		ro_path ((char *) DEFAULT_PATH)

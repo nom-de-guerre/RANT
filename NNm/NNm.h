@@ -36,6 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <data.h>
 #include <NeuralM.h>
+#include <sampling.h>
 
 #include <stratum.h>
 #include <RPROP.h>
@@ -61,6 +62,11 @@ protected:
 	bool				n_accuracy;		// halt training at 100% correct
 	int					n_maxIterations;
 
+	// Stochastic Gradient Descent Implementation
+	bool					n_useSGD;		// SGD turned on
+	double					n_SGDn;			// % of batch to use
+	NoReplacementSamples_t	*n_SGDsamples;	// permuted samples
+
 	bool TrainWork (const DataSet_t * const);
 	bool Step(const DataSet_t * const training);
 	bool Halt (DataSet_t const * const);
@@ -83,7 +89,10 @@ public:
 		n_halt (1e-5),
 		n_error (nan (NULL)),
 		n_accuracy (false),
-		n_maxIterations (5000)
+		n_maxIterations (5000),
+		n_useSGD (false),
+		n_SGDn (nan(NULL)),
+		n_SGDsamples (NULL)
 	{
 		n_Nweights = 0;
 
@@ -141,6 +150,12 @@ public:
 	void TurnOffAccuracy (void)
 	{
 		n_accuracy = false;
+	}
+
+	void setSGD (double percentage)
+	{
+		n_useSGD = true;
+		n_SGDn = percentage;
 	}
 
 	/*

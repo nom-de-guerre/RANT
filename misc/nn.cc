@@ -33,14 +33,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <MNIST.h>
 
-#include <softmax.h>
+#include <softmaxNNm.h>
 #include <options.h>
 
-void Run (RunOptions_t &);
+void Run (NNmConfig_t &);
 
 int main (int argc, char *argv[])
 {
-	RunOptions_t params;
+	NNmConfig_t params;
 
 	params.Parse (argc, argv);
 
@@ -59,7 +59,7 @@ int main (int argc, char *argv[])
 	}
 }
 
-double Validate (Softmax_t &model, DataSet_t *datap)
+double Validate (SoftmaxNNm_t &model, DataSet_t *datap)
 {
     int incorrect = 0;
 
@@ -81,7 +81,7 @@ double Validate (Softmax_t &model, DataSet_t *datap)
 char fullpath_data [MAXPATHLEN];
 char fullpath_labels [MAXPATHLEN];
 
-void Run (RunOptions_t &params)
+void Run (NNmConfig_t &params)
 {
 	int Nlayers = 3;
 	int layers [] = { 784, 300, 10 };
@@ -94,8 +94,12 @@ void Run (RunOptions_t &params)
 	sprintf (fullpath_labels, "%s/t10k-labels.idx1-ubyte", params.ro_path);
 	MNIST_t test (fullpath_data, fullpath_labels);
 
-	Softmax_t NNs (layers, Nlayers, RPROP);
+	double SGD = params.ro_Nsamples / (double) 100;
+	SoftmaxNNm_t NNs (layers, Nlayers, RPROP);
+
 	NNs.SetHalt (params.ro_haltCondition);
+	NNs.SetAccuracy ();
+	NNs.setSGD (SGD);
 
 	try {
 
