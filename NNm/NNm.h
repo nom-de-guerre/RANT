@@ -152,7 +152,7 @@ public:
 		n_accuracy = false;
 	}
 
-	void setSGD (double percentage)
+	void SetSGD (double percentage)
 	{
 		n_useSGD = true;
 		n_SGDn = percentage;

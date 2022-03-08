@@ -48,3 +48,34 @@ double Validate (CNN_t &model, DataSet_t *datap)
 	return ratio;
 }
 
+void Validate (CNN_t &model, DataSet_t *datap, double &accuracy, double &loss)
+{
+	int incorrect = 0;
+	int answer;
+
+	SoftmaxNNm_t *softp = model.Bottom ();
+
+	accuracy = 0;
+	loss = 0;
+
+	for (int i = 0; i < datap->N (); ++i)
+	{
+		plane_t obj (IMAGEDIM, IMAGEDIM, datap->entry (i));
+
+		int k = model.Classify (&obj);
+
+		answer = datap->Answer (i);
+		if (k != answer)
+			++incorrect;
+
+		loss += -log (softp->P(answer));
+	}
+
+	double ratio = (double) incorrect;
+	ratio /= (double) datap->t_N;
+	ratio *= 100;
+
+	accuracy = ratio;
+	loss /= (double) datap->t_N;
+}
+

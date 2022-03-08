@@ -37,21 +37,47 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <options.h>
 #include <validate.h>
 
-void Run (NNmConfig_t &);
+void Run (NNmConfig_t &, const int, int *);
 
 int main (int argc, char *argv[])
 {
 	NNmConfig_t params;
 
-	params.Parse (argc, argv);
+	int consumed = params.Parse (argc, argv);
 
 	printf ("Seed %ld\n", params.ro_seed);
-
 	srand (params.ro_seed);
 
+	argc -= consumed;
+	argv += consumed;
+
+#define MAX_ENTRIES 16
+	int Nlayers = 4;
+	int layers [MAX_ENTRIES];
+
+	layers[0] = -1;
+
+	if (argc == 0)
+	{
+		layers[1] = 100;
+		layers[2] = 50;
+		layers[3] = 10;
+
+	} else {
+
+		Nlayers = argc + 2;
+		for (int i = 0; i < argc; ++i)
+			layers[i + 1] = atoi (argv[i]);
+
+		layers[argc + 1] = 10; // Number of categories
+	}
+
 	try {
-		Run (params);
+
+		Run (params, Nlayers, layers);
+
 	} catch (const char *errp) {
+
 		printf ("EXCEPTION: %s\n", errp);
 	}
 }
@@ -59,10 +85,8 @@ int main (int argc, char *argv[])
 char fullpath_data [MAXPATHLEN];
 char fullpath_labels [MAXPATHLEN];
 
-void Run (NNmConfig_t &params)
+void Run (NNmConfig_t &params, const int Nlayers, int *layers)
 {
-	int Nlayers = 4;
-	int layers [] = { -1, 100, 50, 10 };
 
 	sprintf (fullpath_data, "%s/train-images.idx3-ubyte", params.ro_path);
 	sprintf (fullpath_labels, "%s/train-labels.idx1-ubyte", params.ro_path);

@@ -40,13 +40,15 @@ struct NNmConfig_t
 	double			ro_haltCondition;
 	int				ro_maxIterations;
 	char			*ro_path;
+	bool			ro_flag;
 
 	NNmConfig_t () :
 		ro_seed (time (NULL)),
 		ro_Nsamples (100),
 		ro_haltCondition (1e-5),
 		ro_maxIterations (100),
-		ro_path ((char *) DEFAULT_PATH)
+		ro_path ((char *) DEFAULT_PATH),
+		ro_flag (false)
 	{}
 
 	int Parse (int argc, char *argv[]);
@@ -67,7 +69,7 @@ int NNmConfig_t::Parse (int argc, char *argv[])
 
 	while (true)
 	{
-		opt = getopt (argc, argv, "s:n:t:i:h");
+		opt = getopt (argc, argv, "s:n:t:i:p:qh");
 		if (opt == -1)
 			break;
 
@@ -104,6 +106,13 @@ int NNmConfig_t::Parse (int argc, char *argv[])
 
 			ro_path = strdup (optarg);
 			count += 2;
+
+			break;
+
+		case 'q':
+
+			ro_flag = true;		// App can use this for anything
+			++count;
 
 			break;
 

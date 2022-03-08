@@ -176,7 +176,7 @@ public:
 	}
 
 	bool AddFullLayer (
-		int * layers,
+		int *layers,
 		const int Nlayers)
 	{
 		assert (cn_N < cn_Nlayers);
@@ -232,7 +232,7 @@ public:
 			halt = finalp->Loss () < cn_haltMetric;
 
 			if ((cn_steps % 10) == 0)
-				printf ("%d: %f\t%f\n",
+				printf ("TR %d:\t%f\t%f\n",
 					cn_steps,
 					finalp->Loss (),
 					finalp->Accuracy ());
@@ -316,6 +316,11 @@ public:
 	double Loss (void)
 	{
 		return cn_layers[cn_N - 1]->Bottom ()->Loss ();
+	}
+
+	SoftmaxNNm_t * Bottom (void)
+	{
+		return static_cast<SoftmaxNNm_t *> (cn_layers[cn_N - 1]->Bottom ());
 	}
 };
 
