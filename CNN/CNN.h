@@ -177,14 +177,15 @@ public:
 
 	bool AddFullLayer (
 		int *layers,
-		const int Nlayers)
+		const int Nlayers,
+		Rule_t alloc = ADAM)
 	{
 		assert (cn_N < cn_Nlayers);
 		const int layer = cn_N++;
 
 		layers[0] = cn_layers[layer - 1]->TotalOut ();
 
-		cn_layers[layer] = new layer_t (layers, Nlayers);
+		cn_layers[layer] = new layer_t (layers, Nlayers, alloc);
 
 		return true;
 	}

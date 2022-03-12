@@ -87,7 +87,6 @@ char fullpath_labels [MAXPATHLEN];
 
 void Run (NNmConfig_t &params, const int Nlayers, int *layers)
 {
-
 	sprintf (fullpath_data, "%s/train-images.idx3-ubyte", params.ro_path);
 	sprintf (fullpath_labels, "%s/train-labels.idx1-ubyte", params.ro_path);
 	MNIST_t data (fullpath_data, fullpath_labels);

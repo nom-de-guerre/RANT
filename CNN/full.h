@@ -42,8 +42,8 @@ class full_t : public SoftmaxNNm_t, public mapAPI_t
 
 public:
 
-	full_t (const int * const layers, const int Nlayers) :
-		SoftmaxNNm_t (layers, Nlayers, RPROP),
+	full_t (const int * const layers, const int Nlayers, Rule_t alloc) :
+		SoftmaxNNm_t (layers, Nlayers, alloc),
 		mapAPI_t (layers[0]),
 		re_Nin (layers[0]),
 		re_input (new double [re_Nin + 1]), // + 1 for training - the answer
