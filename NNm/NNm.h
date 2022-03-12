@@ -42,6 +42,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <RPROP.h>
 #include <ADAM.h>
 
+typedef stratum_t * (*Rule_t)(const int, const int);
+
 template<typename T> class NNet_t
 {
 protected:
@@ -61,6 +63,7 @@ protected:
 	double				n_error;		// current loss
 	bool				n_accuracy;		// halt training at 100% correct
 	int					n_maxIterations;
+	int					n_keepalive;	// how often to print status
 
 	// Stochastic Gradient Descent Implementation
 	bool					n_useSGD;		// SGD turned on
@@ -81,7 +84,7 @@ public:
 	 */
 	NNet_t (const int * const width, 
 			const int levels,
-			stratum_t * (*alloc)(const int, const int)) :
+			Rule_t alloc) :
 		n_steps (0),
 		n_Nin (width[0]),
 		n_Nout (width[levels - 1]),
@@ -90,6 +93,7 @@ public:
 		n_error (nan (NULL)),
 		n_accuracy (false),
 		n_maxIterations (5000),
+		n_keepalive (100),
 		n_useSGD (false),
 		n_SGDn (nan(NULL)),
 		n_SGDsamples (NULL)
@@ -156,6 +160,11 @@ public:
 	{
 		n_useSGD = true;
 		n_SGDn = percentage;
+	}
+
+	void SetKeepAlive (const int modulus)
+	{
+		n_keepalive = modulus;
 	}
 
 	/*

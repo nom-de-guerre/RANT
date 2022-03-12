@@ -39,7 +39,7 @@ public:
 
 	Regression_t (int *width,
 				  int levels,
-				  stratum_t * (*alloc)(const int, const int)) :
+				  Rule_t alloc) :
 		NNet_t (width, levels, alloc),
 		r_seen (0)
 	{

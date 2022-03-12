@@ -43,7 +43,7 @@ public:
 
 	SoftmaxNNm_t (const int * const width,
 			   const int levels,
-			   stratum_t * (*alloc)(const int, const int)) :
+			   Rule_t alloc) :
 		NNet_t (width, levels, alloc),
 		c_softm (levels[width - 2] + 1, n_Nout)
 	{
