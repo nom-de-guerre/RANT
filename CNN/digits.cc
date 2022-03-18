@@ -104,7 +104,19 @@ void Run (NNmConfig_t &params, const int Nlayers, int *layers)
 
 	int dim = CNN.AddConvolutionLayer (NMAPS, 5, IMAGEDIM);
 	dim = CNN.AddMaxPoolSlideLayer (NMAPS, 2, dim);
-	CNN.AddFullLayer (layers, Nlayers);
+
+	if (params.ro_flag) {
+
+		printf ("Using ADAM\n");
+
+		CNN.AddFullLayer (layers, Nlayers, ADAM);
+
+	} else {
+
+		printf ("Using RPROP+\n");
+
+		CNN.AddFullLayer (layers, Nlayers, RPROP);
+	}
 
 	int Nmodules = CNN.ActiveLayers ();
 	for (int i = 0; i < Nmodules; ++i)
