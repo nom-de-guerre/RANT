@@ -79,7 +79,7 @@ void Run (int *layers)
 
 	try {
 
-		Np->Train (O, 50);
+		Np->Train (O, 10);
 
 	} catch (const char *error) {
 

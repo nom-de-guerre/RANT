@@ -45,7 +45,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
 
-double DotProduct (const int N, double *x, double *y)
+inline double DotProduct (const int N, double *x, double *y)
 {
 	double dot = 0;
 	for (int i = 0; i < N; ++i)
@@ -112,19 +112,11 @@ struct NeuralM_t
 			return false;
 
 		double *datap = new double [N ()];
-		memcpy (datap, sm_data, sm_len);
+		memcpy (datap, sm_data, sizeof (double) * sm_len);
 		sm_data = datap;
 		sm_releaseMemory = true;
 
 		return true;
-	}
-
-	void Copy (NeuralM_t &Z)
-	{
-		assert (sm_releaseMemory);
-		assert (sm_len == Z.sm_len);
-
-		memcpy (sm_data, Z.sm_data, sm_len);
 	}
 
 	double *raw (void)
@@ -134,7 +126,7 @@ struct NeuralM_t
 
 	int N (void) const
 	{
-		return sm_rows * sm_columns;
+		return sm_len;
 	}
 
 	int rows (void) const
