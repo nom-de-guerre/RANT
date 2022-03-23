@@ -91,7 +91,8 @@ void Run (NNmConfig_t &params, int *layers)
 
 	Np->SetHalt (params.ro_haltCondition);
 	Np->SetAccuracy (); // Halt at 100% accuracy, even if above loss threshold
-	Np->SetKeepAlive (50);
+	Np->SetKeepAlive (50); // Print every x epochs
+
 	try {
 
 		Np->Train (O, params.ro_maxIterations);
@@ -152,9 +153,6 @@ DataSet_t *LoadData (ClassDict_t *&dictp)
 	void *datap = Z.Load (6, rows, includeFeature);
 
 	int stride = 4 * sizeof (double) + STR_FEATURE;
-
-	char *startp = (char *) datap;
-	startp += 4 * sizeof (double);
 
 	double *table;
 	dictp = ComputeClasses (

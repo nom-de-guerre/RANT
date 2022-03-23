@@ -100,7 +100,7 @@ void Run (NNmConfig_t &params, const int Nlayers, int *layers)
 	CNN.setHaltMetric (params.ro_haltCondition);
 	CNN.setMaxIterations (params.ro_maxIterations);
 
-#define NMAPS	6
+#define NMAPS	10
 
 	int dim = CNN.AddConvolutionLayer (NMAPS, 5, IMAGEDIM);
 	dim = CNN.AddMaxPoolSlideLayer (NMAPS, 2, dim);
