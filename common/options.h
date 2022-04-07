@@ -31,13 +31,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #define DEFAULT_PATH	"../../../Data/MNIST/"
 #define DISPLAY_VARINT(X) printf ("%s\t%d\n", #X, (int) X)
-#define DISPLAY_VARFLOAT(X) printf ("%s\t%f\n", #X, (double) X)
+#define DISPLAY_VARFLOAT(X) printf ("%s\t%f\n", #X, (IEEE_t) X)
 
 struct NNmConfig_t
 {
 	long			ro_seed;
 	int				ro_Nsamples;
-	double			ro_haltCondition;
+	IEEE_t			ro_haltCondition;
 	int				ro_maxIterations;
 	char			*ro_path;
 	bool			ro_flag;

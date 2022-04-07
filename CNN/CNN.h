@@ -28,6 +28,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef __DJS_CNN__H__
 #define __DJS_CNN__H__
 
+#include <ANT.h>
+
 #include <sampling.h>
 #include <plane.h>
 #include <layer.h>
@@ -44,7 +46,7 @@ protected: // for inheritors to perform validation etc.
 	int					cn_Nsubsamples;
 	int					cn_maxIterations;
 	int					cn_steps;
-	double				cn_haltMetric;
+	IEEE_t				cn_haltMetric;
 
 	NoReplacementSamples_t	*cn_order;
 
@@ -98,7 +100,7 @@ public:
 		cn_maxIterations = N;
 	}
 
-	void setHaltMetric (const double metric)
+	void setHaltMetric (const IEEE_t metric)
 	{
 		cn_haltMetric = metric;
 	}
@@ -245,7 +247,7 @@ public:
 		return halt; // true --> converged
 	}
 
-	void TrainExample (plane_t &example, double answer)
+	void TrainExample (plane_t &example, IEEE_t answer)
 	{
 		cn_layers[0]->ForwardTraining (&example, answer);
 
@@ -267,7 +269,7 @@ public:
 			int index = cn_order->SampleAuto ();
 
 			plane_t example (cn_rows, cn_columns, p->entry (index));
-			double answer = p->Answer (index);
+			IEEE_t answer = p->Answer (index);
 
 			TrainExample (example, answer);
 		}
@@ -314,7 +316,7 @@ public:
 		return cn_steps;
 	}
 
-	double Loss (void)
+	IEEE_t Loss (void)
 	{
 		return cn_layers[cn_N - 1]->Bottom ()->Loss ();
 	}

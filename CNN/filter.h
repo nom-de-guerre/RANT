@@ -86,12 +86,12 @@ public:
 		else
 			assert (arg.a_N == 1);
 
-		double N = ma_map.N ();
-		double * __restrict datap = ma_map.raw ();
+		IEEE_t N = ma_map.N ();
+		IEEE_t * __restrict datap = ma_map.raw ();
 
 		int W_stride = ff_width * ff_width;
-		double *pW = ff_filter->s_W.raw ();
-		double bias = pW[0];
+		IEEE_t *pW = ff_filter->s_W.raw ();
+		IEEE_t bias = pW[0];
 		++pW;
 
 		for (int i = 0; i < N; ++i)
@@ -106,16 +106,16 @@ public:
 		return true;
 	}
 
-	bool Train (arg_t &arg, double answer)
+	bool Train (arg_t &arg, IEEE_t answer)
 	{
 		return Forward (arg);
 	}
 
 	bool Backward (arg_t &arg)
 	{
-		double *bias = ff_filter->s_dL.raw ();
+		IEEE_t *bias = ff_filter->s_dL.raw ();
 		int blockSize = ma_map.N ();
-		__restrict double * gradientp = arg.a_args[0]->raw ();
+		__restrict IEEE_t * gradientp = arg.a_args[0]->raw ();
 
 		ff_G = arg.a_args[0];
 
@@ -160,14 +160,14 @@ public:
 	 */
 	bool ComputeDerivatives (int);
 	void ComputeGradient (int);
-	bool Convolve (plane_t const * const, double const * const);
+	bool Convolve (plane_t const * const, IEEE_t const * const);
 };
 
-bool filter_t::Convolve (plane_t const * const datap, double const * const pW)
+bool filter_t::Convolve (plane_t const * const datap, IEEE_t const * const pW)
 {
-	__restrict double const * const filterp = pW;
-	__restrict double * imagep = datap->raw ();
-	__restrict double *omap = ma_map.raw ();
+	__restrict IEEE_t const * const filterp = pW;
+	__restrict IEEE_t * imagep = datap->raw ();
+	__restrict IEEE_t *omap = ma_map.raw ();
 	int idim = datap->rows ();
 	int stride = idim - ff_width;
 	int mdim = ma_map.rows ();
@@ -196,9 +196,9 @@ bool filter_t::Convolve (plane_t const * const datap, double const * const pW)
 void filter_t::ComputeGradient (int pidx)
 {
 	int blockSize = ff_width * ff_width;
-	__restrict double * filterp = 1 + blockSize * pidx + ff_filter->s_W.raw ();
-	__restrict double * i_gradp = ff_G->raw ();
-	__restrict double *gradientp = ff_flux->raw ();
+	__restrict IEEE_t * filterp = 1 + blockSize * pidx + ff_filter->s_W.raw ();
+	__restrict IEEE_t * i_gradp = ff_G->raw ();
+	__restrict IEEE_t *gradientp = ff_flux->raw ();
 	int idim = inputSize ();
 	int stride = idim - ff_width;
 	int mdim = ma_map.rows ();
@@ -225,10 +225,10 @@ void filter_t::ComputeGradient (int pidx)
 bool filter_t::ComputeDerivatives (int pidx)
 {
 	int blockSize = ff_width * ff_width;
-	__restrict double * dW = 1 + blockSize * pidx + ff_filter->s_dL.raw ();
-	__restrict double * dO = ff_G->raw ();
-	__restrict double *input = ff_input[pidx]->raw ();
-	double *bias = ff_filter->s_dL.raw ();
+	__restrict IEEE_t * dW = 1 + blockSize * pidx + ff_filter->s_dL.raw ();
+	__restrict IEEE_t * dO = ff_G->raw ();
+	__restrict IEEE_t *input = ff_input[pidx]->raw ();
+	IEEE_t *bias = ff_filter->s_dL.raw ();
 	int idim = ff_G->rows ();
 	int stride = idim - ff_width;
 	int mdim = ma_map.rows ();

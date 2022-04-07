@@ -84,14 +84,14 @@ struct stratum_t
 	void init (int Nout)
 	{
 		// Glorot, W ~ [-r, r]
-		double r = sqrt (6.0 / (Nout + s_Nin));
-		double *p = s_W.raw();
-		double sample;
+		IEEE_t r = sqrt (6.0 / (Nout + s_Nin));
+		IEEE_t *p = s_W.raw();
+		IEEE_t sample;
 
 		for (int i = s_W.rows () - 1; i >= 0; --i)
 			for (int j = s_W.columns () - 1; j >= 0; --j)
 			{
-				sample = (double) rand () / RAND_MAX;
+				sample = (IEEE_t) rand () / RAND_MAX;
 				sample *= r;
 				if (rand () % 2)
 					sample = -sample;
@@ -104,9 +104,9 @@ struct stratum_t
 		return s_Nperceptrons;
 	}
 
-	void bprop (stratum_t &, double *, bool = true);
-	double *f (double *, bool = true);
-	double *f (double *, double *);
+	void bprop (stratum_t &, IEEE_t *, bool = true);
+	IEEE_t *f (IEEE_t *, bool = true);
+	IEEE_t *f (IEEE_t *, IEEE_t *);
 
 	virtual void Strategy (void) = 0;
 	virtual void StrategyMono (const int index)
@@ -116,7 +116,7 @@ struct stratum_t
 };
 
 void 
-stratum_t::bprop (stratum_t &next, double *xi, bool activation)
+stratum_t::bprop (stratum_t &next, IEEE_t *xi, bool activation)
 {
 	/*
 	 * Compute per node total derivative for the layer.
@@ -134,8 +134,8 @@ stratum_t::bprop (stratum_t &next, double *xi, bool activation)
 
 	// Apply the delta for per weight derivatives
 
-	double *dL = s_dL.sm_data;
-	double delta;
+	IEEE_t *dL = s_dL.sm_data;
+	IEEE_t delta;
 
 	/*
 	 * ∂L       ∂∑
@@ -156,13 +156,13 @@ stratum_t::bprop (stratum_t &next, double *xi, bool activation)
 	}
 }
 
-double *
-stratum_t::f (double *xi, bool activate)
+IEEE_t *
+stratum_t::f (IEEE_t *xi, bool activate)
 {
 	s_dot.MatrixVectorMult (s_W, xi);
 
-	double *p = s_response.sm_data;
-	double *dot = s_dot.sm_data;
+	IEEE_t *p = s_response.sm_data;
+	IEEE_t *dot = s_dot.sm_data;
 
 	if (activate)
 		for (int i = 0; i < s_Nperceptrons; ++i)
@@ -174,13 +174,13 @@ stratum_t::f (double *xi, bool activate)
 	return s_response.sm_data;
 }
 
-double *
-stratum_t::f (double *xi, double *result)
+IEEE_t *
+stratum_t::f (IEEE_t *xi, IEEE_t *result)
 {
 	s_dot.MatrixVectorMult (s_W, xi);
 
-	double *p = s_response.sm_data;
-	double *dot = s_dot.sm_data;
+	IEEE_t *p = s_response.sm_data;
+	IEEE_t *dot = s_dot.sm_data;
 	for (int i = 0; i < s_Nperceptrons; ++i)
 		*p++ = result[i] = ACTIVATION_FN (*dot++);
 

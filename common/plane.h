@@ -38,7 +38,7 @@ class plane_t
 	bool		dd_releaseMemory;
 	int			dd_rows;
 	int			dd_columns;
-	double		*dd_datap;
+	IEEE_t		*dd_datap;
 
 public:
 
@@ -54,11 +54,11 @@ public:
 		dd_releaseMemory (true),
 		dd_rows (rows),
 		dd_columns (columns),
-		dd_datap (new double [rows * columns])
+		dd_datap (new IEEE_t [rows * columns])
 	{
 	}
 
-	plane_t (const int rows, const int columns, double *datap) :
+	plane_t (const int rows, const int columns, IEEE_t *datap) :
 		dd_releaseMemory (false),
 		dd_rows (rows),
 		dd_columns (columns),
@@ -70,9 +70,9 @@ public:
 		dd_releaseMemory (true),
 		dd_rows (Z.rows ()),
 		dd_columns (Z.columns ()),
-		dd_datap (new double [dd_rows * dd_columns])
+		dd_datap (new IEEE_t [dd_rows * dd_columns])
 	{
-		memcpy (dd_datap, Z.raw (), sizeof (double) * N ());
+		memcpy (dd_datap, Z.raw (), sizeof (IEEE_t) * N ());
 	}
 
 	~plane_t (void)
@@ -86,9 +86,9 @@ public:
 		if (dd_releaseMemory || dd_datap == NULL)
 			return false;
 
-		double *home = new double [N ()];
+		IEEE_t *home = new IEEE_t [N ()];
 
-		memcpy (home, dd_datap, N () * sizeof (double));
+		memcpy (home, dd_datap, N () * sizeof (IEEE_t));
 
 		dd_datap = home;
 		dd_releaseMemory = true;
@@ -98,7 +98,7 @@ public:
 
 	void Reset (void)
 	{
-		memset (dd_datap, 0, sizeof (double) * N ());
+		memset (dd_datap, 0, sizeof (IEEE_t) * N ());
 	}
 
 	int rows (void) const
@@ -121,23 +121,23 @@ public:
 		return dd_columns;
 	}
 
-	double *raw (void) const
+	IEEE_t *raw (void) const
 	{
 		return dd_datap;
 	}
 
-	double *raw (int row, int column) const
+	IEEE_t *raw (int row, int column) const
 	{
 		return dd_datap + (row * dd_columns) + column;
 	}
 
-	void setRaw (double *datap)
+	void setRaw (IEEE_t *datap)
 	{
 		dd_releaseMemory = false;
 		dd_datap = datap;
 	}
 
-	double &operator() (int row, int column) const
+	IEEE_t &operator() (int row, int column) const
 	{
 		return dd_datap[(row * dd_columns) + column];
 	}

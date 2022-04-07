@@ -54,39 +54,39 @@ public:
 	{
 	}
 
-	double _API_bprop (const TrainingRow_t &);
-	double _API_f (double *);
-	double _API_Error (void);
+	IEEE_t _API_bprop (const TrainingRow_t &);
+	IEEE_t _API_f (IEEE_t *);
+	IEEE_t _API_Error (void);
 	void _API_Cycle (void);
 	bool _API_Test (DataSet_t const * const);
 
-	double Accuracy (void) const
+	IEEE_t Accuracy (void) const
 	{
-		double right = c_Correct;
-		return right / (double) c_seen;
+		IEEE_t right = c_Correct;
+		return right / (IEEE_t) c_seen;
 	}
 
-	double Loss (void) const
+	IEEE_t Loss (void) const
 	{
-		return n_error / (double) c_seen;
+		return n_error / (IEEE_t) c_seen;
 	}
 
-	double P (int index)
+	IEEE_t P (int index)
 	{
 		return c_softm.P (index);
 	}
 };
 
-double SoftmaxNNm_t::_API_f (double *x)
+IEEE_t SoftmaxNNm_t::_API_f (IEEE_t *x)
 {
 	x = n_strata[n_levels - 1]->f (x, false);
 
 	return c_softm.ComputeSoftmax (x);
 }
 
-double SoftmaxNNm_t::_API_bprop (const TrainingRow_t &x)
+IEEE_t SoftmaxNNm_t::_API_bprop (const TrainingRow_t &x)
 {
-	double loss;
+	IEEE_t loss;
 	int answer = static_cast<int> (x[n_Nin]);
 
 	int result = Compute (x); // forces computation of Softmax Pi
@@ -102,7 +102,7 @@ double SoftmaxNNm_t::_API_bprop (const TrainingRow_t &x)
 
 	stratum_t *p = n_strata[n_levels - 1];
 	stratum_t *ante = n_strata[n_levels - 2];
-	double *pdL = p->s_dL.raw (); // Done here as it is row order
+	IEEE_t *pdL = p->s_dL.raw (); // Done here as it is row order
 
 	assert (n_Nout == p->s_Nperceptrons);
 
@@ -111,7 +111,7 @@ double SoftmaxNNm_t::_API_bprop (const TrainingRow_t &x)
 	return loss;
 }
 
-double SoftmaxNNm_t::_API_Error (void)
+IEEE_t SoftmaxNNm_t::_API_Error (void)
 {
 	return n_error / c_seen;
 }
@@ -125,7 +125,7 @@ void SoftmaxNNm_t::_API_Cycle (void)
 
 bool SoftmaxNNm_t::_API_Test (DataSet_t const * const tp)
 {
-	double Loss = _API_Error ();
+	IEEE_t Loss = _API_Error ();
 
 	if (n_accuracy && c_Correct == c_seen)
 		return true;

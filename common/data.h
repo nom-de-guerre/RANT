@@ -33,7 +33,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <math.h>
 #include <assert.h>
 
-typedef double * TrainingRow_t;
+#include <ANT.h>
+
+typedef IEEE_t * TrainingRow_t;
 
 struct DataSet_t
 {
@@ -49,12 +51,12 @@ struct DataSet_t
 		t_Nin (Nin),
 		t_Nout (Nout),
 		t_columns (Nin + Nout),
-		t_data (new double [N * Nin + N * Nout])
+		t_data (new IEEE_t [N * Nin + N * Nout])
 	{
 		assert (t_Nout == 1);
 	}
 
-	DataSet_t (int N, int Nin, int Nout, double *datap) :
+	DataSet_t (int N, int Nin, int Nout, IEEE_t *datap) :
 		t_N (N),
 		t_Nin (Nin),
 		t_Nout (Nout),
@@ -72,7 +74,7 @@ struct DataSet_t
 	{
 		DataSet_t *replica = new DataSet_t (t_N, t_Nin, t_Nout);
 
-		memcpy (replica->t_data, t_data, t_Nin * t_Nout * sizeof (double));
+		memcpy (replica->t_data, t_data, t_Nin * t_Nout * sizeof (IEEE_t));
 
 		return replica;
 	}
@@ -112,7 +114,7 @@ struct DataSet_t
 	{
 		DataSet_t *p = new DataSet_t (N, t_Nin, t_Nout);
 		size_t entrySize = t_Nin + t_Nout;
-		size_t len = sizeof (double) * entrySize;
+		size_t len = sizeof (IEEE_t) * entrySize;
 		TrainingRow_t from, to;
 
 		to = p->Raw ();
@@ -127,12 +129,12 @@ struct DataSet_t
 		return p;
 	}
 
-	double *Raw (void)
+	IEEE_t *Raw (void)
 	{
 		return t_data;
 	}
 
-	double Answer (const int index) const
+	IEEE_t Answer (const int index) const
 	{
 		return *(t_data + index * (t_Nout + t_Nin) + t_Nin);
 	}
@@ -142,18 +144,18 @@ struct DataSet_t
 		return t_N;
 	}
 
-	void FeatureIteration (int feature, int &stride, double *&base)
+	void FeatureIteration (int feature, int &stride, IEEE_t *&base)
 	{
-		// the data are stored row order, and elements are assumed double
+		// the data are stored row order, and elements are assumed IEEE_t
 		stride = t_columns;
 		base = t_data + feature;
 	}
 
-	double Max (const int feature)
+	IEEE_t Max (const int feature)
 	{
-		double best = -DBL_MAX;
+		IEEE_t best = -DBL_MAX;
 		int stride;
-		double *column;
+		IEEE_t *column;
 
 		FeatureIteration (feature, stride, column);
 
@@ -164,11 +166,11 @@ struct DataSet_t
 		return best;
 	}
 
-	double Min (const int feature)
+	IEEE_t Min (const int feature)
 	{
-		double best = DBL_MAX;
+		IEEE_t best = DBL_MAX;
 		int stride;
-		double *column;
+		IEEE_t *column;
 
 		FeatureIteration (feature, stride, column);
 
@@ -179,11 +181,11 @@ struct DataSet_t
 		return best;
 	}
 
-	double Mean (const int feature)
+	IEEE_t Mean (const int feature)
 	{
-		double sum = 0;
+		IEEE_t sum = 0;
 		int stride;
-		double *column;
+		IEEE_t *column;
 
 		FeatureIteration (feature, stride, column);
 
@@ -193,13 +195,13 @@ struct DataSet_t
 		return sum / t_N;
 	}
 
-	double Variance (const int feature)
+	IEEE_t Variance (const int feature)
 	{
-		double sum = 0;
-		double sumsq = 0;
-		double var;
+		IEEE_t sum = 0;
+		IEEE_t sumsq = 0;
+		IEEE_t var;
 		int stride;
-		double *column;
+		IEEE_t *column;
 
 		FeatureIteration (feature, stride, column);
 
@@ -219,9 +221,9 @@ struct DataSet_t
 
 	void Center (const int feature)
 	{
-		double centre = Mean (feature);
+		IEEE_t centre = Mean (feature);
 		int stride;
-		double *column;
+		IEEE_t *column;
 
 		FeatureIteration (feature, stride, column);
 
@@ -231,10 +233,10 @@ struct DataSet_t
 
 	void Zscore (const int feature, bool centre = true)
 	{
-		double stddev = sqrt (Variance (feature));
-		double mean = (centre ? Mean (feature) : nan (NULL));
+		IEEE_t stddev = sqrt (Variance (feature));
+		IEEE_t mean = (centre ? Mean (feature) : nan (NULL));
 		int stride;
-		double *column;
+		IEEE_t *column;
 
 		FeatureIteration (feature, stride, column);
 
@@ -292,20 +294,20 @@ ComputeClasses (
 	const int N,
 	const int Nfeatures,
 	const char *Table,
-	double *&Tset,
+	IEEE_t *&Tset,
 	const int stride)
 {
 	unique_t dict;
 	int count = 0;
 	int classID;
-	const char *p = Table + (Nfeatures - 1) * sizeof (double);
-	double *csv;
+	const char *p = Table + (Nfeatures - 1) * sizeof (IEEE_t);
+	IEEE_t *csv;
 
-	Tset = new double [N * Nfeatures];
+	Tset = new IEEE_t [N * Nfeatures];
 
 	for (int i = 0, index = 0; i < N; ++i)
 	{
-		csv = (double *) Table;
+		csv = (IEEE_t *) Table;
 		for (int j = 0; j < Nfeatures - 1; ++j, ++index)
 			Tset[index] = csv[j];
 

@@ -30,6 +30,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <string.h>
 
+#include <ANT.h>
+
 /*
  * This file implements the neural matrix.  They implement some
  * matrix/vector products that neural networks need.  They look
@@ -45,9 +47,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
 
-inline double DotProduct (const int N, double *x, double *y)
+inline IEEE_t DotProduct (const int N, IEEE_t *x, IEEE_t *y)
 {
-	double dot = 0;
+	IEEE_t dot = 0;
 	for (int i = 0; i < N; ++i)
 		dot += *x++ * *y++;
 
@@ -60,7 +62,7 @@ struct NeuralM_t
 	int			sm_rows;
 	int			sm_columns;
 	int			sm_len;
-	double		*sm_data;
+	IEEE_t		*sm_data;
 
 	NeuralM_t (void) :
 		sm_releaseMemory (false),
@@ -76,11 +78,11 @@ struct NeuralM_t
 		sm_rows (rows),
 		sm_columns (columns),
 		sm_len (rows * columns),
-		sm_data (new double [sm_len])
+		sm_data (new IEEE_t [sm_len])
 	{
 	}
 
-	NeuralM_t (const int rows, const int columns, double *datap) :
+	NeuralM_t (const int rows, const int columns, IEEE_t *datap) :
 		sm_releaseMemory (false),
 		sm_rows (rows),
 		sm_columns (columns),
@@ -103,7 +105,7 @@ struct NeuralM_t
 		sm_rows = N;
 		sm_columns = 1;
 		sm_len = N;
-		sm_data = new double [N];
+		sm_data = new IEEE_t [N];
 	}
 
 	bool Copy (void)
@@ -111,15 +113,15 @@ struct NeuralM_t
 		if (sm_releaseMemory || sm_data == NULL)
 			return false;
 
-		double *datap = new double [N ()];
-		memcpy (datap, sm_data, sizeof (double) * sm_len);
+		IEEE_t *datap = new IEEE_t [N ()];
+		memcpy (datap, sm_data, sizeof (IEEE_t) * sm_len);
 		sm_data = datap;
 		sm_releaseMemory = true;
 
 		return true;
 	}
 
-	double *raw (void)
+	IEEE_t *raw (void)
 	{
 		return sm_data;
 	}
@@ -145,12 +147,12 @@ struct NeuralM_t
 	}
 
 	// Introduced for vectors
-	inline double &operator[] (const int row)
+	inline IEEE_t &operator[] (const int row)
 	{
 		return sm_data[row];
 	}
 
-	double &operator() (const int row, const int column)
+	IEEE_t &operator() (const int row, const int column)
 	{
 		return *(sm_data + (row * sm_columns) + column);
 	}
@@ -160,9 +162,9 @@ struct NeuralM_t
 	 * multiply the vector.
 	 *
 	 */
-	void MatrixVectorMult (NeuralM_t &A, double *x)
+	void MatrixVectorMult (NeuralM_t &A, IEEE_t *x)
 	{
-		double *pA = A.sm_data;
+		IEEE_t *pA = A.sm_data;
 		int jump = A.stride ();
 		int Nweights = A.columns () - 1;
 
@@ -179,9 +181,9 @@ struct NeuralM_t
 	 * Assumes first column is the bias, and ignores.
 	 *
 	 */
-	void TransposeMatrixVectorMult (NeuralM_t &A, double *vec)
+	void TransposeMatrixVectorMult (NeuralM_t &A, IEEE_t *vec)
 	{
-		double *rowp = A.sm_data + 1; // skip bias
+		IEEE_t *rowp = A.sm_data + 1; // skip bias
 		int Nweights = A.columns () - 1;
 		int runs = A.rows ();
 		int jump = A.stride ();
@@ -199,12 +201,12 @@ struct NeuralM_t
 
 	void zero (void)
 	{
-		memset (sm_data, 0, sm_len * sizeof (double));
+		memset (sm_data, 0, sm_len * sizeof (IEEE_t));
 	}
 
-	void setValue (double x)
+	void setValue (IEEE_t x)
 	{
-		double *p = raw ();
+		IEEE_t *p = raw ();
 		int halt = N ();
 
 		for (int i = 0; i < halt; ++i)

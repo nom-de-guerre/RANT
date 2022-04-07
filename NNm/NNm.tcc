@@ -43,21 +43,21 @@ NNet_t<T>::Halt (DataSet_t const * const tp)
 	return static_cast<T *> (this)->_API_Test (tp);
 }
 
-template<typename T> double
+template<typename T> IEEE_t
 NNet_t<T>::Loss (void)
 {
 	// The current value of the loss function
 	return static_cast<T *> (this)->_API_Error ();
 }
 
-template<typename T> double 
+template<typename T> IEEE_t
 NNet_t<T>::ComputeDerivative (const TrainingRow_t x)
 {
 	/*
 	 * Initiate the recurrence by triggering the loss function.
 	 *
 	 */
-	double error = static_cast<T *>(this)->_API_bprop (x);
+	IEEE_t error = static_cast<T *>(this)->_API_bprop (x);
 
 	for (int level = n_levels - 2; level >= 0; --level)
 		n_strata[level]->bprop (
@@ -67,10 +67,10 @@ NNet_t<T>::ComputeDerivative (const TrainingRow_t x)
 	return error;
 }
 
-template<typename T> double
-NNet_t<T>::Compute (double *x)
+template<typename T> IEEE_t
+NNet_t<T>::Compute (IEEE_t *x)
 {
-	double *ripple;
+	IEEE_t *ripple;
 
 	ripple = x;
 

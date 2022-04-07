@@ -122,7 +122,7 @@ struct mapAPI_t
 	}
 
 	virtual bool Forward (arg_t &) = 0;				// normal compute
-	virtual bool Train (arg_t &, double) = 0;		// forward, but train
+	virtual bool Train (arg_t &, IEEE_t) = 0;		// forward, but train
 	virtual bool Backward (arg_t &) = 0;			// compute gradient
 	virtual bool Update (void) = 0;					// update weights
 	virtual plane_t *fetchGradient (void) = 0;
@@ -278,7 +278,7 @@ public:
 
 	bool f (layer_t *);
 
-	bool ForwardTraining (plane_t *datap, double answer)
+	bool ForwardTraining (plane_t *datap, IEEE_t answer)
 	{
 		ll_args.a_N = 1;
 		ll_args.a_args[0] = datap;
@@ -289,7 +289,7 @@ public:
 		return true;
 	}
 
-	bool ForwardTraining (layer_t *lp, double answer);
+	bool ForwardTraining (layer_t *lp, IEEE_t answer);
 
 	bool BackwardTraining (void)
 	{
@@ -427,7 +427,7 @@ bool layer_t::f (layer_t *ante)
 	return true;
 }
 
-bool layer_t::ForwardTraining (layer_t *ante, double answer)
+bool layer_t::ForwardTraining (layer_t *ante, IEEE_t answer)
 {
 	switch (ll_degree)
 	{

@@ -41,6 +41,8 @@ void Run (NNmConfig_t &, const int, int *);
 
 int main (int argc, char *argv[])
 {
+	printf ("IEEE_t\t%d\n", sizeof (IEEE_t));
+
 	NNmConfig_t params;
 
 	int consumed = params.Parse (argc, argv);

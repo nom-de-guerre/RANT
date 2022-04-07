@@ -57,10 +57,10 @@ struct RPROP_t
 {
 	NeuralM_t				r_Ei;
 	NeuralM_t				r_deltaW;
-	double					*r_W;
+	IEEE_t					*r_W;
 	NeuralM_t				*r_dL;
 
-	RPROP_t (const int N, const int Nin, double *W, NeuralM_t *dL) :
+	RPROP_t (const int N, const int Nin, IEEE_t *W, NeuralM_t *dL) :
 		r_Ei (N, Nin),
 		r_deltaW (N, Nin),
 		r_W (W),
@@ -88,8 +88,8 @@ struct RPROP_t
 void 
 RPROP_t::RPROP (int index)
 {
-	double delta;
-	double backtrack;
+	IEEE_t delta;
+	IEEE_t backtrack;
 
 	if (r_Ei.sm_data[index] == 0.0 || r_dL->sm_data[index] == 0.0)
 	{

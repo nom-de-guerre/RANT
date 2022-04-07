@@ -49,8 +49,8 @@ struct ADAMStrategy_t : public stratum_t
 {
 	NeuralM_t				ad_Mi;
 	NeuralM_t               ad_Vi;
-	double					ad_beta1;
-	double 					ad_beta2;
+	IEEE_t					ad_beta1;
+	IEEE_t 					ad_beta2;
 
 	ADAMStrategy_t (const int N, const int Nin) :
 		stratum_t (N, Nin),
@@ -98,10 +98,10 @@ ADAMStrategy_t::Strategy (void)
 void 
 ADAMStrategy_t::ADAM (int index)
 {
-	double g = s_dL.sm_data[index];
-	double m;
-	double v;
-	double update;
+	IEEE_t g = s_dL.sm_data[index];
+	IEEE_t m;
+	IEEE_t v;
+	IEEE_t update;
 
 	ad_Mi.sm_data[index] = BETA1 * ad_Mi.sm_data[index] + (1 - BETA1) * g;
 	ad_Vi.sm_data[index] = BETA2 * ad_Vi.sm_data[index] + (1 - BETA2) * (g * g);

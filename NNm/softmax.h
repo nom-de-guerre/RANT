@@ -36,14 +36,14 @@ class Softmax_t
 {
 	int				so_Nin;
 	int				so_Nclasses;
-	double			*so_P;
+	IEEE_t			*so_P;
 
 public:
 
 	Softmax_t (const int Nin, const int Nclasses) :
 		so_Nin (Nin),		// +1 for the bias
 		so_Nclasses (Nclasses),
-		so_P (new double [so_Nclasses])
+		so_P (new IEEE_t [so_Nclasses])
 	{
 	}
 
@@ -52,10 +52,10 @@ public:
 		delete [] so_P;
 	}
 
-	int ComputeSoftmax (double const * const);
-	void bprop (const int, double *, double *, double *);
+	int ComputeSoftmax (IEEE_t const * const);
+	void bprop (const int, IEEE_t *, IEEE_t *, IEEE_t *);
 
-	double P (int x)
+	IEEE_t P (int x)
 	{
 		return so_P[x];
 	}
@@ -65,10 +65,10 @@ public:
  * Convert network outputs, so_P[], to softmax "probabilities"
  *
  */
-int Softmax_t::ComputeSoftmax (double const * const Xi)
+int Softmax_t::ComputeSoftmax (IEEE_t const * const Xi)
 {
-	double denom = 0;
-	double max = -DBL_MAX;
+	IEEE_t denom = 0;
+	IEEE_t max = -DBL_MAX;
 	int factor = -1;
 
 	for (int i = 0; i < so_Nclasses; ++i)
@@ -103,11 +103,11 @@ int Softmax_t::ComputeSoftmax (double const * const Xi)
 
 void Softmax_t::bprop (
 	const int answer,
-	double * deltap,
-	double * pdL,
-	double * Xi)
+	IEEE_t * deltap,
+	IEEE_t * pdL,
+	IEEE_t * Xi)
 {
-	double dL;
+	IEEE_t dL;
 
 	for (int output_i = 0; output_i < so_Nclasses; ++output_i)
 	{

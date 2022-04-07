@@ -66,7 +66,7 @@ public:
 		return Pool (arg.a_args[0]);
 	}
 
-	bool Train (arg_t &arg, double answer)
+	bool Train (arg_t &arg, IEEE_t answer)
 	{
 		mp_grad.Reset ();
 
@@ -102,9 +102,9 @@ public:
 
 bool MpoolSlide_t::Pool (plane_t const * const datap)
 {
-	__restrict double *omap = ma_map.raw ();
+	__restrict IEEE_t *omap = ma_map.raw ();
 	__restrict int *rindexp = mp_rindex;
-	__restrict double *imagep = datap->raw ();
+	__restrict IEEE_t *imagep = datap->raw ();
 
 	int idim = datap->rows (); // input image
 	int mdim = ma_map.rows (); // output map
@@ -134,9 +134,9 @@ bool MpoolSlide_t::Pool (plane_t const * const datap)
 
 bool MpoolSlide_t::ComputeGradient (plane_t const * const datap)
 {
-	__restrict double *gradp = mp_grad.raw ();
+	__restrict IEEE_t *gradp = mp_grad.raw ();
 	__restrict int *rindexp = mp_rindex;
-	__restrict double *deltap = datap->raw ();
+	__restrict IEEE_t *deltap = datap->raw ();
 	int halt = ma_map.N ();
 
 	for (int i = 0; i < halt; ++i)

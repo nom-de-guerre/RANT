@@ -30,6 +30,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <string.h>
 
+#include <ANT.h>
+
 #include <softmaxNNm.h>
 #include <layer.h>
 
@@ -37,7 +39,7 @@ class full_t : public SoftmaxNNm_t, public mapAPI_t
 {
 	int				re_Nin;
 
-	double			*re_input;
+	IEEE_t			*re_input;
 	NeuralM_t		re_gradient;
 
 public:
@@ -46,7 +48,7 @@ public:
 		SoftmaxNNm_t (layers, Nlayers, alloc),
 		mapAPI_t (layers[0]),
 		re_Nin (layers[0]),
-		re_input (new double [re_Nin + 1]), // + 1 for training - the answer
+		re_input (new IEEE_t [re_Nin + 1]), // + 1 for training - the answer
 		re_gradient (re_Nin, 1, ma_map.raw ())
 	{
 	}
@@ -74,12 +76,12 @@ public:
 		for (int i = 0; i < arg.a_N; ++i, index += blockSize)
 			memcpy (re_input + index, 
 				arg.a_args[i]->raw (), 
-				blockSize * sizeof (double));
+				blockSize * sizeof (IEEE_t));
 
 		return index;
 	}
 
-	bool Train (arg_t &arg, double answer)
+	bool Train (arg_t &arg, IEEE_t answer)
 	{
 		int len = Load (arg);
 		assert (len == re_Nin);

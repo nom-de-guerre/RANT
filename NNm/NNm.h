@@ -59,15 +59,15 @@ protected:
 
 	int					n_Nweights;
 
-	double				n_halt;			// target loss
-	double				n_error;		// current loss
+	IEEE_t				n_halt;			// target loss
+	IEEE_t				n_error;		// current loss
 	bool				n_accuracy;		// halt training at 100% correct
 	int					n_maxIterations;
 	int					n_keepalive;	// how often to print status
 
 	// Stochastic Gradient Descent Implementation
 	bool					n_useSGD;		// SGD turned on
-	double					n_SGDn;			// % of batch to use
+	IEEE_t					n_SGDn;			// % of batch to use
 	NoReplacementSamples_t	*n_SGDsamples;	// permuted samples
 
 	bool TrainWork (const DataSet_t * const);
@@ -133,7 +133,7 @@ public:
 		n_maxIterations = maxIterations;
 	}
 
-	void SetHalt (double mse)
+	void SetHalt (IEEE_t mse)
 	{
 		n_halt = mse;
 	}
@@ -156,7 +156,7 @@ public:
 		n_accuracy = false;
 	}
 
-	void SetSGD (double percentage)
+	void SetSGD (IEEE_t percentage)
 	{
 		n_useSGD = true;
 		n_SGDn = percentage;
@@ -173,9 +173,9 @@ public:
 	 *
 	 */
 	void Start (void);								// calls Cycle
-	double Compute (double *);						// calls f ()
-	inline double Loss (void);						// calls Error
-	double ComputeDerivative (const TrainingRow_t);	// calls bprop
+	IEEE_t Compute (IEEE_t *);						// calls f ()
+	inline IEEE_t Loss (void);						// calls Error
+	IEEE_t ComputeDerivative (const TrainingRow_t);	// calls bprop
 
 	// The below are public so these objects can be integrated
 	void UpdateWeights (void)

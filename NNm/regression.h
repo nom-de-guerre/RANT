@@ -45,9 +45,9 @@ public:
 	{
 	}
 
-	double _API_bprop (const TrainingRow_t &);
-	double _API_f (double *);
-	double _API_Error (void);
+	IEEE_t _API_bprop (const TrainingRow_t &);
+	IEEE_t _API_f (IEEE_t *);
+	IEEE_t _API_Error (void);
 
 	void _API_Cycle (void) 
 	{
@@ -58,21 +58,21 @@ public:
 	bool _API_Test (DataSet_t const * const);
 };
 
-double Regression_t::_API_f (double *x)
+IEEE_t Regression_t::_API_f (IEEE_t *x)
 {
 	x = n_strata[n_levels - 1]->f (x);
 
 	return x[0];
 }
 
-double Regression_t::_API_bprop (const TrainingRow_t &x)
+IEEE_t Regression_t::_API_bprop (const TrainingRow_t &x)
 {
-	double error = 0;
+	IEEE_t error = 0;
 
-	double y = Compute (x);
+	IEEE_t y = Compute (x);
 
-	double delta;
-	double dAct;
+	IEEE_t delta;
+	IEEE_t dAct;
 	stratum_t *p = n_strata[n_levels - 1];
 	stratum_t *ante = n_strata[n_levels - 2];
 
@@ -107,14 +107,14 @@ double Regression_t::_API_bprop (const TrainingRow_t &x)
 	return y;
 }
 
-double Regression_t::_API_Error (void)
+IEEE_t Regression_t::_API_Error (void)
 {
 	return n_error / r_seen;
 }
 
 bool Regression_t::_API_Test (DataSet_t const * const tp)
 {
-	double Loss = _API_Error ();
+	IEEE_t Loss = _API_Error ();
 
 	return (Loss <= n_halt ? true : false);
 }

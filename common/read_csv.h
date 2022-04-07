@@ -165,8 +165,8 @@ public:
 
 		if (is_numeric || is_float)
 		{
-			*(double *) (fs_datap + fs_cursor) = atof (buffer);
-			fs_cursor += sizeof (double);
+			*(IEEE_t *) (fs_datap + fs_cursor) = atof (buffer);
+			fs_cursor += sizeof (IEEE_t);
 
 		} else {
 
