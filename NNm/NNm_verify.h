@@ -58,7 +58,7 @@ public:
 	{
 	}
 
-	void VerifyGradient (int level, double h, double *Xi)
+	void VerifyGradient (int level, IEEE_t h, IEEE_t *Xi)
 	{
 		assert (level > -1 && level < n_levels - 1);
 
@@ -71,17 +71,17 @@ public:
 		ComputeDerivative (Xi);
 		G.Copy ();
 
-		double *ripple = Xi;
+		IEEE_t *ripple = Xi;
 		for (int i = 0; i <= level; ++i)
 			ripple = n_strata[i]->f (ripple);
 
 		printf ("\tBPROP\t\tDiff\t\tRatio\n");
 
 		// For each of the N perceptrons
-		double dL_bp;
-		double dL_diff;
-		double error;
-		double answer = Xi[n_Nin];
+		IEEE_t dL_bp;
+		IEEE_t dL_diff;
+		IEEE_t error;
+		IEEE_t answer = Xi[n_Nin];
 		for (int i = 0; i < N; ++i)
 		{
 			dL_bp = G.raw () [i];
@@ -126,7 +126,7 @@ public:
 			 *
 			 */
 
-			double ratio = (fabs (dL_bp) - fabs (dL_diff)) /
+			IEEE_t ratio = (fabs (dL_bp) - fabs (dL_diff)) /
 							(fabs (dL_bp) + fabs (dL_diff));
 
 			printf ("∆\t%f\t%f\t%f\n",
