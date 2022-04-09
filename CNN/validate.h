@@ -27,7 +27,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <CNN.h>
 
-double Validate (CNN_t &model, DataSet_t *datap)
+IEEE_t Validate (CNN_t &model, DataSet_t *datap)
 {
 	int incorrect = 0;
 
@@ -41,14 +41,14 @@ double Validate (CNN_t &model, DataSet_t *datap)
 			++incorrect;
 	}
 
-	double ratio = (double) incorrect;
-	ratio /= (double) datap->t_N;
+	IEEE_t ratio = (IEEE_t) incorrect;
+	ratio /= (IEEE_t) datap->t_N;
 	ratio *= 100;
 
 	return ratio;
 }
 
-void Validate (CNN_t &model, DataSet_t *datap, double &accuracy, double &loss)
+void Validate (CNN_t &model, DataSet_t *datap, IEEE_t &accuracy, IEEE_t &loss)
 {
 	int incorrect = 0;
 	int answer;
@@ -71,11 +71,11 @@ void Validate (CNN_t &model, DataSet_t *datap, double &accuracy, double &loss)
 		loss += -log (softp->P(answer));
 	}
 
-	double ratio = (double) incorrect;
-	ratio /= (double) datap->t_N;
+	IEEE_t ratio = (IEEE_t) incorrect;
+	ratio /= (IEEE_t) datap->t_N;
 	ratio *= 100;
 
 	accuracy = ratio;
-	loss /= (double) datap->t_N;
+	loss /= (IEEE_t) datap->t_N;
 }
 
