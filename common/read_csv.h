@@ -28,6 +28,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef __ANT_READ_CSV__H__
 #define __ANT_READ_CSV__H__
 
+#include <sys/stat.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
@@ -35,7 +37,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <assert.h>
 #include <stdint.h>
 
-#define MCHUNK	1048576 // 1 megabyte
+#include <data.h>
+
 #define STR_FEATURE 16
 
 class LoadCSV_t
@@ -44,103 +47,31 @@ class LoadCSV_t
 
 	uint8_t			*fs_datap;
 	int				fs_cursor;
+	ssize_t			fs_free;
 
 	char			**fs_titles;
 
 	int				fs_rows;
 	int				fs_columns;
 
-public:
+	types_e			*fs_schema;
 
-	LoadCSV_t (const char *filepath) :
-		fs_cursor (0),
-		fs_titles (NULL),
-		fs_rows (0),
-		fs_columns (0)
+	void * Consume (ssize_t req)
 	{
-		extern int errno;
+		void *p = fs_datap + fs_cursor;
 
-		fs_fp = fopen (filepath, "r");
-		if (fs_fp == NULL)
-			throw (strerror (errno));
+		assert (req <= fs_free);
 
-		fs_datap = new uint8_t [MCHUNK];
+		fs_free -= req;
+		fs_cursor += req;
+
+		return p;
 	}
 
-	~LoadCSV_t (void)
-	{
-		fclose (fs_fp);
-
-		for (int i = 0; fs_titles && i < fs_columns; ++i)
-			free (fs_titles[i]);
-
-		if (fs_titles)
-			delete [] fs_titles;
-	}
-
-	void * Load (const int Nfeatures,
-		int &rows,
-		bool process[],
-		bool header = true)
-	{
-		char buffer[64];
-		int entries;
-
-		fs_columns = Nfeatures;
-
-		if (header)
-			fs_titles = new char * [Nfeatures];
-
-		for (int i = 0; header && i < Nfeatures - 1; ++i)
-		{
-			entries = fscanf (fs_fp, "%[^,],", buffer);
-			if (entries != 1)
-			{
-				for (int j = 0; j < i; ++j)
-					free (fs_titles[j]);
-
-				delete [] fs_titles;
-
-				return NULL;
-			}
-
-			fs_titles[i] = strdup (buffer);
-		}
-
-		if (header) // need to consume new line
-		{
-			fscanf (fs_fp, "%s\n", buffer);
-			fs_titles [Nfeatures - 1] = strdup (buffer);
-		}
-
-		while (entries != EOF)
-		{
-			for (int i = 0; header && i < Nfeatures - 1; ++i)
-			{
-				entries = fscanf (fs_fp, "%[^,],", buffer);
-				if (entries != 1)
-					break;
-
-				if (process && process[i])
-					ProcessEntry (buffer);
-			}
-
-			entries = fscanf (fs_fp, ("%s\n"), buffer);
-			if (process && process[Nfeatures - 1])
-				ProcessEntry (buffer);
-
-			if (entries == 1)
-				++fs_rows;
-		}
-
-		rows = fs_rows;
-
-		return fs_datap;
-	}
-
-	void ProcessEntry (const char *buffer)
+	types_e ProcessEntry (const char *buffer, Categories_t *dictp = NULL)
 	{
 		const char *p = buffer;
+		int classID;
 		bool is_numeric = true;
 		bool is_float = false;
 
@@ -165,17 +96,301 @@ public:
 
 		if (is_numeric || is_float)
 		{
-			*(IEEE_t *) (fs_datap + fs_cursor) = atof (buffer);
-			fs_cursor += sizeof (IEEE_t);
+			*((IEEE_t *) Consume (sizeof (IEEE_t))) = atof (buffer);
+
+			return types_e::IEEE;
+
+		} else if (dictp) {
+			classID = dictp->Encode (buffer);
+			*((IEEE_t *) Consume (sizeof (IEEE_t))) = classID;
+
+			return types_e::CATEGORICAL;
 
 		} else {
 
 			int len = strlen (buffer);
-			memcpy (fs_datap + fs_cursor, buffer, len);
-			fs_cursor += STR_FEATURE;
+			memcpy (Consume (len), buffer, len);
+
+			return types_e::CATEGORICAL;
 		}
 
-		assert (fs_cursor < MCHUNK);
+		return types_e::IGNORE;
+	}
+
+	inline void ProcessBuffer (
+		types_e id, 
+		const char *buffer, 
+		Categories_t &dict)
+	{
+		int classID;
+
+		switch (id) {
+
+		case IEEE:
+
+			*((IEEE_t *) Consume (sizeof (IEEE_t))) = atof (buffer);
+
+			break;
+
+		case CATEGORICAL:
+
+			classID = dict.Encode (buffer);
+			*((IEEE_t *) Consume (sizeof (IEEE_t))) = classID;
+
+			break;
+
+			default:
+
+			assert (false);
+		}
+	}
+
+	int ReadHeader (bool process [])
+	{
+		char buffer[64];
+		int index = 0;
+		int entries;
+
+		fs_titles = new char * [fs_columns];
+
+		for (int i = 0; i < fs_columns - 1; ++i)
+		{
+			entries = fscanf (fs_fp, "%[^,],", buffer);
+			if (entries != 1)
+			{
+				for (int j = 0; j < i; ++j)
+					free (fs_titles[j]);
+
+				delete [] fs_titles;
+
+				return -1;
+			}
+
+			if (process[i])
+			{
+				fs_titles[index] = strdup (buffer);
+				++index;
+			}
+		}
+
+		// need to consume new line
+		fscanf (fs_fp, "%s\n", buffer);
+		fs_titles [index++] = strdup (buffer);
+
+		return index;
+	}
+
+public:
+
+	LoadCSV_t (const char *filepath) :
+		fs_cursor (0),
+		fs_titles (NULL),
+		fs_rows (0),
+		fs_columns (0),
+		fs_schema (NULL)
+	{
+		extern int errno;
+		struct stat mdata;
+
+		int rc = stat (filepath, &mdata);
+		if (rc)
+			throw (strerror (errno));
+
+		fs_free = mdata.st_size << 1;
+
+		fs_fp = fopen (filepath, "r");
+		if (fs_fp == NULL)
+			throw (strerror (errno));
+
+		fs_datap = new uint8_t [fs_free];
+	}
+
+	~LoadCSV_t (void)
+	{
+		fclose (fs_fp);
+
+		for (int i = 0; fs_titles && i < fs_columns; ++i)
+			free (fs_titles[i]);
+
+		if (fs_titles)
+			delete [] fs_titles;
+
+		if (fs_schema)
+			delete [] fs_schema;
+	}
+
+	void * Load (const int Nfeatures,
+		int &rows,
+		bool process[],
+		bool header = true)
+	{
+		char buffer[64];
+		int entries=1;
+
+		if (header)
+		{
+			fs_columns = Nfeatures;
+			fs_columns = ReadHeader (process);
+			if (fs_columns < 1)
+				return NULL;
+
+		} else {
+
+			fs_columns = 0;
+			for (int i = 0; i < Nfeatures; ++i)
+				if (process[i])
+					++fs_columns;
+		}
+
+		while (entries != EOF)
+		{
+			for (int i = 0; i < Nfeatures - 1; ++i)
+			{
+				entries = fscanf (fs_fp, "%[^,],", buffer);
+				if (entries != 1)
+					break;
+
+				if (process && process[i])
+					ProcessEntry (buffer);
+			}
+
+			entries = fscanf (fs_fp, ("%s\n"), buffer);
+			if (process && process[Nfeatures - 1])
+				ProcessEntry (buffer);
+
+			if (entries == 1)
+				++fs_rows;
+		}
+
+		rows = fs_rows;
+
+		return fs_datap;
+	}
+
+	DataSet_t * LoadDS (const int Nfeatures,
+		bool process[],
+		bool header = true)
+	{
+		DataSet_t *O;
+		Categories_t dict;
+		char buffer[64];
+		int entries=1;
+		types_e type;
+		int used;
+
+		if (header)
+		{
+			fs_columns = Nfeatures;
+			fs_columns = ReadHeader (process);
+			if (fs_columns < 1)
+				return NULL;
+
+		} else {
+
+			fs_columns = 0;
+			for (int i = 0; i < Nfeatures; ++i)
+				if (process[i])
+					++fs_columns;
+		}
+
+		fs_schema = new types_e [fs_columns];
+
+		while (entries != EOF)
+		{
+			used = 0;
+			for (int i = 0; i < Nfeatures - 1; ++i)
+			{
+				entries = fscanf (fs_fp, "%[^,],", buffer);
+				if (entries != 1)
+					break;
+
+				if (process && !process[i])
+					continue;
+
+				type = ProcessEntry (buffer, &dict);
+				if (fs_rows)
+					assert (fs_schema[used] == type);
+				else
+					fs_schema[used] = type;
+
+				++used;
+			}
+
+			entries = fscanf (fs_fp, ("%s\n"), buffer);
+			if (process && process[Nfeatures - 1])
+			{
+				ProcessEntry (buffer, &dict);
+				if (fs_rows)
+						assert (fs_schema[used] == type);
+				else
+						fs_schema[used] = type;
+			}
+
+			if (entries == 1)
+				++fs_rows;
+		}
+
+		O = new DataSet_t (fs_rows, 
+			fs_columns - 1, 
+			1, 
+			(IEEE_t *) fs_datap, 
+			new ClassDict_t (dict));
+
+		return O;
+	}
+
+	DataSet_t * LoadSchema (const int Nfeatures,
+		bool process [],
+		types_e schema [],
+		bool header = true)
+	{
+		DataSet_t *O = NULL;
+		Categories_t dict;
+		char buffer[64];
+		int entries=1;
+
+		if (header)
+		{
+			fs_columns = Nfeatures;
+			fs_columns = ReadHeader (process);
+			if (fs_columns < 1)
+				return NULL;
+
+		} else {
+
+			fs_columns = 0;
+			for (int i = 0; i < Nfeatures; ++i)
+				if (process[i])
+					++fs_columns;
+		}
+
+		while (entries != EOF)
+		{
+			for (int i = 0; i < Nfeatures - 1; ++i)
+			{
+				entries = fscanf (fs_fp, "%[^,],", buffer);
+
+				if (!process[i])
+					continue;
+
+				ProcessBuffer (schema[i], buffer, dict);
+			}
+
+			// entries = fscanf (fs_fp, "%[^,]\n", buffer);
+			entries = fscanf (fs_fp, ("%s\n"), buffer);
+			ProcessBuffer (schema [Nfeatures - 1], buffer, dict);
+
+			if (entries != EOF)
+				++fs_rows;
+		}
+
+		O = new DataSet_t (fs_rows, 
+			fs_columns - 1, 
+			1, 
+			(IEEE_t *) fs_datap, 
+			new ClassDict_t (dict));
+
+		return O;
 	}
 };
 

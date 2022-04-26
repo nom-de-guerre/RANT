@@ -35,7 +35,134 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <ANT.h>
 
+/*
+ * The code below is used for computing the classes for classification
+ * from non-numeric labels.
+ *
+ */
+
+#include <map>
+struct cmpStr
+{
+	bool operator()(const char *x, const char *y) const
+	{
+		return strcmp (x, y) < 0;
+	}
+};
+
+typedef std::map<const char *, int, cmpStr> unique_t;
+
+struct Categories_t
+{
+	unique_t			cc_unique;
+	int					cc_code;
+
+	Categories_t (void) :
+		cc_code (0)
+	{
+	}
+
+	~Categories_t (void)
+	{
+	}
+
+	int N (void)
+	{
+		return cc_code;
+	}
+
+	int Encode (const char * category)
+	{
+		int classID;
+
+		auto rc = cc_unique.find (category);
+		if (rc == cc_unique.end ())
+		{
+			cc_unique[strdup (category)] = cc_code;
+
+			classID = cc_code;
+
+			++cc_code;
+
+		} else
+			classID = rc->second;
+
+
+		return classID;
+	}
+};
+
+struct ClassDict_t
+{
+	struct dictVal_t
+	{
+		const char	*className;
+		int			classID;
+	};
+
+	int			cd_N;
+	dictVal_t	*cd_dict;
+
+	ClassDict_t (Categories_t &dict) :
+		cd_N (dict.N ()),
+		cd_dict (new dictVal_t [cd_N])
+	{
+		for (const auto& [key, value] : dict.cc_unique)
+		{
+			cd_dict[value].classID = value;
+			cd_dict[value].className = key;
+		}
+	}
+
+	~ClassDict_t (void)
+	{
+		delete [] cd_dict;
+	}
+
+	const char *Name (const int index)
+	{
+		return cd_dict[index].className;
+	}
+};
+
+ClassDict_t *
+ComputeClasses (
+	const int N,
+	const int Nfeatures,
+	const char *Table,
+	IEEE_t *&Tset,
+	const int stride)
+{
+	Categories_t dict;
+	int classID;
+	const char *p = Table + (Nfeatures - 1) * sizeof (IEEE_t);
+	IEEE_t *csv;
+
+	Tset = new IEEE_t [N * Nfeatures];
+
+	for (int i = 0, index = 0; i < N; ++i)
+	{
+		csv = (IEEE_t *) Table;
+		for (int j = 0; j < Nfeatures - 1; ++j, ++index)
+			Tset[index] = csv[j];
+
+		classID = dict.Encode (p);
+
+		Tset[index] = classID;
+
+		Table += stride;
+		p += stride;
+		++index;
+	}
+
+	ClassDict_t *dictp = new ClassDict_t (dict);
+
+	return dictp;
+}
+
 typedef IEEE_t * TrainingRow_t;
+
+enum types_e { IGNORE, IEEE, CATEGORICAL };
 
 struct DataSet_t
 {
@@ -46,12 +173,15 @@ struct DataSet_t
 
 	TrainingRow_t			t_data;
 
+	ClassDict_t				*t_dictp;
+
 	DataSet_t (int N, int Nin, int Nout) :
 		t_N (N),
 		t_Nin (Nin),
 		t_Nout (Nout),
 		t_columns (Nin + Nout),
-		t_data (new IEEE_t [N * Nin + N * Nout])
+		t_data (new IEEE_t [N * Nin + N * Nout]),
+		t_dictp (NULL)
 	{
 		assert (t_Nout == 1);
 	}
@@ -61,13 +191,27 @@ struct DataSet_t
 		t_Nin (Nin),
 		t_Nout (Nout),
 		t_columns (Nin + Nout),
-		t_data (datap)
+		t_data (datap),
+		t_dictp (NULL)
+	{
+	}
+
+	DataSet_t (int N, int Nin, int Nout, IEEE_t *datap, ClassDict_t *dictp) :
+		t_N (N),
+		t_Nin (Nin),
+		t_Nout (Nout),
+		t_columns (Nin + Nout),
+		t_data (datap),
+		t_dictp (dictp)
 	{
 	}
 
 	~DataSet_t (void)
 	{
 		delete [] t_data;
+
+		if (t_dictp)
+			delete t_dictp;
 	}
 
 	DataSet_t *Copy (void)
@@ -197,26 +341,36 @@ struct DataSet_t
 
 	IEEE_t Variance (const int feature)
 	{
-		IEEE_t sum = 0;
-		IEEE_t sumsq = 0;
+		IEEE_t mean;
+		IEEE_t summand;
 		IEEE_t var;
 		int stride;
 		IEEE_t *column;
+		IEEE_t sum = 0;
+
+		/*
+		 * We use the double pass version as it is more numerically stable
+		 * than the single pass version: E(x^2) - E(x)^2
+		 *
+		 */
+		mean = Mean (feature);
 
 		FeatureIteration (feature, stride, column);
 
 		for (int i = 0; i < t_N; ++i, column += stride)
 		{
-			sum += *column;
-			sumsq += *column * *column;
+			summand = *column - mean;
+			sum += summand * summand; 
 		}
 
-		sum /= t_N;
-		sum *= sum;
-
-		var = sumsq / (t_N - 1) - sum;
+		var = sum / (t_N - 1);
 
 		return var;
+	}
+
+	IEEE_t StdDev (const int feature)
+	{
+		return sqrt (Variance (feature));
 	}
 
 	void Center (const int feature)
@@ -233,7 +387,7 @@ struct DataSet_t
 
 	void Zscore (const int feature, bool centre = true)
 	{
-		IEEE_t stddev = sqrt (Variance (feature));
+		IEEE_t stddev = StdDev (feature);
 		IEEE_t mean = (centre ? Mean (feature) : nan (NULL));
 		int stride;
 		IEEE_t *column;
@@ -247,96 +401,39 @@ struct DataSet_t
 			*column /= stddev;
 		}
 	}
-};
 
-/*
- * The code below is used for computing the classes for classification
- * from non-numeric labels.
- *
- */
-
-#include <map>
-struct cmpStr
-{
-	bool operator()(const char *x, const char *y) const
+	void Normalize (const int feature)
 	{
-		return strcmp (x, y) < 0;
+		int stride;
+		IEEE_t *column;
+		IEEE_t sum = 0;
+
+		Center (feature); // mean is now zero
+
+		FeatureIteration (feature, stride, column);
+
+		for (int i = 0; i < t_N; ++i, column += stride)
+			sum += *column * *column;
+
+		sum = sqrt (sum / (t_N - 1));
+
+		FeatureIteration (feature, stride, column);
+
+		for (int i = 0; i < t_N; ++i, column += stride)
+			*column /= sum;
+	}
+
+	void Normalize (void)
+	{
+		for (int i = 0; i < t_Nin; ++i)
+			Normalize (i);
+	}
+
+	const char *CategoryName (const int type)
+	{
+		return t_dictp->Name (type);
 	}
 };
-typedef std::map<const char *, int, cmpStr> unique_t;
-
-struct ClassDict_t
-{
-	int			cd_N;
-
-	struct dictVal_t
-	{
-		const char	*className;
-		int			classID;
-	};
-
-	dictVal_t	*cd_dict;
-
-	ClassDict_t (int N) :
-		cd_N (N),
-		cd_dict (new dictVal_t [N])
-	{
-	}
-
-	~ClassDict_t (void)
-	{
-		delete [] cd_dict;
-	}
-};
-
-ClassDict_t *
-ComputeClasses (
-	const int N,
-	const int Nfeatures,
-	const char *Table,
-	IEEE_t *&Tset,
-	const int stride)
-{
-	unique_t dict;
-	int count = 0;
-	int classID;
-	const char *p = Table + (Nfeatures - 1) * sizeof (IEEE_t);
-	IEEE_t *csv;
-
-	Tset = new IEEE_t [N * Nfeatures];
-
-	for (int i = 0, index = 0; i < N; ++i)
-	{
-		csv = (IEEE_t *) Table;
-		for (int j = 0; j < Nfeatures - 1; ++j, ++index)
-			Tset[index] = csv[j];
-
-		auto rc = dict.find (p);
-		if (rc == dict.end ())
-		{
-			dict[strdup (p)] = count;
-			classID = count;
-			++count;
-		} else
-			classID = rc->second;
-
-		Tset[index] = classID;
-
-		Table += stride;
-		p += stride;
-		++index;
-	}
-
-	ClassDict_t *dictp = new ClassDict_t (count);
-
-	for (const auto& [key, value] : dict)
-	{
-		dictp->cd_dict[value].classID = value;
-		dictp->cd_dict[value].className = key;
-	}
-
-	return dictp;
-}
 
 #endif // header inclusion
 

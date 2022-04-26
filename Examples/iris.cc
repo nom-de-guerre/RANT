@@ -36,7 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <options.h>
 
 void Run (NNmConfig_t &, int *);
-DataSet_t *LoadData (ClassDict_t *&);
+DataSet_t *LoadData (void);
 
 int main (int argc, char *argv[])
 {
@@ -71,8 +71,7 @@ int main (int argc, char *argv[])
 
 void Run (NNmConfig_t &params, int *layers)
 {
-	ClassDict_t *dictp;
-	DataSet_t *O = LoadData (dictp);
+	DataSet_t *O = LoadData ();
 	SoftmaxNNm_t *Np = NULL;
 	double guess;
 
@@ -99,7 +98,7 @@ void Run (NNmConfig_t &params, int *layers)
 
 	} catch (const char *excep) {
 
-		printf ("ERROR: %s\n", excep);
+		printf ("Warning: %s\n", excep);
 	}
 
 	printf ("\n\tLoss\t\tAccuracy\tSteps\n");
@@ -130,8 +129,8 @@ void Run (NNmConfig_t &params, int *layers)
 		if (!correct)
 			printf ("(%d)\tDJS_RESULT\t%s\t%s\t%c\n",
 				i,
-				dictp->cd_dict[(int) guess].className,
-				dictp->cd_dict[(int) O->Answer (i)].className,
+				O->CategoryName (guess),
+				O->CategoryName (O->Answer (i)),
 				(correct ? ' ' : 'X'));
 	}
 
@@ -143,26 +142,13 @@ void Run (NNmConfig_t &params, int *layers)
 
 }
 
-bool includeFeature[] = { false, true, true, true, true, true };
+bool includeFeature [] = { false, true, true, true, true, true };
 
-DataSet_t *LoadData (ClassDict_t *&dictp)
+DataSet_t *LoadData (void)
 {
 	LoadCSV_t Z ("../../../Data/iris.csv");
 
-	int rows;
-	void *datap = Z.Load (6, rows, includeFeature);
-
-	int stride = 4 * sizeof (double) + STR_FEATURE;
-
-	double *table;
-	dictp = ComputeClasses (
-		rows,
-		5,
-		(const char *) datap,
-		table, 
-		stride);
-
-	DataSet_t *tp = new DataSet_t (rows, 4, 1, table);
+	DataSet_t *tp = Z.LoadDS (6, includeFeature);
 
 	for (int i = 0; i < 4; ++i)
 	{

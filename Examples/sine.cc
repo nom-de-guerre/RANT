@@ -78,8 +78,13 @@ void Run (NNmConfig_t &params, int *layers)
 
 	try {
 
-		Np = new Regression_t (layers + 1, layers[0], RPROP);
+		if (params.ro_flag)
+			Np = new Regression_t (layers + 1, layers[0], ADAM);
+		else
+			Np = new Regression_t (layers + 1, layers[0], RPROP);
+
 		Np->SetHalt (params.ro_haltCondition);
+		Np->SetKeepAlive (10000);
 
 		Np->Train (O, params.ro_maxIterations);
 
@@ -106,17 +111,21 @@ void Run (NNmConfig_t &params, int *layers)
 		if (error > params.ro_haltCondition)
 			++missed;
 
+#if 1
 		printf ("DJS_RESULT\t%1.8f\t%1.8f\t%1.8f\t%s\n",
 			(*O)[i][0],
 			(*O)[i][1],
 			guess,
 			(error > params.ro_haltCondition ? "X" : ""));
+#endif
 	}
 
 	MSE /= O->t_N;
+	printf ("Loss\t%d\t%e\n", Np->Steps (), MSE);
+
+#if 0
 	if (MSE > params.ro_haltCondition)
 		printf ("Accuracy not achieved: %e\t%e\n", MSE, params.ro_haltCondition);
-
 	MSE = 0.0;
 	O = BuildTrainingSet (64);
 	for (int i = 0; i < O->t_N; ++i)
@@ -134,6 +143,8 @@ void Run (NNmConfig_t &params, int *layers)
 
 	if (missed)
 		printf ("Missed: %d\n", missed);
+#endif
+
 }
 
 DataSet_t *BuildTrainingSet (int N)
@@ -144,7 +155,8 @@ DataSet_t *BuildTrainingSet (int N)
 	{
 		double sample = (double) rand () / RAND_MAX;
 
-		(*O)[i][0] = sample * PI_2;
+		// (*O)[i][0] = sample * PI_2;
+		(*O)[i][0] = sample * PI;
 		(*O)[i][1] = sin ((*O)[i][0]);
 	}
 
