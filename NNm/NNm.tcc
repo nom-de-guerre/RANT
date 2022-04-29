@@ -72,7 +72,18 @@ NNet_t<T>::Compute (IEEE_t *x)
 {
 	IEEE_t *ripple;
 
-	ripple = x;
+	if (n_normalize) {
+
+		for (int i = 0; i < n_Nin; ++i)
+		{
+			n_arg[i] = x[i] - n_normParams[2 * i];
+			n_arg[i] /= n_normParams[2 * i + 1];
+		}
+
+		ripple = n_arg;
+
+	} else
+		ripple = x;
 
 	for (int layer = 0; layer < n_levels - 1; ++layer)
 		ripple = n_strata[layer]->f (ripple);

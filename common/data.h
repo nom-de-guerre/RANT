@@ -175,6 +175,8 @@ struct DataSet_t
 
 	ClassDict_t				*t_dictp;
 
+	types_e					*t_schema;
+
 	DataSet_t (int N, int Nin, int Nout) :
 		t_N (N),
 		t_Nin (Nin),
@@ -221,6 +223,11 @@ struct DataSet_t
 		memcpy (replica->t_data, t_data, t_Nin * t_Nout * sizeof (IEEE_t));
 
 		return replica;
+	}
+
+	int Nin (void) const
+	{
+		return t_Nin;
 	}
 
 	int Stride (void) const
@@ -288,14 +295,14 @@ struct DataSet_t
 		return t_N;
 	}
 
-	void FeatureIteration (int feature, int &stride, IEEE_t *&base)
+	void FeatureIteration (int feature, int &stride, IEEE_t *&base) const
 	{
 		// the data are stored row order, and elements are assumed IEEE_t
 		stride = t_columns;
 		base = t_data + feature;
 	}
 
-	IEEE_t Max (const int feature)
+	IEEE_t Max (const int feature) const
 	{
 		IEEE_t best = -DBL_MAX;
 		int stride;
@@ -310,7 +317,7 @@ struct DataSet_t
 		return best;
 	}
 
-	IEEE_t Min (const int feature)
+	IEEE_t Min (const int feature) const
 	{
 		IEEE_t best = DBL_MAX;
 		int stride;
@@ -325,7 +332,7 @@ struct DataSet_t
 		return best;
 	}
 
-	IEEE_t Mean (const int feature)
+	IEEE_t Mean (const int feature) const
 	{
 		IEEE_t sum = 0;
 		int stride;
@@ -339,7 +346,7 @@ struct DataSet_t
 		return sum / t_N;
 	}
 
-	IEEE_t Variance (const int feature)
+	IEEE_t Variance (const int feature) const
 	{
 		IEEE_t mean;
 		IEEE_t summand;
@@ -368,7 +375,7 @@ struct DataSet_t
 		return var;
 	}
 
-	IEEE_t StdDev (const int feature)
+	IEEE_t StdDev (const int feature) const
 	{
 		return sqrt (Variance (feature));
 	}
@@ -426,7 +433,12 @@ struct DataSet_t
 	void Normalize (void)
 	{
 		for (int i = 0; i < t_Nin; ++i)
+		{
+			if (t_schema && t_schema[i] != IEEE)
+				continue;
+
 			Normalize (i);
+		}
 	}
 
 	const char *CategoryName (const int type)

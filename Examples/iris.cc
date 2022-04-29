@@ -91,6 +91,7 @@ void Run (NNmConfig_t &params, int *layers)
 	Np->SetHalt (params.ro_haltCondition);
 	Np->SetAccuracy (); // Halt at 100% accuracy, even if above loss threshold
 	Np->SetKeepAlive (50); // Print every x epochs
+	Np->SetNormalize (O);
 
 	try {
 
@@ -149,19 +150,6 @@ DataSet_t *LoadData (void)
 	LoadCSV_t Z ("../../../Data/iris.csv");
 
 	DataSet_t *tp = Z.LoadDS (6, includeFeature);
-
-	for (int i = 0; i < 4; ++i)
-	{
-		tp->Center (i);
-		double max = tp->Max (i);
-
-		int N = tp->N ();
-		int stride = tp->Stride ();
-		double *base = (double *) tp->FeatureBase (i);
-
-		for (int j = 0, index = 0; j < N; ++j, index += stride)
-			base[index] /= max;
-	}
 
 	return tp;
 }

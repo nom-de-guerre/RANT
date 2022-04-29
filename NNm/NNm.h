@@ -70,6 +70,10 @@ protected:
 	IEEE_t					n_SGDn;			// % of batch to use
 	NoReplacementSamples_t	*n_SGDsamples;	// permuted samples
 
+	bool				n_normalize;
+	IEEE_t				*n_normParams;
+	IEEE_t				*n_arg;
+
 	bool TrainWork (const DataSet_t * const);
 	bool Step(const DataSet_t * const training);
 	bool Halt (DataSet_t const * const);
@@ -96,7 +100,10 @@ public:
 		n_keepalive (100),
 		n_useSGD (false),
 		n_SGDn (nan(NULL)),
-		n_SGDsamples (NULL)
+		n_SGDsamples (NULL),
+		n_normalize (false),
+		n_normParams (NULL),
+		n_arg (NULL)
 	{
 		n_Nweights = 0;
 
@@ -126,6 +133,12 @@ public:
 			delete n_strata[i];
 
 		delete [] n_strata;
+
+		if (n_normParams)
+			delete [] n_normParams;
+
+		if (n_arg)
+			delete [] n_arg;
 	}
 
 	void SetMaxIterations (int maxIterations)
@@ -185,6 +198,21 @@ public:
 	}
 
 	bool ExposeGradient (NeuralM_t &);
+
+	void SetNormalize (DataSet_t const * const S)
+	{
+		assert (S->Nin () == n_Nin);
+
+		n_normalize = true;
+		n_normParams = new IEEE_t [n_Nin * 2];
+		n_arg = new IEEE_t [n_Nin];
+
+		for (int i = 0; i < n_Nin; ++i)
+		{
+			n_normParams[i * 2] = S->Mean (i);
+			n_normParams[i * 2 + 1] = S->StdDev (i);
+		}
+	}
 };
 
 #include <NNm.tcc>

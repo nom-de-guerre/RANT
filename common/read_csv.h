@@ -336,6 +336,9 @@ public:
 			(IEEE_t *) fs_datap, 
 			new ClassDict_t (dict));
 
+		O->t_schema = fs_schema;
+		fs_schema = NULL;
+
 		return O;
 	}
 
