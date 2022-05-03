@@ -95,7 +95,7 @@ public:
 			for (int i = level + 1; i < n_levels - 1; ++i)
 				ripple = n_strata[i]->f (ripple);
 
-			error = static_cast<Regression_t *>(this)->_API_f (ripple) - answer;
+			error = _API_f (ripple) - answer;
 			error = 0.5 * error * error;
 			dL_diff = error;
 
@@ -108,7 +108,7 @@ public:
 			for (int i = level + 1; i < n_levels - 1; ++i)
 				ripple = n_strata[i]->f (ripple);
 
-			error = static_cast<Regression_t *>(this)->_API_f (ripple) - answer;
+			error = _API_f (ripple) - answer;
 			error = 0.5 * error * error;
 			dL_diff -= error;
 			dL_diff /= 2 * h;

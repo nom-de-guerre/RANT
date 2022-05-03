@@ -74,7 +74,6 @@ struct stratum_t
 		s_dot (s_Nperceptrons, 1),
 		s_response (s_Nperceptrons, 1)
 	{
-		s_dL.zero ();
 	}
 
 	virtual ~stratum_t (void)
@@ -83,6 +82,8 @@ struct stratum_t
 
 	void init (int Nout)
 	{
+		s_dL.zero ();
+
 		// Glorot, W ~ [-r, r]
 		IEEE_t r = sqrt (6.0 / (Nout + s_Nin));
 		IEEE_t *p = s_W.raw();

@@ -46,7 +46,7 @@ int main (int argc, char *argv[])
 {
 	if (argc < 2)
 	{
-		printf ("Usage: LoW hidden-layers output-layers\n");
+		printf ("Usage: list of hidden-layers\n");
 		exit (-1);
 	}
 
@@ -55,12 +55,17 @@ int main (int argc, char *argv[])
 
 	srand (seed);
 
-	int N_layers = argc - 1;
-	int *layers = new int [N_layers + 2];	// widths plus length prefix, inputs
-	layers[0] = N_layers + 1;
+	--argc;
+	++argv;
+
+	int N_layers = argc;
+	int *layers = new int [N_layers + 3];	// widths plus length prefix, inputs
+	layers[0] = N_layers + 2;
 	layers[1] = 1;							// one input
+	layers[N_layers + 2] = 1;				// one output
+
 	for (int i = 0; i < N_layers; ++i)
-		layers[i + 2] = atoi (argv[i + 1]);
+		layers[i + 2] = atoi (argv[i]);
 
 	Run (layers);
 
@@ -83,17 +88,15 @@ void Run (int *layers)
 
 	} catch (const char *error) {
 
-		printf ("Oh Well...\n");
+		// Ignore
 	}
 
-	int sample = rand () % N_POINTS;
-	Np->VerifyGradient (0, 1e-7, (*O)[sample]);
-
-	sample = rand () % N_POINTS;
-	Np->VerifyGradient (0, 1e-7, (*O)[sample]);
-
-	sample = rand () % N_POINTS;
-	Np->VerifyGradient (1, 1e-7, (*O)[sample]);
+	// We only examine the input layer and the hidden layers
+	for (int i = 0; i < layers[0] - 2; ++i)
+	{
+		int sample = rand () % N_POINTS;
+		Np->VerifyGradient (i, 1e-7, (*O)[sample]);
+	}
 }
 
 DataSet_t *BuildTrainingSet (int N)
