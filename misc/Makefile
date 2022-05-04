@@ -1,7 +1,7 @@
 NN_INCLUDES = -I../NNm -I../common -I../CNN
 OPTIONS= $(OUTSIDE)
-CC=g++
-DEBUG=-O3 
+CC=g++ -std=c++17
+DEBUG=-O3
 # DEBUG=-O0 -g
 CFLAGS=-Wall -I. $(NN_INCLUDES) $(OPTIONS) $(DEBUG)
 NN_DEPS = $(wildcard *.h) $(wildcard ../common/*h) $(wildcard ../NNm/*) $(wildcard ../CNN/*h)
@@ -17,9 +17,13 @@ checkGradient: checkGradient.cc $(DEPS)
 ensemble: ensemble.cc $(DEPS)
 	$(CC) -o $@ $(CFLAGS) ensemble.cc
 
-all: show checkGradient ensemble
+nn: nn.cc $(DEPS)
+	$(CC) -o $@ $(CFLAGS) nn.cc
+
+all: show checkGradient ensemble nn
 
 clean:
 	rm show
 	rm checkGradient
 	rm ensemble
+	rm nn

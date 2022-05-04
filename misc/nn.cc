@@ -26,6 +26,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include <sys/param.h>
+#include <sys/time.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -36,21 +37,36 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <softmaxNNm.h>
 #include <options.h>
 
-void Run (NNmConfig_t &);
+void Run (NNmConfig_t &, int *);
 
 int main (int argc, char *argv[])
 {
 	NNmConfig_t params;
 
-	params.Parse (argc, argv);
+	printf ("bytes\t%d\n", sizeof (IEEE_t));
+
+	int consumed = params.Parse (argc, argv);
+
+	argc -= consumed;
+	argv += consumed;
 
 	printf ("Seed %ld\n", params.ro_seed);
 
 	srand (params.ro_seed);
 
+	// { length, inputs,  ..., outputs }
+	int *layers = new int [argc + 3];
+
+	layers[0] = argc + 2;
+	layers[1] = 784;					// 28x28 inputs
+	layers[argc + 2] = 10;				// 3 outputs
+
+	for (int i = 0; i < argc; ++i)
+		layers[i + 2] = atoi (argv[i]);
+
 	try {
 
-		Run (params);
+		Run (params, layers);
 
 	} catch (const char *errp) {
 
@@ -63,6 +79,10 @@ double Validate (SoftmaxNNm_t &model, DataSet_t *datap)
 {
     int incorrect = 0;
 
+	struct timeval start, end;
+
+	gettimeofday (&start, NULL);
+
     for (int i = 0; i < datap->N (); ++i)
     {
         int guess = model.Compute ((*datap)[i]);
@@ -70,6 +90,15 @@ double Validate (SoftmaxNNm_t &model, DataSet_t *datap)
         if (guess != datap->Answer (i))
             ++incorrect;
     }
+
+	gettimeofday (&end, NULL);
+
+	uint32_t a, b;
+	a = 1000000 * start.tv_sec + start.tv_usec;
+	b = 1000000 * end.tv_sec + end.tv_usec;
+
+	printf ("TIME\t%f\n",
+		(double) (b - a) / datap->t_N);
 
     double ratio = (double) incorrect;
     ratio /= (double) datap->t_N;
@@ -81,11 +110,8 @@ double Validate (SoftmaxNNm_t &model, DataSet_t *datap)
 char fullpath_data [MAXPATHLEN];
 char fullpath_labels [MAXPATHLEN];
 
-void Run (NNmConfig_t &params)
+void Run (NNmConfig_t &params, int *layers)
 {
-	int Nlayers = 3;
-	int layers [] = { 784, 300, 10 };
-
 	sprintf (fullpath_data, "%s/train-images.idx3-ubyte", params.ro_path);
 	sprintf (fullpath_labels, "%s/train-labels.idx1-ubyte", params.ro_path);
 	MNIST_t data (fullpath_data, fullpath_labels);
@@ -94,12 +120,13 @@ void Run (NNmConfig_t &params)
 	sprintf (fullpath_labels, "%s/t10k-labels.idx1-ubyte", params.ro_path);
 	MNIST_t test (fullpath_data, fullpath_labels);
 
-	double SGD = params.ro_Nsamples / (double) 100;
-	SoftmaxNNm_t NNs (layers, Nlayers, RPROP);
+	double SGD = 0.1; // params.ro_Nsamples / (double) 100;
+	SoftmaxNNm_t NNs (layers + 1, layers[0], RPROP);
 
 	NNs.SetHalt (params.ro_haltCondition);
 	NNs.SetAccuracy ();
-	NNs.setSGD (SGD);
+	NNs.SetSGD (SGD);
+	NNs.SetKeepAlive (10);
 
 	try {
 
