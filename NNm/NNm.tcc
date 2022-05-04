@@ -164,14 +164,11 @@ NNet_t<T>::Step (const DataSet_t * const training)
 	Start ();
 
 	if (n_useSGD)
-	{
-		n_SGDsamples->Reset ();
 		batch = n_SGDn * batch;
-	}
 
 	for (int i = 0; i < batch; ++i)
 	{
-		(n_useSGD ? sample = n_SGDsamples->Sample () : sample = i);
+		(n_useSGD ? sample = n_SGDsamples->SampleAuto () : sample = i);
 		assert (sample >= 0 && sample < training->N ());
 		ComputeDerivative (training->entry (sample));
 	}
