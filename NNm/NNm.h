@@ -39,6 +39,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <sampling.h>
 
 #include <stratum.h>
+#include <dense.h>
+#include <logits.h>
 #include <RPROP.h>
 #include <ADAM.h>
 
@@ -86,9 +88,9 @@ public:
 	 * an SLP with a single input, 4 hidden and 1 output perceptron.
 	 *
 	 */
-	NNet_t (const int * const width, 
-			const int levels,
-			Rule_t alloc) :
+	NNet_t (const int levels,
+			const int * const width, 
+			StrategyAlloc_t rule) :
 		n_steps (0),
 		n_Nin (width[0]),
 		n_Nout (width[levels - 1]),
@@ -106,7 +108,6 @@ public:
 		n_arg (NULL)
 	{
 		n_Nweights = 0;
-
 		// width = # inputs, width 1, ..., # outputs
 
 		for (int i = levels - 1; i > 0; --i)
@@ -122,8 +123,39 @@ public:
 		for (int i = 1; i <= n_levels; ++i)
 		{
 			n_width[i - 1] = width[i];
-			n_strata[i - 1] = (*alloc)(width[i], width[i - 1]);
-			n_strata[i - 1]->init (i < n_levels ? width[i + 1] : width[i]);
+			n_strata[i - 1] = new dense_t (width[i], width[i - 1], rule);
+			n_strata[i - 1]->_sAPI_init (
+				i < n_levels ?
+				width[i + 1] :
+				width[i]);
+		}
+	}
+
+	NNet_t (const int levels, const int Nin, const int Nout) :
+		n_steps (0),
+		n_Nin (Nin),
+		n_Nout (Nout),
+		n_levels (levels - 1), // no state for input
+		n_Nweights (-1),
+		n_halt (1e-5),
+		n_error (nan (NULL)),
+		n_accuracy (false),
+		n_maxIterations (5000),
+		n_keepalive (100),
+		n_useSGD (false),
+		n_SGDn (nan(NULL)),
+		n_SGDsamples (NULL),
+		n_normalize (false),
+		n_normParams (NULL),
+		n_arg (NULL)
+	{
+		n_strata = new stratum_t * [n_levels];
+		n_width = new int [n_levels];
+
+		for (int i = 0; i < n_levels; ++i)
+		{
+			n_strata[i] = NULL;
+			n_width[i] = -1;
 		}
 	}
 
@@ -133,6 +165,8 @@ public:
 			delete n_strata[i];
 
 		delete [] n_strata;
+
+		delete [] n_width;
 
 		if (n_normParams)
 			delete [] n_normParams;
@@ -180,6 +214,30 @@ public:
 		n_keepalive = modulus;
 	}
 
+	void AddDenseLayer (int layer, int N, StrategyAlloc_t rule)
+	{
+		assert (layer >= 0 && layer < n_levels);
+		assert (n_strata[layer] == NULL);
+
+		int Nin = (layer ? n_width[layer - 1] : n_Nin);
+
+		n_width[layer] = N;
+		n_strata[layer] = new dense_t (N, Nin, rule);
+		n_strata[layer]->_sAPI_init (N);
+	}
+
+	void AddLogitsLayer (int layer, int N, StrategyAlloc_t rule)
+	{
+		assert (layer >= 0 && layer < n_levels);
+		assert (n_strata[layer] == NULL);
+
+		int Nin = (layer ? n_width[layer - 1] : n_Nin);
+
+		n_width[layer] = N;
+		n_strata[layer] = new logits_t (N, Nin, rule);
+		n_strata[layer]->_sAPI_init (N);
+	}
+
 	/*
 	 * The next 4 call the specialization.  They are public as
 	 * CNN components need to access them to integrate training.
@@ -194,7 +252,7 @@ public:
 	void UpdateWeights (void)
 	{
 		for (int i = 0; i < n_levels; ++i)
-			n_strata[i]->Strategy ();
+			n_strata[i]->_sAPI_strategy ();
 	}
 
 	bool ExposeGradient (NeuralM_t &);

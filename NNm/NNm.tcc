@@ -57,12 +57,23 @@ NNet_t<T>::ComputeDerivative (const TrainingRow_t x)
 	 * Initiate the recurrence by triggering the loss function.
 	 *
 	 */
-	IEEE_t error = static_cast<T *>(this)->_API_bprop (x);
+	IEEE_t *Xi;
+	NeuralM_t *gradp;
 
-	for (int level = n_levels - 2; level >= 0; --level)
-		n_strata[level]->bprop (
-			*n_strata[level + 1],
-			(level > 0 ? n_strata[level - 1]->s_response.raw () : x));
+	IEEE_t error;
+
+	for (int level = n_levels - 1; level >= 0; --level)
+	{
+		Xi = (level > 0 ? n_strata[level - 1]->z () : x);
+		gradp = n_strata[level]->_sAPI_gradientM ();
+
+		if (level == n_levels - 1)
+			error = static_cast<T *>(this)->_API_bprop (x, gradp->raw ());
+		else
+			n_strata[level + 1]->_sAPI_gradient (*gradp);
+
+		n_strata[level]->_sAPI_bprop (Xi);
+	}
 
 	return error;
 }
@@ -86,7 +97,7 @@ NNet_t<T>::Compute (IEEE_t *x)
 		ripple = x;
 
 	for (int layer = 0; layer < n_levels - 1; ++layer)
-		ripple = n_strata[layer]->f (ripple);
+		ripple = n_strata[layer]->_sAPI_f (ripple);
 
 	/*
 	 * Compute the final result with the specialization
@@ -190,9 +201,7 @@ template<typename T> bool
 NNet_t<T>::ExposeGradient (NeuralM_t &grad)
 {
 	// Compute per node total derivative
-	grad.TransposeMatrixVectorMult (
-		n_strata[0]->s_W, 
-		n_strata[0]->s_delta.raw ());
+	n_strata[0]->_sAPI_gradient (grad);
 
 	return true;
 }

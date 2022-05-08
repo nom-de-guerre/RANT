@@ -34,7 +34,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 class filter_t : public mapAPI_t
 {
 	int				ff_width;		// only square filters currently supported
-	RPROPStrategy_t	*ff_filter;
+	dense_t			*ff_filter;
 	plane_t			**ff_input;		// Xi from the ante layer
 	plane_t			*ff_flux;		// gradient we propagate backwards
 	plane_t			const * ff_G;	// gradient from post layer
@@ -48,24 +48,24 @@ public:
 	filter_t (const int fwidth, const int mwidth) :
 		mapAPI_t (mwidth - fwidth + 1, mwidth),
 		ff_width (fwidth),
-		ff_filter (new RPROPStrategy_t (1, fwidth * fwidth)),
+		ff_filter (new dense_t (1, fwidth * fwidth, RPROP)),
 		ff_input (new plane_t *),
 		ff_flux (new plane_t (mwidth, mwidth)),
 		ff_G (NULL)
 	{
-		ff_filter->init (mwidth * mwidth); // on that order, used for Glorot
+		ff_filter->_sAPI_init (mwidth * mwidth); // on that order, used for Glorot
 	}
 
 	filter_t (const int fwidth, const int mwidth, const int Nin, int *program) :
 		mapAPI_t (mwidth - fwidth + 1, Nin, program),
 		ff_width (fwidth),
-		ff_filter (new RPROPStrategy_t (1, ma_stripeN * ff_width * ff_width)),
+		ff_filter (new dense_t (1, ma_stripeN * ff_width * ff_width, RPROP)),
 		ff_input (new plane_t * [Nin]),
 		ff_flux (new plane_t (mwidth, mwidth)),
 		ff_G (NULL)
 	{
 		ma_iwidth = mwidth;
-		ff_filter->init (mwidth * mwidth * Nin);
+		ff_filter->_sAPI_init (mwidth * mwidth * Nin);
 	}
 
 	~filter_t (void)
@@ -90,7 +90,7 @@ public:
 		IEEE_t * __restrict datap = ma_map.raw ();
 
 		int W_stride = ff_width * ff_width;
-		IEEE_t *pW = ff_filter->s_W.raw ();
+		IEEE_t *pW = ff_filter->de_W.raw ();
 		IEEE_t bias = pW[0];
 		++pW;
 
@@ -113,7 +113,7 @@ public:
 
 	bool Backward (arg_t &arg)
 	{
-		IEEE_t *bias = ff_filter->s_dL.raw ();
+		IEEE_t *bias = ff_filter->de_dL.raw ();
 		int blockSize = ma_map.N ();
 		__restrict IEEE_t * gradientp = arg.a_args[0]->raw ();
 
@@ -133,7 +133,7 @@ public:
 
 	bool Update (void)
 	{
-		ff_filter->Strategy ();
+		ff_filter->_sAPI_strategy ();
 #ifndef __SAVE_G_FOR_VERIFICATION
 		ff_G = NULL;
 #endif
@@ -196,7 +196,7 @@ bool filter_t::Convolve (plane_t const * const datap, IEEE_t const * const pW)
 void filter_t::ComputeGradient (int pidx)
 {
 	int blockSize = ff_width * ff_width;
-	__restrict IEEE_t * filterp = 1 + blockSize * pidx + ff_filter->s_W.raw ();
+	__restrict IEEE_t * filterp = 1 + blockSize * pidx + ff_filter->de_W.raw ();
 	__restrict IEEE_t * i_gradp = ff_G->raw ();
 	__restrict IEEE_t *gradientp = ff_flux->raw ();
 	int idim = inputSize ();
@@ -225,10 +225,10 @@ void filter_t::ComputeGradient (int pidx)
 bool filter_t::ComputeDerivatives (int pidx)
 {
 	int blockSize = ff_width * ff_width;
-	__restrict IEEE_t * dW = 1 + blockSize * pidx + ff_filter->s_dL.raw ();
+	__restrict IEEE_t * dW = 1 + blockSize * pidx + ff_filter->de_dL.raw ();
 	__restrict IEEE_t * dO = ff_G->raw ();
 	__restrict IEEE_t *input = ff_input[pidx]->raw ();
-	IEEE_t *bias = ff_filter->s_dL.raw ();
+	IEEE_t *bias = ff_filter->de_dL.raw ();
 	int idim = ff_G->rows ();
 	int stride = idim - ff_width;
 	int mdim = ma_map.rows ();

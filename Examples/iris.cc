@@ -75,18 +75,15 @@ void Run (NNmConfig_t &params, int *layers)
 	SoftmaxNNm_t *Np = NULL;
 	double guess;
 
-	if (params.ro_flag) {
+	Np = new SoftmaxNNm_t (layers[0], layers[1], layers[layers[0]]);
 
-		Np = new SoftmaxNNm_t (layers + 1, layers[0], ADAM);
+	for (int i = 2; i <= layers[0] - 1; ++i)
+		Np->AddDenseLayer (i - 2, layers[i], (params.ro_flag ? ADAM : RPROP));
 
-		printf ("Using ADAM\n");
-
-	 } else { 
-
-		Np = new SoftmaxNNm_t (layers + 1, layers[0], RPROP);
-
-		printf ("Using RPROP+\n");
-	}
+	Np->AddLogitsLayer (
+		layers[0] - 2,
+		layers[layers[0]],
+		(params.ro_flag ? ADAM : RPROP));
 
 	Np->SetHalt (params.ro_haltCondition);
 	Np->SetAccuracy (); // Halt at 100% accuracy, even if above loss threshold

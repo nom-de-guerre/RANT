@@ -45,29 +45,34 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * ADAM strategy implementation.
  *
  */
-struct ADAMStrategy_t : public stratum_t
+struct ADAM_t : public strategy_t
 {
 	NeuralM_t				ad_Mi;
 	NeuralM_t               ad_Vi;
 	IEEE_t					ad_beta1;
 	IEEE_t 					ad_beta2;
+	IEEE_t					*ad_learnable;
+	IEEE_t					*ad_dL;
 
-	ADAMStrategy_t (const int N, const int Nin) :
-		stratum_t (N, Nin),
-		ad_Mi (s_Nperceptrons, s_Nin),
-		ad_Vi (s_Nperceptrons, s_Nin),
+	ADAM_t (const int N, const int Nin, IEEE_t *W, IEEE_t *dL) :
+		strategy_t (),
+		ad_Mi (N, Nin),
+		ad_Vi (N, Nin),
 		ad_beta1 (BETA1),
-		ad_beta2 (BETA2)
+		ad_beta2 (BETA2),
+		ad_learnable (W),
+		ad_dL (dL)
 	{
 		ad_Mi.zero ();
 		ad_Vi.zero ();
 	}
 
-	~ADAMStrategy_t (void)
+	~ADAM_t (void)
 	{
 	}
 
-	void Strategy (void);
+	virtual void _tAPI_strategy (void);
+
 	void StrategyMono (const int index)
 	{
 		ADAM (index);
@@ -77,7 +82,7 @@ struct ADAMStrategy_t : public stratum_t
 };
 
 void 
-ADAMStrategy_t::Strategy (void)
+ADAM_t::_tAPI_strategy (void)
 {
 	int Nweights = ad_Mi.N ();
 
@@ -96,9 +101,9 @@ ADAMStrategy_t::Strategy (void)
  */
 
 void 
-ADAMStrategy_t::ADAM (int index)
+ADAM_t::ADAM (int index)
 {
-	IEEE_t g = s_dL.sm_data[index];
+	IEEE_t g = ad_dL[index];
 	IEEE_t m;
 	IEEE_t v;
 	IEEE_t update;
@@ -109,16 +114,14 @@ ADAMStrategy_t::ADAM (int index)
 	v = ad_Vi.sm_data[index] / (1 - ad_beta2);
 	update = m / (sqrt (v) + EPSILON);
 
-	s_W.sm_data[index] -= ALPHA * update;
+	ad_learnable[index] -= ALPHA * update;
 
-	s_dL.sm_data[index] = 0.0;
+	ad_dL[index] = 0.0;
 }
 
-stratum_t * AllocateADAM (const int N, const int Nin);
-
-stratum_t * AllocateADAM (const int N, const int Nin)
+strategy_t * AllocateADAM (const int N, const int Nin, IEEE_t *W, IEEE_t *dL)
 {
-	stratum_t *p = new ADAMStrategy_t (N, Nin);
+	strategy_t *p = new ADAM_t (N, Nin, W, dL);
 
 	return p;
 }

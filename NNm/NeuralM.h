@@ -213,6 +213,18 @@ struct NeuralM_t
 			*p++ = x;
 	}
 
+	void resize (const int rows, const int columns)
+	{
+		delete [] sm_data;
+
+		sm_rows = rows;
+		sm_columns = columns;
+		sm_len = rows * columns;
+
+		sm_data = new IEEE_t [sm_len];
+
+	}
+
 	void display (const char * const msgp = NULL) const
 	{
 		if (msgp)

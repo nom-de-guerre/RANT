@@ -49,12 +49,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 class RegressionGrad_t : public Regression_t
 {
-	stratum_t			*rg_stratum;
+	dense_t			*rg_stratum;
 
 public:
 
-	RegressionGrad_t (int *width, int levels) :
-		Regression_t (width, levels, RPROP)
+	RegressionGrad_t (int levels, int *width) :
+		Regression_t (levels, width, RPROP)
 	{
 	}
 
@@ -62,7 +62,7 @@ public:
 	{
 		assert (level > -1 && level < n_levels - 1);
 
-		rg_stratum = n_strata[level];
+		rg_stratum = static_cast<dense_t *> (n_strata[level]);
 
 		int N = rg_stratum->N ();
 
@@ -73,7 +73,7 @@ public:
 
 		IEEE_t *ripple = Xi;
 		for (int i = 0; i <= level; ++i)
-			ripple = n_strata[i]->f (ripple);
+			ripple = n_strata[i]->_sAPI_f (ripple);
 
 		printf ("\tBPROP\t\tDiff\t\tRatio\n");
 
@@ -86,14 +86,14 @@ public:
 		{
 			dL_bp = G.raw () [i];
 
-			rg_stratum->s_dot (i, 0) += h;
+			rg_stratum->de_dot (i, 0) += h;
 			rg_stratum->s_response (i, 0) =
-				ACTIVATION_FN (rg_stratum->s_dot (i, 0));
+				ACTIVATION_FN (rg_stratum->de_dot (i, 0));
 
 			ripple = rg_stratum->s_response.raw ();
 
 			for (int i = level + 1; i < n_levels - 1; ++i)
-				ripple = n_strata[i]->f (ripple);
+				ripple = n_strata[i]->_sAPI_f (ripple);
 
 			error = _API_f (ripple) - answer;
 			error = 0.5 * error * error;
@@ -101,21 +101,21 @@ public:
 
 			ripple = rg_stratum->s_response.raw ();
 
-			rg_stratum->s_dot (i, 0) -= 2 * h;
+			rg_stratum->de_dot (i, 0) -= 2 * h;
 			rg_stratum->s_response (i, 0) =
-				ACTIVATION_FN (rg_stratum->s_dot (i, 0));
+				ACTIVATION_FN (rg_stratum->de_dot (i, 0));
 
 			for (int i = level + 1; i < n_levels - 1; ++i)
-				ripple = n_strata[i]->f (ripple);
+				ripple = n_strata[i]->_sAPI_f (ripple);
 
 			error = _API_f (ripple) - answer;
 			error = 0.5 * error * error;
 			dL_diff -= error;
 			dL_diff /= 2 * h;
 
-			rg_stratum->s_dot (i, 0) += h;
+			rg_stratum->de_dot (i, 0) += h;
 			rg_stratum->s_response (i, 0) =
-				ACTIVATION_FN (rg_stratum->s_dot (i, 0));
+				ACTIVATION_FN (rg_stratum->de_dot (i, 0));
 
 			/*
 			 *         | bprop | - | diff |

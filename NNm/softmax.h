@@ -34,14 +34,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 class Softmax_t
 {
-	int				so_Nin;
 	int				so_Nclasses;
 	IEEE_t			*so_P;
 
 public:
 
-	Softmax_t (const int Nin, const int Nclasses) :
-		so_Nin (Nin),		// +1 for the bias
+	Softmax_t (const int Nclasses) :
 		so_Nclasses (Nclasses),
 		so_P (new IEEE_t [so_Nclasses])
 	{
@@ -53,7 +51,7 @@ public:
 	}
 
 	int ComputeSoftmax (IEEE_t const * const);
-	void bprop (const int, IEEE_t *, IEEE_t *, IEEE_t *);
+	void bprop (const int, IEEE_t *);
 
 	IEEE_t P (int x)
 	{
@@ -101,11 +99,7 @@ int Softmax_t::ComputeSoftmax (IEEE_t const * const Xi)
 	return factor;
 }
 
-void Softmax_t::bprop (
-	const int answer,
-	IEEE_t * deltap,
-	IEEE_t * pdL,
-	IEEE_t * Xi)
+void Softmax_t::bprop ( const int answer, IEEE_t * deltap)
 {
 	IEEE_t dL;
 
@@ -123,18 +117,6 @@ void Softmax_t::bprop (
 		 */
 
 		deltap[output_i] = dL;
-
-		/*
-		 * initiate the recurrence
-		 *
-		 * ∂L   ∂y   ∂L
-		 * -- · -- = -- = 𝛅 · y(i-1)
-		 * ∂y   ∂w   ∂w
-		 *
-		 */
-		*pdL++ += dL;						// the bias
-		for (int i = 1; i < so_Nin; ++i)
-			*pdL++ += dL * Xi[i - 1];
 	}
 }
 

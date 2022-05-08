@@ -41,11 +41,21 @@ class SoftmaxNNm_t : public NNet_t<SoftmaxNNm_t>
 
 public:
 
-	SoftmaxNNm_t (const int * const width,
-			   const int levels,
-			   Rule_t alloc) :
-		NNet_t (width, levels, alloc),
-		c_softm (levels[width - 2] + 1, n_Nout)
+	SoftmaxNNm_t (const int Nlayers, const int *layers, StrategyAlloc_t rule) :
+		NNet_t (Nlayers, layers, rule),
+		c_softm (n_Nout)
+	{
+		// we need a logits layer for the terminal layer
+		delete n_strata[n_levels - 1];
+		n_strata[n_levels - 1] = 
+			new logits_t (n_Nout, n_strata[n_levels - 2]->N (), rule);
+
+		_API_Cycle ();
+	}
+
+	SoftmaxNNm_t (const int Nlayers, const int Nin, const int Nout) :
+		NNet_t (Nlayers, Nin, Nout),
+		c_softm (Nout)
 	{
 		_API_Cycle ();
 	}
@@ -54,7 +64,7 @@ public:
 	{
 	}
 
-	IEEE_t _API_bprop (const TrainingRow_t &);
+	IEEE_t _API_bprop (const TrainingRow_t &, IEEE_t *);
 	IEEE_t _API_f (IEEE_t *);
 	IEEE_t _API_Error (void);
 	void _API_Cycle (void);
@@ -79,12 +89,12 @@ public:
 
 IEEE_t SoftmaxNNm_t::_API_f (IEEE_t *x)
 {
-	x = n_strata[n_levels - 1]->f (x, false);
+	x = n_strata[n_levels - 1]->_sAPI_f (x, false);
 
 	return c_softm.ComputeSoftmax (x);
 }
 
-IEEE_t SoftmaxNNm_t::_API_bprop (const TrainingRow_t &x)
+IEEE_t SoftmaxNNm_t::_API_bprop (const TrainingRow_t &x, IEEE_t *gradp)
 {
 	IEEE_t loss;
 	int answer = static_cast<int> (x[n_Nin]);
@@ -94,19 +104,13 @@ IEEE_t SoftmaxNNm_t::_API_bprop (const TrainingRow_t &x)
 		++c_Correct;
 	++c_seen;
 
-	loss = -log (c_softm.P(answer));
+	loss = -log (c_softm.P (answer));
 	if (isnan (loss) || isinf (loss))
 		n_error += 1000;
 	else
 		n_error += loss;
 
-	stratum_t *p = n_strata[n_levels - 1];
-	stratum_t *ante = n_strata[n_levels - 2];
-	IEEE_t *pdL = p->s_dL.raw (); // Done here as it is row order
-
-	assert (n_Nout == p->s_Nperceptrons);
-
-	c_softm.bprop (answer, p->s_delta.raw (), pdL, ante->s_response.raw ());
+	c_softm.bprop (answer, gradp);
 
 	return loss;
 }

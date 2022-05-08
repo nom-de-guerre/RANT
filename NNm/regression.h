@@ -32,20 +32,23 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 class Regression_t : public NNet_t<Regression_t>
 {
-
 	int			r_seen;
 
 public:
 
-	Regression_t (int *width,
-				  int levels,
-				  Rule_t alloc) :
-		NNet_t (width, levels, alloc),
+	Regression_t (const int Nlayers, const int *layers, StrategyAlloc_t rule) :
+		NNet_t (Nlayers, layers, rule),
 		r_seen (0)
 	{
 	}
 
-	IEEE_t _API_bprop (const TrainingRow_t &);
+	Regression_t (const int Nlayers, const int Nin, const int Nout) : 
+		NNet_t (Nlayers, Nin, Nout),
+		r_seen (0)
+	{
+	}
+
+	IEEE_t _API_bprop (const TrainingRow_t &, IEEE_t *gradp);
 	IEEE_t _API_f (IEEE_t *);
 	IEEE_t _API_Error (void);
 
@@ -60,47 +63,19 @@ public:
 
 IEEE_t Regression_t::_API_f (IEEE_t *x)
 {
-	x = n_strata[n_levels - 1]->f (x);
+	x = n_strata[n_levels - 1]->_sAPI_f (x);
 
 	return x[0];
 }
 
-IEEE_t Regression_t::_API_bprop (const TrainingRow_t &x)
+IEEE_t Regression_t::_API_bprop (const TrainingRow_t &x, IEEE_t *gradp)
 {
 	IEEE_t error = 0;
 
 	IEEE_t y = Compute (x);
 
-	IEEE_t delta;
-	IEEE_t dAct;
-	stratum_t *p = n_strata[n_levels - 1];
-	stratum_t *ante = n_strata[n_levels - 2];
-
-	error = y - x[n_Nin];
+	*gradp = error = y - x[n_Nin];
 	n_error += error * error;
-
-	dAct = DERIVATIVE_FN (y);
- 
-	/*
-	 * ∂L   ∂y   ∂L
-	 * -- · -- = -- = 𝛅 = delta
-	 * ∂y   ∂∑   ∂∑
-	 *
-	 */
-
-	delta = error * dAct;
-	p->s_delta.sm_data[0] = delta;
-
-	/*
-	 *  ∂L   ∂y   ∂L
-	 *  -- · -- = -- = 𝛅 · y(i-1)
-	 *  ∂∑   ∂w   ∂w
-	 *
-	 */
-
-	p->s_dL.sm_data[0] += delta;			// the bias
-	for (int i = 1; i < p->s_Nin; ++i)
-		p->s_dL.sm_data[i] += delta * ante->s_response.sm_data[i - 1];
 
 	++r_seen;
 

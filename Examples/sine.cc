@@ -76,15 +76,14 @@ void Run (NNmConfig_t &params, int *layers)
 	Regression_t *Np = NULL;
 	double guess;
 
+	Np = new Regression_t (layers[0], layers[1], layers[layers[0]]);
+
+	Np->SetHalt (params.ro_haltCondition);
+
+	for (int i = 2; i <= layers[0]; ++i)
+		Np->AddDenseLayer (i - 2, layers[i], (params.ro_flag ? ADAM : RPROP));
+
 	try {
-
-		if (params.ro_flag)
-			Np = new Regression_t (layers + 1, layers[0], ADAM);
-		else
-			Np = new Regression_t (layers + 1, layers[0], RPROP);
-
-		Np->SetHalt (params.ro_haltCondition);
-		Np->SetKeepAlive (10000);
 
 		Np->Train (O, params.ro_maxIterations);
 
@@ -111,19 +110,16 @@ void Run (NNmConfig_t &params, int *layers)
 		if (error > params.ro_haltCondition)
 			++missed;
 
-#if 1
 		printf ("DJS_RESULT\t%1.8f\t%1.8f\t%1.8f\t%s\n",
 			(*O)[i][0],
 			(*O)[i][1],
 			guess,
 			(error > params.ro_haltCondition ? "X" : ""));
-#endif
 	}
 
 	MSE /= O->t_N;
 	printf ("Loss\t%d\t%e\n", Np->Steps (), MSE);
 
-#if 0
 	if (MSE > params.ro_haltCondition)
 		printf ("Accuracy not achieved: %e\t%e\n", MSE, params.ro_haltCondition);
 	MSE = 0.0;
@@ -143,8 +139,6 @@ void Run (NNmConfig_t &params, int *layers)
 
 	if (missed)
 		printf ("Missed: %d\n", missed);
-#endif
-
 }
 
 DataSet_t *BuildTrainingSet (int N)

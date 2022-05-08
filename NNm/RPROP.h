@@ -34,8 +34,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <math.h>
 #include <float.h>
 
-#include <stratum.h>
-
 // RPROP+ update parameters
 #define DELTA0				1e-2
 #define DELTA_MIN			1e-8
@@ -53,28 +51,29 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
 
-struct RPROP_t
+struct RPROP_t : public strategy_t
 {
 	NeuralM_t				r_Ei;
-	NeuralM_t				r_deltaW;
-	IEEE_t					*r_W;
-	NeuralM_t				*r_dL;
+	NeuralM_t				r_delta;
+	IEEE_t					*r_learnable;
+	IEEE_t					*r_dL;
 
-	RPROP_t (const int N, const int Nin, IEEE_t *W, NeuralM_t *dL) :
+	RPROP_t (const int N, const int Nin, IEEE_t *W, IEEE_t *dL) :
+		strategy_t (),
 		r_Ei (N, Nin),
-		r_deltaW (N, Nin),
-		r_W (W),
+		r_delta (N, Nin),
+		r_learnable (W),
 		r_dL (dL)
 	{
 		r_Ei.zero ();
-		r_deltaW.setValue (DELTA0);
+		r_delta.setValue (DELTA0);
 	}
 
 	~RPROP_t (void)
 	{
 	}
 
-	void Strategy (void)
+	virtual void _tAPI_strategy (void)
 	{
 		int Nweights = r_Ei.N ();
 
@@ -91,98 +90,71 @@ RPROP_t::RPROP (int index)
 	IEEE_t delta;
 	IEEE_t backtrack;
 
-	if (r_Ei.sm_data[index] == 0.0 || r_dL->sm_data[index] == 0.0)
+	if (r_Ei.sm_data[index] == 0.0 || r_dL[index] == 0.0)
 	{
-		delta = -SIGN (r_dL->sm_data[index]) * r_deltaW.sm_data[index];
+		delta = -SIGN (r_dL[index]) * r_delta.sm_data[index];
 
 		if (isnan (delta))
 			throw ("Degenerate weight update");
 
-		r_W[index] += delta;
+		r_learnable[index] += delta;
 
-		r_Ei.sm_data[index] = r_dL->sm_data[index];
+		r_Ei.sm_data[index] = r_dL[index];
 
-	} else if (SIGN (r_dL->sm_data[index]) == SIGN (r_Ei.sm_data[index])) {
+	} else if (SIGN (r_dL[index]) == SIGN (r_Ei.sm_data[index])) {
 
 		// (1)
-		delta = r_deltaW.sm_data[index] * ETA_PLUS;
+		delta = r_delta.sm_data[index] * ETA_PLUS;
 		if (delta > DELTA_MAX)
 			delta = DELTA_MAX;
 
-		r_deltaW.sm_data[index] = delta;
+		r_delta.sm_data[index] = delta;
 
 		// (2)
-		delta *= -(SIGN (r_dL->sm_data[index]));
+		delta *= -(SIGN (r_dL[index]));
 		if (isnan (delta))
 			throw ("Degenerate weight update");
 
 		// (3)
-		r_W[index] += delta;
+		r_learnable[index] += delta;
 
-		r_Ei.sm_data[index] = r_dL->sm_data[index];
+		r_Ei.sm_data[index] = r_dL[index];
 
 	} else {
 
-		backtrack = r_deltaW.sm_data[index] * SIGN (r_Ei.sm_data[index]);
+		backtrack = r_delta.sm_data[index] * SIGN (r_Ei.sm_data[index]);
 
 		// (1)
-		delta = r_deltaW.sm_data[index] * ETA_MINUS;
+		delta = r_delta.sm_data[index] * ETA_MINUS;
 		if (delta < DELTA_MIN)
 			delta = DELTA_MIN;
 
 		if (isnan (delta))
 			throw ("Degenerate weight update");
 
-		r_deltaW.sm_data[index] = delta;
+		r_delta.sm_data[index] = delta;
 
 		// (2)
-		r_W[index] += backtrack;
+		r_learnable[index] += backtrack;
 
 		// (3)
 		r_Ei.sm_data[index] = 0.0;
 	}
 
-	r_dL->sm_data[index] = 0.0;
+	r_dL[index] = 0.0;
 
-	assert (r_deltaW.sm_data[index] > 0);
+	assert (r_delta.sm_data[index] > 0);
 }
 
-struct RPROPStrategy_t : public stratum_t, private RPROP_t
+strategy_t * AllocateRPROP (const int N, const int Nin, IEEE_t *W, IEEE_t *dL)
 {
-	RPROPStrategy_t (const int N, const int Nin) :
-		stratum_t (N, Nin),
-		RPROP_t (N, Nin + 1, s_W.raw (), &s_dL)
-	{
-	}
-
-	~RPROPStrategy_t (void)
-	{
-	}
-
-	void StrategyMono (const int index)
-	{
-		RPROP (index);
-	}
-
-	void Strategy (void);
-};
-
-void 
-RPROPStrategy_t::Strategy (void)
-{
-	RPROP_t::Strategy ();
-}
-
-stratum_t * AllocateRPROP (const int N, const int Nin);
-
-stratum_t * AllocateRPROP (const int N, const int Nin)
-{
-	stratum_t *p = new RPROPStrategy_t (N, Nin);
+	strategy_t *p = new RPROP_t (N, Nin, W, dL);
 
 	return p;
 }
 
 #define RPROP AllocateRPROP
+
 
 #endif // header inclusion
 

@@ -79,7 +79,7 @@ void Run (int *layers)
 	DataSet_t *O = BuildTrainingSet (N_POINTS);
 	RegressionGrad_t *Np = NULL;
 
-	Np = new RegressionGrad_t (layers + 1, layers[0]);
+	Np = new RegressionGrad_t (layers[0], layers + 1);
 	Np->SetHalt (soln_MSE);
 
 	try {

@@ -41,7 +41,7 @@ void Run (NNmConfig_t &, const int, int *);
 
 int main (int argc, char *argv[])
 {
-	printf ("IEEE_t\t%d\n", sizeof (IEEE_t));
+	printf ("IEEE_t\t%lu\n", sizeof (IEEE_t));
 
 	NNmConfig_t params;
 

@@ -25,60 +25,39 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef _NN_STRATUM__H__
-#define _NN_STRATUM__H__
+#ifndef _NN_STRATEGY__H__
+#define _NN_STRATEGY__H__
 
 #include <NeuralM.h>
-#include <strategy.h>
 
-struct stratum_t
+struct strategy_t
 {
-	int						s_Nnodes;
-	int						s_Nin;
-
-	NeuralM_t				s_delta;
-	NeuralM_t				s_response;
-
-	strategy_t				*s_strat;
-
-	stratum_t (const int N, const int Nin) :
-		s_Nnodes (N),
-		s_Nin (Nin),
-		s_delta (N, 1),
-		s_response (N, 1)
+	strategy_t (void)
 	{
 	}
 
-	virtual ~stratum_t (void)
+	virtual ~strategy_t (void)
 	{
 	}
 
-	int N (void) const
+	virtual void _tAPI_strategy (void)
 	{
-		return s_Nnodes;
-	}
-
-	virtual void _sAPI_init (const int) = 0;
-	virtual IEEE_t * _sAPI_f (IEEE_t * const, bool = true) = 0;
-
-	virtual void _sAPI_gradient (NeuralM_t &) = 0;
-	virtual void _sAPI_bprop (IEEE_t *, bool = true) = 0;
-
-	virtual void _sAPI_strategy (void)
-	{
-		s_strat->_tAPI_strategy ();
-	}
-
-	virtual NeuralM_t * _sAPI_gradientM (void)
-	{
-		return &s_delta;
-	}
-
-	IEEE_t * z (void)
-	{
-		return s_response.raw ();
+		return;
 	}
 };
+
+typedef strategy_t * (*StrategyAlloc_t) (
+	const int,
+	const int,
+	IEEE_t *,
+	IEEE_t *);
+
+strategy_t * StratNone (const int a, const int b, IEEE_t *c, IEEE_t *d)
+{
+	return new strategy_t ();
+}
+
+#define NONE StratNone
 
 #endif // header inclusion
 

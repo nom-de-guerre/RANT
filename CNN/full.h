@@ -44,8 +44,8 @@ class full_t : public SoftmaxNNm_t, public mapAPI_t
 
 public:
 
-	full_t (const int * const layers, const int Nlayers, Rule_t alloc) :
-		SoftmaxNNm_t (layers, Nlayers, alloc),
+	full_t (const int * const layers, const int Nlayers, StrategyAlloc_t rule) :
+		SoftmaxNNm_t (Nlayers, layers, rule),
 		mapAPI_t (layers[0]),
 		re_Nin (layers[0]),
 		re_input (new IEEE_t [re_Nin + 1]), // + 1 for training - the answer
