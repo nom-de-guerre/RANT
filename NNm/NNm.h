@@ -41,16 +41,17 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stratum.h>
 #include <dense.h>
 #include <logits.h>
+#include <layerN.h>
 #include <RPROP.h>
 #include <ADAM.h>
-
-typedef stratum_t * (*Rule_t)(const int, const int);
 
 template<typename T> class NNet_t
 {
 protected:
 
 	int					n_steps;
+
+	int					n_populated;
 
 	// morphology of the net
 	int					n_Nin;
@@ -92,6 +93,7 @@ public:
 			const int * const width, 
 			StrategyAlloc_t rule) :
 		n_steps (0),
+		n_populated (levels - 1),
 		n_Nin (width[0]),
 		n_Nout (width[levels - 1]),
 		n_levels (levels - 1), // no state for input
@@ -133,9 +135,10 @@ public:
 
 	NNet_t (const int levels, const int Nin, const int Nout) :
 		n_steps (0),
+		n_populated (0),
 		n_Nin (Nin),
 		n_Nout (Nout),
-		n_levels (levels - 1), // no state for input
+		n_levels (levels),
 		n_Nweights (-1),
 		n_halt (1e-5),
 		n_error (nan (NULL)),
@@ -214,8 +217,10 @@ public:
 		n_keepalive = modulus;
 	}
 
-	void AddDenseLayer (int layer, int N, StrategyAlloc_t rule)
+	void AddDenseLayer (int N, StrategyAlloc_t rule)
 	{
+		int layer = n_populated++;
+
 		assert (layer >= 0 && layer < n_levels);
 		assert (n_strata[layer] == NULL);
 
@@ -226,8 +231,10 @@ public:
 		n_strata[layer]->_sAPI_init (N);
 	}
 
-	void AddLogitsLayer (int layer, int N, StrategyAlloc_t rule)
+	void AddLogitsLayer (int N, StrategyAlloc_t rule)
 	{
+		int layer = n_populated++;
+
 		assert (layer >= 0 && layer < n_levels);
 		assert (n_strata[layer] == NULL);
 
@@ -236,6 +243,20 @@ public:
 		n_width[layer] = N;
 		n_strata[layer] = new logits_t (N, Nin, rule);
 		n_strata[layer]->_sAPI_init (N);
+	}
+
+	void AddLayerNormalization (StrategyAlloc_t rule)
+	{
+		int layer = n_populated++;
+
+		assert (layer > 0 && layer < n_levels);
+		assert (n_strata[layer] == NULL);
+
+		int Nin = n_width[layer - 1];
+
+		n_width[layer] = Nin;
+		n_strata[layer] = new layerN_t (Nin, rule);
+		n_strata[layer]->_sAPI_init (Nin);
 	}
 
 	/*

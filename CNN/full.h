@@ -89,7 +89,9 @@ public:
 		re_input[len] = answer;
 
 		ComputeDerivative (re_input);
-		ExposeGradient (re_gradient);
+		re_gradient.TransposeMatrixVectorMult (
+			static_cast<dense_t *> (n_strata[0])->de_W,
+			n_strata[0]->s_delta.raw ());
 
 		return true;
 	}

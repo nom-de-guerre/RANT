@@ -53,14 +53,13 @@ int main (int argc, char *argv[])
 	int N_layers = argc;
 
 	// { length, inputs,  ..., outputs }
-	int *layers = new int [N_layers + 3];
-
-	layers[0] = N_layers + 2;
-	layers[1] = 4;							// 4 inputs
-	layers[N_layers + 2] = 3;				// 3 outputs
+	int *layers = new int [N_layers + 1];
 
 	for (int i = 0; i < N_layers; ++i)
-		layers[i + 2] = atoi (argv[i]);
+		layers[i + 1] = atoi (argv[i]);
+
+	++N_layers; // logits
+	layers[0] = N_layers;
 
 	Run (params, layers);
 
@@ -75,15 +74,13 @@ void Run (NNmConfig_t &params, int *layers)
 	SoftmaxNNm_t *Np = NULL;
 	double guess;
 
-	Np = new SoftmaxNNm_t (layers[0], layers[1], layers[layers[0]]);
+	Np = new SoftmaxNNm_t (layers[0] + 1, 4, 3);
 
-	for (int i = 2; i <= layers[0] - 1; ++i)
-		Np->AddDenseLayer (i - 2, layers[i], (params.ro_flag ? ADAM : RPROP));
+	for (int i = 1; i < layers[0]; ++i)
+		Np->AddDenseLayer (layers[i], (params.ro_flag ? ADAM : RPROP));
 
-	Np->AddLogitsLayer (
-		layers[0] - 2,
-		layers[layers[0]],
-		(params.ro_flag ? ADAM : RPROP));
+	Np->AddLayerNormalization (RPROP);
+	Np->AddLogitsLayer (3, (params.ro_flag ? ADAM : RPROP));
 
 	Np->SetHalt (params.ro_haltCondition);
 	Np->SetAccuracy (); // Halt at 100% accuracy, even if above loss threshold

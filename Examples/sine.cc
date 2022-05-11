@@ -76,12 +76,9 @@ void Run (NNmConfig_t &params, int *layers)
 	Regression_t *Np = NULL;
 	double guess;
 
-	Np = new Regression_t (layers[0], layers[1], layers[layers[0]]);
+	Np = new Regression_t (layers[0], layers + 1, RPROP);
 
 	Np->SetHalt (params.ro_haltCondition);
-
-	for (int i = 2; i <= layers[0]; ++i)
-		Np->AddDenseLayer (i - 2, layers[i], (params.ro_flag ? ADAM : RPROP));
 
 	try {
 
