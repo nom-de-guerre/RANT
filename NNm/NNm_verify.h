@@ -37,7 +37,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * The idea is to use the definition of a derivative.  For a given
  * quantity in the NN:
  *
- *    dL       f (x + h) - f (x - h)
+ *    dL       L (x + h) - L (x - h)
  *    -- = lim --------------------- 
  *    dx   h→0         2h
  *
@@ -58,11 +58,18 @@ public:
 	{
 	}
 
+	RegressionGrad_t (int Nlevels, int Nin, int Nout) :
+		Regression_t (Nlevels, Nin, Nout)
+	{
+	}
+
 	void VerifyGradient (int level, IEEE_t h, IEEE_t *Xi)
 	{
 		assert (level > -1 && level < n_levels - 1);
 
-		rg_stratum = static_cast<dense_t *> (n_strata[level]);
+		rg_stratum = dynamic_cast<dense_t *> (n_strata[level]);
+		if (rg_stratum == NULL)
+			throw ("VerifyGradient - not a dense_t");
 
 		int N = rg_stratum->N ();
 

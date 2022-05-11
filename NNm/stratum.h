@@ -61,7 +61,7 @@ struct stratum_t
 	virtual void _sAPI_init (const int) = 0;
 	virtual IEEE_t * _sAPI_f (IEEE_t * const, bool = true) = 0;
 
-	virtual void _sAPI_gradient (NeuralM_t &) = 0;
+	virtual void _sAPI_gradient (stratum_t &) = 0;
 	virtual void _sAPI_bprop (IEEE_t *, bool = true) = 0;
 
 	virtual void _sAPI_strategy (void)

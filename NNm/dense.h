@@ -95,7 +95,7 @@ struct dense_t : public stratum_t
 	}
 
 	virtual IEEE_t * _sAPI_f (IEEE_t * const, bool = true);
-	virtual void _sAPI_gradient (NeuralM_t &);
+	virtual void _sAPI_gradient (stratum_t &);
 	virtual void _sAPI_bprop (IEEE_t *, bool = true);
 
 	virtual void StrategyMono (const int index)
@@ -105,9 +105,9 @@ struct dense_t : public stratum_t
 };
 
 void
-dense_t::_sAPI_gradient (NeuralM_t &delta)
+dense_t::_sAPI_gradient (stratum_t &Z)
 {
-	delta.TransposeMatrixVectorMult (de_W, s_delta.raw ());
+	Z.s_delta.TransposeMatrixVectorMult (de_W, s_delta.raw ());
 }
 
 void 
