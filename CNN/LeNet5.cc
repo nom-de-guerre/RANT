@@ -85,7 +85,7 @@ char fullpath_labels [MAXPATHLEN];
 void Run (NNmConfig_t &params)
 {
 	int Nlayers = 4;
-	int layers [] = { -1, 200, 100, 15 };
+	int layers [] = { -1, 200, 100, 10 };
 
 	sprintf (fullpath_data, "%s/train-images.idx3-ubyte", params.ro_path);
     sprintf (fullpath_labels, "%s/train-labels.idx1-ubyte", params.ro_path);
@@ -97,7 +97,7 @@ void Run (NNmConfig_t &params)
 
 	CNN_t CNN (IMAGEDIM, IMAGEDIM, 5, 10);
 
-	CNN.setSGDSamples (params.ro_Nsamples);
+	CNN.setSGDSamples (params.ro_Nsamples * data.N ());
 	CNN.setMaxIterations (params.ro_maxIterations);
 	CNN.setHaltMetric (params.ro_haltCondition);
 

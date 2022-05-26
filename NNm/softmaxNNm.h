@@ -46,9 +46,10 @@ public:
 		c_softm (n_Nout)
 	{
 		// we need a logits layer for the terminal layer
+
 		delete n_strata[n_levels - 1];
 		n_strata[n_levels - 1] = 
-			new logits_t (n_Nout, n_strata[n_levels - 2]->N (), rule);
+			new logits_t (n_levels - 1, n_Nout, n_strata[n_levels - 2]->N (), rule);
 
 		_API_Cycle ();
 	}

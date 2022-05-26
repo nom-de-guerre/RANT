@@ -61,8 +61,17 @@ struct dense_t : public stratum_t
 	// Vectors - per perceptron (node)
 	NeuralM_t				de_dot;			// Wx
 
+	dense_t (const int ID, const int N, const int Nin, StrategyAlloc_t rule) :
+		stratum_t (ID, N, Nin + 1),				// account for bias
+		de_W (N, Nin + 1),
+		de_dL (N, Nin + 1),
+		de_dot (N, 1)
+	{
+		s_strat = (*rule) (N, Nin + 1, de_W.raw (), de_dL.raw ());
+	}
+
 	dense_t (const int N, const int Nin, StrategyAlloc_t rule) :
-		stratum_t (N, Nin + 1),				// account for bias
+		stratum_t (-1, N, Nin + 1),				// account for bias
 		de_W (N, Nin + 1),
 		de_dL (N, Nin + 1),
 		de_dot (N, 1)

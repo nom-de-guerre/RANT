@@ -70,7 +70,7 @@ NNet_t<T>::ComputeDerivative (const TrainingRow_t x)
 		if (level == n_levels - 1)
 			error = static_cast<T *>(this)->_API_bprop (x, gradp->raw ());
 		else
-			n_strata[level + 1]->_sAPI_gradient (*gradp);
+			n_strata[level + 1]->_sAPI_gradient (*n_strata[level]);
 
 		n_strata[level]->_sAPI_bprop (Xi);
 	}
@@ -189,20 +189,5 @@ NNet_t<T>::Step (const DataSet_t * const training)
 		UpdateWeights ();
 
 	return done;
-}
-
-/*
- * The below is used when the ANN has stuff before it in the graph (so the 
- * gradient must continue through us).
- *
- */
-
-template<typename T> bool
-NNet_t<T>::ExposeGradient (NeuralM_t &grad)
-{
-	// Compute per node total derivative
-	n_strata[0]->_sAPI_gradient (grad);
-
-	return true;
 }
 

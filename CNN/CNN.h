@@ -247,19 +247,6 @@ public:
 		return halt; // true --> converged
 	}
 
-	void TrainExample (plane_t &example, IEEE_t answer)
-	{
-		cn_layers[0]->ForwardTraining (&example, answer);
-
-		for (int j = 1; j < cn_N; ++j)
-			cn_layers[j]->ForwardTraining (cn_layers[j - 1], answer);
-
-		cn_layers[cn_N - 1]->BackwardTraining ();
-
-		for (int j = cn_N - 1; j > 0; --j)
-			cn_layers[j - 1]->BackwardTraining (cn_layers[j]);
-	}
-
 	bool TrainingEpoch (DataSet_t *p) // this should be private...
 	{
 		bool success = false;
@@ -275,6 +262,19 @@ public:
 		}
 
 		return success;
+	}
+
+	void TrainExample (plane_t &example, IEEE_t answer)
+	{
+		cn_layers[0]->ForwardTraining (&example, answer);
+
+		for (int j = 1; j < cn_N; ++j)
+			cn_layers[j]->ForwardTraining (cn_layers[j - 1], answer);
+
+		cn_layers[cn_N - 1]->BackwardTraining ();
+
+		for (int j = cn_N - 1; j > 0; --j)
+			cn_layers[j - 1]->BackwardTraining (cn_layers[j]);
 	}
 
 	/*

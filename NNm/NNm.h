@@ -125,7 +125,7 @@ public:
 		for (int i = 1; i <= n_levels; ++i)
 		{
 			n_width[i - 1] = width[i];
-			n_strata[i - 1] = new dense_t (width[i], width[i - 1], rule);
+			n_strata[i - 1] = new dense_t (i - 1, width[i], width[i - 1], rule);
 			n_strata[i - 1]->_sAPI_init (
 				i < n_levels ?
 				width[i + 1] :
@@ -227,7 +227,7 @@ public:
 		int Nin = (layer ? n_width[layer - 1] : n_Nin);
 
 		n_width[layer] = N;
-		n_strata[layer] = new dense_t (N, Nin, rule);
+		n_strata[layer] = new dense_t (layer, N, Nin, rule);
 		n_strata[layer]->_sAPI_init (N);
 	}
 
@@ -241,7 +241,7 @@ public:
 		int Nin = (layer ? n_width[layer - 1] : n_Nin);
 
 		n_width[layer] = N;
-		n_strata[layer] = new logits_t (N, Nin, rule);
+		n_strata[layer] = new logits_t (layer, N, Nin, rule);
 		n_strata[layer]->_sAPI_init (N);
 	}
 
@@ -255,7 +255,7 @@ public:
 		int Nin = n_width[layer - 1];
 
 		n_width[layer] = Nin;
-		n_strata[layer] = new layerN_t (Nin, rule);
+		n_strata[layer] = new layerN_t (layer, Nin, rule);
 		n_strata[layer]->_sAPI_init (Nin);
 	}
 

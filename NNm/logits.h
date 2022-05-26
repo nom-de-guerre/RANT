@@ -50,8 +50,8 @@ struct logits_t : public stratum_t
 	// Vectors - per perceptron (node)
 	NeuralM_t				lo_dot;			// Wx
 
-	logits_t (const int N, const int Nin, StrategyAlloc_t rule) :
-		stratum_t (N, Nin + 1),				// account for bias
+	logits_t (const int ID, const int N, const int Nin, StrategyAlloc_t rule) :
+		stratum_t (ID, N, Nin + 1),				// account for bias
 		lo_W (N, Nin + 1),
 		lo_dL (N, Nin + 1),
 		lo_dot (N, 1)

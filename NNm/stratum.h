@@ -33,6 +33,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 struct stratum_t
 {
+	const int				s_ID;
+
 	int						s_Nnodes;
 	int						s_Nin;
 
@@ -41,7 +43,8 @@ struct stratum_t
 
 	strategy_t				*s_strat;
 
-	stratum_t (const int N, const int Nin) :
+	stratum_t (const int ID, const int N, const int Nin) :
+		s_ID (ID),
 		s_Nnodes (N),
 		s_Nin (Nin),
 		s_delta (N, 1),
