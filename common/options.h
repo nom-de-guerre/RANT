@@ -36,7 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 struct NNmConfig_t
 {
 	long			ro_seed;
-	int				ro_Nsamples;
+	IEEE_t			ro_Nsamples;
 	IEEE_t			ro_haltCondition;
 	int				ro_maxIterations;
 	char			*ro_path;
@@ -44,7 +44,7 @@ struct NNmConfig_t
 
 	NNmConfig_t () :
 		ro_seed (time (NULL)),
-		ro_Nsamples (100),
+		ro_Nsamples (1.0),
 		ro_haltCondition (1e-5),
 		ro_maxIterations (100),
 		ro_path ((char *) DEFAULT_PATH),
@@ -83,7 +83,7 @@ int NNmConfig_t::Parse (int argc, char *argv[])
 
 		case 'n':
 
-			ro_Nsamples = atoi (optarg);
+			ro_Nsamples = atof (optarg);
 			count += 2;
 
 			break;
