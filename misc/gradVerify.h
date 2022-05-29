@@ -77,6 +77,10 @@ public:
 		double ratio;
 		double denom;
 
+		IEEE_t const *mapp = (level ? 
+			(*cn_layers[level - 1])[0]->raw () :
+			cg_example->raw ());
+
 		printf ("\tBPROP\t\tDiff\t\tRatio\n");
 
 		for (int i = 0; i < Nentries; ++i)
@@ -87,12 +91,14 @@ public:
 			denom = fabs (dL_diff) + fabs (dL_bp);
 			ratio = (fabs (dL_diff) - fabs (dL_bp)) / denom;
 
-			printf ("%d\t%f\t%f\t%f\t%s\n",
+			printf ("%d\t%f\t%f\t%f\t%s\t%f\n",
 				i,
 				dL_bp,
 				dL_diff,
 				ratio,
-				(fabs (ratio) < 1e-4 ? "" : "X"));
+				(fabs (ratio) < 1e-4 ? "R" : "W"),
+				mapp[i]
+				);
 		}
 	}
 
@@ -123,13 +129,13 @@ public:
 
 		rawp[entry] += h;
 
-		cg_softmaxp->Cycle ();
+		cg_softmaxp->_API_Cycle ();
 		f_diff (level);
 		L0 = -log (cg_softmaxp->P ((int) cg_answer));
 
 		rawp[entry] -= 2 * h;
 
-		cg_softmaxp->Cycle ();
+		cg_softmaxp->_API_Cycle ();
 		f_diff (level);
 		L1 = -log (cg_softmaxp->P ((int) cg_answer));
 
@@ -142,7 +148,7 @@ public:
 
 	plane_t *ComputeBPROP (int level)
 	{
-		cg_softmaxp->Cycle ();
+		cg_softmaxp->_API_Cycle ();
 		plane_t *Gp = cn_layers[level]->getModule (0)->fetchGradient ();
 		Gp->Reset ();
 

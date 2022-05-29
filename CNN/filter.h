@@ -37,7 +37,7 @@ class filter_t : public mapAPI_t
 	dense_t			*ff_filter;
 	plane_t			**ff_input;		// Xi from the ante layer
 	plane_t			*ff_flux;		// gradient we propagate backwards
-	plane_t			const * ff_G;	// gradient from post layer
+	IEEE_t	const 	*ff_G;	// gradient from post layer
 
 public:
 
@@ -53,7 +53,8 @@ public:
 		ff_flux (new plane_t (mwidth, mwidth)),
 		ff_G (NULL)
 	{
-		ff_filter->_sAPI_init (mwidth * mwidth); // on that order, used for Glorot
+		// on that order, used for Glorot
+		ff_filter->_sAPI_init (mwidth * mwidth);
 	}
 
 	filter_t (const int fwidth, const int mwidth, const int Nin, int *program) :
@@ -117,10 +118,9 @@ public:
 		int blockSize = ma_map.N ();
 		__restrict IEEE_t * gradientp = arg.a_args[0]->raw ();
 
-		ff_G = arg.a_args[0];
+		ff_G = arg.a_args[0]->raw ();
 
 		assert (arg.a_N == 1);
-		assert (ff_G->rows () == ma_map.rows ());
 
 		for (int i = 0; i < blockSize; ++i)
 			*bias += gradientp[i];
@@ -197,7 +197,7 @@ void filter_t::ComputeGradient (int pidx)
 {
 	int blockSize = ff_width * ff_width;
 	__restrict IEEE_t * filterp = 1 + blockSize * pidx + ff_filter->de_W.raw ();
-	__restrict IEEE_t * i_gradp = ff_G->raw ();
+	__restrict IEEE_t const * i_gradp = ff_G;
 	__restrict IEEE_t *gradientp = ff_flux->raw ();
 	int idim = inputSize ();
 	int stride = idim - ff_width;
@@ -226,10 +226,10 @@ bool filter_t::ComputeDerivatives (int pidx)
 {
 	int blockSize = ff_width * ff_width;
 	__restrict IEEE_t * dW = 1 + blockSize * pidx + ff_filter->de_dL.raw ();
-	__restrict IEEE_t * dO = ff_G->raw ();
+	__restrict IEEE_t const * dO = ff_G;
 	__restrict IEEE_t *input = ff_input[pidx]->raw ();
 	IEEE_t *bias = ff_filter->de_dL.raw ();
-	int idim = ff_G->rows ();
+	int idim = ma_map.rows ();
 	int stride = idim - ff_width;
 	int mdim = ma_map.rows ();
 

@@ -226,10 +226,8 @@ public:
 		if (cn_order == NULL)
 			cn_order = new NoReplacementSamples_t (p->N ());
 
-		while (!halt && cn_steps < cn_maxIterations)
+		for (; !halt && cn_steps < cn_maxIterations; ++cn_steps)
 		{
-			++cn_steps;
-
 			TrainingEpoch (p);
 
 			halt = finalp->Loss () < cn_haltMetric;

@@ -35,13 +35,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <gradVerify.h>
 #include <options.h>
-#include <validate.h>
 
-void Run (RunOptions_t &);
+void Run (NNmConfig_t &);
 
 int main (int argc, char *argv[])
 {
-	RunOptions_t params;
+	NNmConfig_t params;
 
 	params.ro_Nsamples = 50;
 	params.ro_maxIterations = 10;
@@ -53,16 +52,20 @@ int main (int argc, char *argv[])
 	srand (params.ro_seed);
 
 	try {
+
 		Run (params);
+
 	} catch (const char *errp) {
+
 		printf ("EXCEPTION: %s\n", errp);
+
 	}
 }
 
 char fullpath_data [MAXPATHLEN];
 char fullpath_labels [MAXPATHLEN];
 
-void Run (RunOptions_t &params)
+void Run (NNmConfig_t &params)
 {
 	int Nlayers = 3;
 	int layers [] = { -1, 50, 10 };
@@ -72,13 +75,14 @@ void Run (RunOptions_t &params)
 	MNIST_t data (fullpath_data, fullpath_labels);
 
 	Gradient_t CNN (IMAGEDIM, IMAGEDIM, 3, 10);
-	CNN.setSGDSamples (params.ro_Nsamples);
+	CNN.setSGDSamples (params.ro_Nsamples * data.N ());
 	CNN.setHaltMetric (params.ro_haltCondition);
-	CNN.setMaxIterations (params.ro_maxIterations);
+	CNN.setMaxIterations (5);
 
 #define NMAPS	1
 
-	CNN.AddConvolutionLayer (NMAPS, 5, IMAGEDIM);
+	int dim = CNN.AddConvolutionLayer (NMAPS, 3, IMAGEDIM);
+	CNN.AddMaxPoolLayer (NMAPS, 2, dim);
 	CNN.AddFullLayer (layers, Nlayers);
 
 	int N = CNN.ActiveLayers ();
@@ -95,6 +99,6 @@ void Run (RunOptions_t &params)
 	printf ("Digit %d at %d\n", (int) answer, index);
 
 	CNN.VerifyGradient (0, 1e-7, example, answer); // convolutional
-	CNN.VerifyGradient (1, 1e-7, example, answer); // softmax
+	CNN.VerifyGradient (2, 1e-7, example, answer); // softmax
 }
 
