@@ -220,7 +220,7 @@ struct DataSet_t
 	{
 		DataSet_t *replica = new DataSet_t (t_N, t_Nin, t_Nout);
 
-		memcpy (replica->t_data, t_data, t_Nin * t_Nout * sizeof (IEEE_t));
+		memcpy (replica->t_data, t_data, t_N * t_columns * sizeof (IEEE_t));
 
 		return replica;
 	}

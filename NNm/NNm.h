@@ -176,6 +176,9 @@ public:
 
 		if (n_arg)
 			delete [] n_arg;
+
+		if (n_SGDsamples)
+			delete n_SGDsamples;
 	}
 
 	void SetMaxIterations (int maxIterations)
