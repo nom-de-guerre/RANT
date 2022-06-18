@@ -34,7 +34,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 class Softmax_t
 {
-	int				so_Nclasses;
+	const int		so_Nclasses;
 	IEEE_t			*so_P;
 
 public:

@@ -37,6 +37,9 @@ class SoftmaxNNm_t : public NNet_t<SoftmaxNNm_t>
 {
 	int						c_Correct;
 	int						c_seen;
+
+protected:
+
 	Softmax_t				c_softm;
 
 public:
@@ -46,10 +49,11 @@ public:
 		c_softm (n_Nout)
 	{
 		// we need a logits layer for the terminal layer
+		int terminus = n_populated - 1;
 
-		delete n_strata[n_levels - 1];
-		n_strata[n_levels - 1] = 
-			new logits_t (n_levels - 1, n_Nout, n_strata[n_levels - 2]->N (), rule);
+		delete n_strata[terminus];
+		n_strata[terminus] = 
+			new logits_t (terminus, n_Nout, n_strata[terminus - 1]->N (), rule);
 
 		_API_Cycle ();
 	}
@@ -90,7 +94,7 @@ public:
 
 IEEE_t SoftmaxNNm_t::_API_f (IEEE_t *x)
 {
-	x = n_strata[n_levels - 1]->_sAPI_f (x, false);
+	x = n_strata[n_populated - 1]->_sAPI_f (x, false);
 
 	return c_softm.ComputeSoftmax (x);
 }

@@ -29,7 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <unistd.h>
 #include <string.h>
 
-#define DEFAULT_PATH	"../../../Data/MNIST/"
+#define DEFAULT_PATH	"../../../Neural Networks/Data/MNIST/"
 #define DISPLAY_VARINT(X) printf ("%s\t%d\n", #X, (int) X)
 #define DISPLAY_VARFLOAT(X) printf ("%s\t%f\n", #X, (IEEE_t) X)
 

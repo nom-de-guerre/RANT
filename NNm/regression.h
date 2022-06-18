@@ -63,7 +63,7 @@ public:
 
 IEEE_t Regression_t::_API_f (IEEE_t *x)
 {
-	x = n_strata[n_levels - 1]->_sAPI_f (x);
+	x = n_strata[n_populated - 1]->_sAPI_f (x);
 
 	return x[0];
 }

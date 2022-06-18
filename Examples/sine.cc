@@ -80,6 +80,8 @@ void Run (NNmConfig_t &params, int *layers)
 
 	Np->SetHalt (params.ro_haltCondition);
 
+	Np->DisplayModel ();
+
 	try {
 
 		Np->Train (O, params.ro_maxIterations);

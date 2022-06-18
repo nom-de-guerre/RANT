@@ -164,7 +164,7 @@ public:
 
 	~NNet_t (void)
 	{
-		for (int i = 0; i < n_levels; ++i)
+		for (int i = 0; i < n_populated; ++i)
 			delete n_strata[i];
 
 		delete [] n_strata;
@@ -211,6 +211,8 @@ public:
 
 	void SetSGD (IEEE_t percentage)
 	{
+		assert (percentage > 0 && percentage <= 1.0);
+
 		n_useSGD = true;
 		n_SGDn = percentage;
 	}
@@ -248,7 +250,8 @@ public:
 		n_strata[layer]->_sAPI_init (N);
 	}
 
-	void AddLayerNormalization (StrategyAlloc_t rule)
+	// Layer normalization, not batch normalization
+	void AddNormalizationLayer (StrategyAlloc_t rule)
 	{
 		int layer = n_populated++;
 
@@ -275,7 +278,7 @@ public:
 	// The below are public so these objects can be integrated
 	void UpdateWeights (void)
 	{
-		for (int i = 0; i < n_levels; ++i)
+		for (int i = 0; i < n_populated; ++i)
 			n_strata[i]->_sAPI_strategy ();
 	}
 
@@ -294,6 +297,15 @@ public:
 			n_normParams[i * 2] = S->Mean (i);
 			n_normParams[i * 2 + 1] = S->StdDev (i);
 		}
+	}
+
+	void DisplayModel (void)
+	{
+		for (int i = 0; i < n_populated; ++i)
+			printf ("%s (%d)\t%s",
+				n_strata[i]->s_Name,
+				n_strata[i]->s_Nnodes,
+				(i + 1 == n_populated ? "\n" : "⟹\t"));
 	}
 };
 

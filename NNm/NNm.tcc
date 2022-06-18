@@ -62,12 +62,12 @@ NNet_t<T>::ComputeDerivative (const TrainingRow_t x)
 
 	IEEE_t error;
 
-	for (int level = n_levels - 1; level >= 0; --level)
+	for (int level = n_populated - 1; level >= 0; --level)
 	{
 		Xi = (level > 0 ? n_strata[level - 1]->z () : x);
 		gradp = n_strata[level]->_sAPI_gradientM ();
 
-		if (level == n_levels - 1)
+		if (level == n_populated - 1)
 			error = static_cast<T *>(this)->_API_bprop (x, gradp->raw ());
 		else
 			n_strata[level + 1]->_sAPI_gradient (*n_strata[level]);
@@ -96,7 +96,7 @@ NNet_t<T>::Compute (IEEE_t *x)
 	} else
 		ripple = x;
 
-	for (int layer = 0; layer < n_levels - 1; ++layer)
+	for (int layer = 0; layer < n_populated - 1; ++layer)
 		ripple = n_strata[layer]->_sAPI_f (ripple);
 
 	/*

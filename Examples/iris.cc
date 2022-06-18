@@ -66,21 +66,20 @@ int main (int argc, char *argv[])
 	delete [] layers;
 }
 
-#define __USE_RPROP false
-
 void Run (NNmConfig_t &params, int *layers)
 {
 	DataSet_t *O = LoadData ();
 	SoftmaxNNm_t *Np = NULL;
 	double guess;
+	auto rule = (params.ro_flag ? ADAM : RPROP);
 
 	Np = new SoftmaxNNm_t (layers[0] + 1, 4, 3);
 
 	for (int i = 1; i < layers[0]; ++i)
-		Np->AddDenseLayer (layers[i], (params.ro_flag ? ADAM : RPROP));
+		Np->AddDenseLayer (layers[i], rule);
 
-	Np->AddLayerNormalization (RPROP);
-	Np->AddLogitsLayer (3, (params.ro_flag ? ADAM : RPROP));
+	Np->AddNormalizationLayer (rule);
+	Np->AddLogitsLayer (3, rule);
 
 	Np->SetHalt (params.ro_haltCondition);
 	Np->SetAccuracy (); // Halt at 100% accuracy, even if above loss threshold
@@ -141,7 +140,7 @@ bool includeFeature [] = { false, true, true, true, true, true };
 
 DataSet_t *LoadData (void)
 {
-	LoadCSV_t Z ("../../../Data/iris.csv");
+	LoadCSV_t Z ("../../../Neural Networks/Data/iris.csv");
 
 	DataSet_t *tp = Z.LoadDS (6, includeFeature);
 

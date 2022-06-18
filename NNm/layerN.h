@@ -54,7 +54,7 @@ struct layerN_t : public stratum_t
 	IEEE_t				ln_sigma;
 
 	layerN_t (const int ID, const int N, StrategyAlloc_t rule) :
-		stratum_t (ID, N, N),
+		stratum_t ("norm", ID, N, N),
 		ln_params (N, 2),
 		ln_dL (N, 2),
 		ln_xhat (new IEEE_t [N]),

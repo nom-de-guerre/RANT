@@ -51,7 +51,7 @@ struct logits_t : public stratum_t
 	NeuralM_t				lo_dot;			// Wx
 
 	logits_t (const int ID, const int N, const int Nin, StrategyAlloc_t rule) :
-		stratum_t (ID, N, Nin + 1),				// account for bias
+		stratum_t ("softmax", ID, N, Nin + 1),		// account for bias
 		lo_W (N, Nin + 1),
 		lo_dL (N, Nin + 1),
 		lo_dot (N, 1)
@@ -141,17 +141,8 @@ logits_t::_sAPI_bprop (IEEE_t *xi, bool activation)
 IEEE_t *
 logits_t::_sAPI_f (IEEE_t * const xi, bool activate)
 {
-	lo_dot.MatrixVectorMult (lo_W, xi);
-
-	IEEE_t *p = s_response.sm_data;
-	IEEE_t *dot = lo_dot.sm_data;
-
-	if (activate)
-		for (int i = 0; i < s_Nnodes; ++i)
-			*p++ = ACTIVATION_FN (*dot++);
-	else
-		for (int i = 0; i < s_Nnodes; ++i)
-			*p++ = *dot++;
+printf ("%s:%d\n", s_Name, s_ID);
+	s_response.MatrixVectorMult (lo_W, xi);
 
 	return s_response.sm_data;
 }

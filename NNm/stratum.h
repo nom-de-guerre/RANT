@@ -33,6 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 struct stratum_t
 {
+	const char				*s_Name;
 	const int				s_ID;
 
 	int						s_Nnodes;
@@ -43,7 +44,8 @@ struct stratum_t
 
 	strategy_t				*s_strat;
 
-	stratum_t (const int ID, const int N, const int Nin) :
+	stratum_t (const char *namep, const int ID, const int N, const int Nin) :
+		s_Name (namep),
 		s_ID (ID),
 		s_Nnodes (N),
 		s_Nin (Nin),

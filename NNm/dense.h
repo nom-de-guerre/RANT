@@ -62,7 +62,7 @@ struct dense_t : public stratum_t
 	NeuralM_t				de_dot;			// Wx
 
 	dense_t (const int ID, const int N, const int Nin, StrategyAlloc_t rule) :
-		stratum_t (ID, N, Nin + 1),				// account for bias
+		stratum_t ("dense", ID, N, Nin + 1),	// account for bias
 		de_W (N, Nin + 1),
 		de_dL (N, Nin + 1),
 		de_dot (N, 1)
@@ -71,7 +71,7 @@ struct dense_t : public stratum_t
 	}
 
 	dense_t (const int N, const int Nin, StrategyAlloc_t rule) :
-		stratum_t (-1, N, Nin + 1),				// account for bias
+		stratum_t ("dense", -1, N, Nin + 1),	// account for bias
 		de_W (N, Nin + 1),
 		de_dL (N, Nin + 1),
 		de_dot (N, 1)
