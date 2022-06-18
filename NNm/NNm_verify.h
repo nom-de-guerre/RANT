@@ -65,7 +65,7 @@ public:
 
 	void VerifyGradient (int level, IEEE_t h, IEEE_t *Xi)
 	{
-		assert (level > -1 && level < n_levels - 1);
+		assert (level > -1 && level < n_populated - 1);
 
 		rg_stratum = dynamic_cast<dense_t *> (n_strata[level]);
 		if (rg_stratum == NULL)
@@ -99,7 +99,7 @@ public:
 
 			ripple = rg_stratum->s_response.raw ();
 
-			for (int i = level + 1; i < n_levels - 1; ++i)
+			for (int i = level + 1; i < n_populated - 1; ++i)
 				ripple = n_strata[i]->_sAPI_f (ripple);
 
 			error = _API_f (ripple) - answer;
@@ -112,7 +112,7 @@ public:
 			rg_stratum->s_response (i, 0) =
 				ACTIVATION_FN (rg_stratum->de_dot (i, 0));
 
-			for (int i = level + 1; i < n_levels - 1; ++i)
+			for (int i = level + 1; i < n_populated - 1; ++i)
 				ripple = n_strata[i]->_sAPI_f (ripple);
 
 			error = _API_f (ripple) - answer;
