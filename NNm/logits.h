@@ -141,7 +141,6 @@ logits_t::_sAPI_bprop (IEEE_t *xi, bool activation)
 IEEE_t *
 logits_t::_sAPI_f (IEEE_t * const xi, bool activate)
 {
-printf ("%s:%d\n", s_Name, s_ID);
 	s_response.MatrixVectorMult (lo_W, xi);
 
 	return s_response.sm_data;
