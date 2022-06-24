@@ -121,6 +121,16 @@ struct NeuralM_t
 		return true;
 	}
 
+	bool Copy (NeuralM_t &X)
+	{
+		assert (X.sm_rows == sm_rows);
+		assert (X.sm_columns == sm_columns);
+
+		memcpy (sm_data, X.sm_data, sizeof (IEEE_t) * sm_len);
+
+		return true;
+	}
+
 	IEEE_t *raw (void)
 	{
 		return sm_data;

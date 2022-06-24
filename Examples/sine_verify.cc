@@ -59,13 +59,11 @@ int main (int argc, char *argv[])
 	++argv;
 
 	int N_layers = argc;
-	int *layers = new int [N_layers + 3];	// widths plus length prefix, inputs
-	layers[0] = N_layers + 2;
-	layers[1] = 1;							// one input
-	layers[N_layers + 2] = 1;				// one output
+	int *layers = new int [N_layers + 1];
+	layers[0] = N_layers;
 
 	for (int i = 0; i < N_layers; ++i)
-		layers[i + 2] = atoi (argv[i]);
+		layers[i + 1] = atoi (argv[i]);
 
 	Run (layers);
 
@@ -79,12 +77,21 @@ void Run (int *layers)
 	DataSet_t *O = BuildTrainingSet (N_POINTS);
 	RegressionGrad_t *Np = NULL;
 
-	Np = new RegressionGrad_t (layers[0], layers + 1);
+	Np = new RegressionGrad_t (layers[0] + 2, 1, 1);
+
+	for (int i = 0; i < layers[0]; ++i)
+		Np->AddDenseLayer (layers[i + 1], RPROP);
+
+	Np->AddNormalizationLayer (RPROP);
+	Np->AddScalerMSELayer (RPROP);
+
 	Np->SetHalt (soln_MSE);
+
+	Np->DisplayModel ();
 
 	try {
 
-		Np->Train (O, 10);
+		Np->Train (O, 5);
 
 	} catch (const char *error) {
 
@@ -92,7 +99,7 @@ void Run (int *layers)
 	}
 
 	// We only examine the input layer and the hidden layers
-	for (int i = 0; i < layers[0] - 2; ++i)
+	for (int i = 0; i < layers[0]; ++i)
 	{
 		int sample = rand () % N_POINTS;
 		Np->VerifyGradient (i, 1e-7, (*O)[sample]);

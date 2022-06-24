@@ -25,61 +25,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-/*
- * Interface to loss function.
- *
- */
-template<typename T> void 
-NNet_t<T>::Start (void)
-{
-	// Starting a new batch
-	return static_cast<T *> (this)->_API_Cycle ();
-}
-
-template<typename T> bool
-NNet_t<T>::Halt (DataSet_t const * const tp)
-{
-	// Finished a batch, can we stop?
-	return static_cast<T *> (this)->_API_Test (tp);
-}
-
-template<typename T> IEEE_t
-NNet_t<T>::Loss (void)
-{
-	// The current value of the loss function
-	return static_cast<T *> (this)->_API_Error ();
-}
-
-template<typename T> IEEE_t
-NNet_t<T>::ComputeDerivative (const TrainingRow_t x)
-{
-	/*
-	 * Initiate the recurrence by triggering the loss function.
-	 *
-	 */
-	IEEE_t *Xi;
-	NeuralM_t *gradp;
-
-	IEEE_t error;
-
-	for (int level = n_populated - 1; level >= 0; --level)
-	{
-		Xi = (level > 0 ? n_strata[level - 1]->z () : x);
-		gradp = n_strata[level]->_sAPI_gradientM ();
-
-		if (level == n_populated - 1)
-			error = static_cast<T *>(this)->_API_bprop (x, gradp->raw ());
-		else
-			n_strata[level + 1]->_sAPI_gradient (*n_strata[level]);
-
-		n_strata[level]->_sAPI_bprop (Xi);
-	}
-
-	return error;
-}
-
-template<typename T> IEEE_t
-NNet_t<T>::Compute (IEEE_t *x)
+IEEE_t
+NNet_t::Compute (IEEE_t *x)
 {
 	IEEE_t *ripple;
 
@@ -96,14 +43,32 @@ NNet_t<T>::Compute (IEEE_t *x)
 	} else
 		ripple = x;
 
-	for (int layer = 0; layer < n_populated - 1; ++layer)
+	for (int layer = 0; layer < n_populated; ++layer)
 		ripple = n_strata[layer]->_sAPI_f (ripple);
 
+	return ripple[0];
+}
+
+void
+NNet_t::ComputeDerivative (const TrainingRow_t x)
+{
+	IEEE_t *Xi;
+
 	/*
-	 * Compute the final result with the specialization
+	 * Initiate the recurrence by triggering the loss function.
 	 *
 	 */
-	return static_cast<T *>(this)->_API_f (ripple);
+	Compute (x);
+	n_error += n_strata[n_populated - 1]->_sAPI_Loss (x + n_Nin);
+	n_strata[n_populated - 1]->_sAPI_bprop (n_strata[n_populated - 1]->z ());
+
+	for (int level = n_populated - 2; level >= 0; --level)
+	{
+		Xi = (level > 0 ? n_strata[level - 1]->z () : x);
+
+		n_strata[level + 1]->_sAPI_gradient (*n_strata[level]);
+		n_strata[level]->_sAPI_bprop (Xi);
+	}
 }
 
 /*
@@ -111,8 +76,8 @@ NNet_t<T>::Compute (IEEE_t *x)
  *
  */
 
-template<typename T> bool
-NNet_t<T>::Train (const DataSet_t * const training)
+bool
+NNet_t::Train (const DataSet_t * const training)
 {
 	bool rc;
 
@@ -121,8 +86,8 @@ NNet_t<T>::Train (const DataSet_t * const training)
 	return rc;
 }
 
-template<typename T> bool 
-NNet_t<T>::Train (const DataSet_t * const training, int maxIterations)
+bool 
+NNet_t::Train (const DataSet_t * const training, int maxIterations)
 {
 	bool rc;
 
@@ -132,8 +97,8 @@ NNet_t<T>::Train (const DataSet_t * const training, int maxIterations)
 	return rc;
 }
 
-template<typename T> bool 
-NNet_t<T>::TrainWork (const DataSet_t * const training)
+bool 
+NNet_t::TrainWork (const DataSet_t * const training)
 {
 	bool solved = false;
 
@@ -144,6 +109,8 @@ NNet_t<T>::TrainWork (const DataSet_t * const training)
 		(n_steps < n_maxIterations) && !solved;
 		++n_steps)
 	{
+		n_error = 0.0;
+
 		try {
 
 			solved = Step (training);
@@ -165,14 +132,12 @@ NNet_t<T>::TrainWork (const DataSet_t * const training)
 	return true;
 }
 
-template<typename T> bool 
-NNet_t<T>::Step (const DataSet_t * const training)
+bool 
+NNet_t::Step (const DataSet_t * const training)
 {
 	int batch = training->N ();
 	int sample;
 	bool done;
-
-	Start ();
 
 	if (n_useSGD)
 		batch = n_SGDn * batch;
@@ -184,7 +149,9 @@ NNet_t<T>::Step (const DataSet_t * const training)
 		ComputeDerivative (training->entry (sample));
 	}
 
-	done = Halt (training);
+	n_error /= batch;
+
+	done = n_error <= n_halt;
 	if (!done)
 		UpdateWeights ();
 

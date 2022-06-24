@@ -31,14 +31,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdint.h>
 #include <math.h>
 
-#include <regression.h>
+#include <NNm.h>
 #include <options.h>
 
-#define N_POINTS	32
+#define N_POINTS	256
 
 #define PI 			3.141592653589793
 #define PI_2		1.570796326794897
-#define PI_DELTA	(PI_2 / N_POINTS)
+
+#define RANGE		PI
 
 DataSet_t *BuildTrainingSet (int);
 void Run (NNmConfig_t &, int *);
@@ -57,13 +58,11 @@ int main (int argc, char *argv[])
 
 	int N_layers = argc;
 	// length, # inputs (1), hidden widths (argc), output width (1)
-	int *layers = new int [N_layers + 3];
-	layers[0] = N_layers + 2;
-	layers[1] = 1;							// one input
-	layers[N_layers + 2] = 1;				// one output
+	int *layers = new int [N_layers + 1];
+	layers[0] = N_layers;
 
 	for (int i = 0; i < N_layers; ++i)
-		layers[i + 2] = atoi (argv[i]);
+		layers[i + 1] = atoi (argv[i]);
 
 	Run (params, layers);
 
@@ -73,10 +72,16 @@ int main (int argc, char *argv[])
 void Run (NNmConfig_t &params, int *layers)
 {
 	DataSet_t *O = BuildTrainingSet (N_POINTS);
-	Regression_t *Np = NULL;
+	NNet_t *Np = NULL;
 	double guess;
+	auto rule = (params.ro_flag ? ADAM : RPROP);
 
-	Np = new Regression_t (layers[0], layers + 1, RPROP);
+	Np = new NNet_t (layers[0] + 1, 1, 1);
+
+	for (int i = 0; i < layers[0]; ++i)
+		Np->AddDenseLayer (layers[i + 1], rule);
+
+	Np->AddScalerMSELayer (rule);
 
 	Np->SetHalt (params.ro_haltCondition);
 
@@ -97,30 +102,38 @@ void Run (NNmConfig_t &params, int *layers)
 	int missed = 0;
 	double error;
 	double MSE = 0;
+	double ratio;
 
 	for (int i = 0; i < N_POINTS; ++i)
 	{
 		guess = Np->Compute ((*O)[i]);
 
 		error = (*O)[i][1] - guess;
+		ratio = fabs (error) / (*O)[i][1];
 		error *= error;
 		MSE += error;
 
 		if (error > params.ro_haltCondition)
 			++missed;
 
-		printf ("DJS_RESULT\t%1.8f\t%1.8f\t%1.8f\t%s\n",
+		printf ("DJS_RESULT\t%1.8f\t%1.8f\t%1.8f\t%f\t%s\n",
 			(*O)[i][0],
 			(*O)[i][1],
 			guess,
+			ratio,
 			(error > params.ro_haltCondition ? "X" : ""));
 	}
 
 	MSE /= O->t_N;
-	printf ("Loss\t%d\t%e\n", Np->Steps (), MSE);
+	printf ("Loss\t%e in %d iterations.\n", MSE, Np->Steps ());
 
 	if (MSE > params.ro_haltCondition)
-		printf ("Accuracy not achieved: %e\t%e\n", MSE, params.ro_haltCondition);
+		printf ("Accuracy not achieved: %e\t%e\n",
+			MSE,
+			params.ro_haltCondition);
+
+	delete O;
+
 	MSE = 0.0;
 	O = BuildTrainingSet (64);
 	for (int i = 0; i < O->t_N; ++i)
@@ -140,6 +153,12 @@ void Run (NNmConfig_t &params, int *layers)
 		printf ("Missed: %d\n", missed);
 }
 
+/*
+ * Contruct a training set for sine that obviates the need
+ * for pre-processing.  Range and domain are both (0, 1).
+ *
+ */
+
 DataSet_t *BuildTrainingSet (int N)
 {
 	DataSet_t *O = new DataSet_t (N, 1, 1);
@@ -148,9 +167,8 @@ DataSet_t *BuildTrainingSet (int N)
 	{
 		double sample = (double) rand () / RAND_MAX;
 
-		// (*O)[i][0] = sample * PI_2;
-		(*O)[i][0] = sample * PI;
-		(*O)[i][1] = sin ((*O)[i][0]);
+		(*O)[i][0] = sample;
+		(*O)[i][1] = sin ((*O)[i][0] * RANGE);
 	}
 
 	return O;

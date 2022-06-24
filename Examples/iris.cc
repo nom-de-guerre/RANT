@@ -30,7 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdlib.h>
 #include <stdint.h>
 
-#include <softmaxNNm.h>
+#include <NNm.h>
 #include <read_csv.h>
 #include <data.h>
 #include <options.h>
@@ -69,22 +69,23 @@ int main (int argc, char *argv[])
 void Run (NNmConfig_t &params, int *layers)
 {
 	DataSet_t *O = LoadData ();
-	SoftmaxNNm_t *Np = NULL;
+	NNet_t *Np = NULL;
 	double guess;
 	auto rule = (params.ro_flag ? ADAM : RPROP);
 
-	Np = new SoftmaxNNm_t (layers[0] + 1, 4, 3);
+	Np = new NNet_t (layers[0] + 1, 4, 3);
 
 	for (int i = 1; i < layers[0]; ++i)
 		Np->AddDenseLayer (layers[i], rule);
 
-	Np->AddNormalizationLayer (rule);
-	Np->AddLogitsLayer (3, rule);
+	Np->AddSoftmaxLayer (3, rule);
 
 	Np->SetHalt (params.ro_haltCondition);
 	Np->SetAccuracy (); // Halt at 100% accuracy, even if above loss threshold
-	Np->SetKeepAlive (50); // Print every x epochs
-	Np->SetNormalize (O);
+	Np->SetKeepAlive (1); // Print every x epochs
+	Np->SetNormalizePP (O);
+
+	Np->DisplayModel ();
 
 	try {
 
@@ -95,10 +96,9 @@ void Run (NNmConfig_t &params, int *layers)
 		printf ("Warning: %s\n", excep);
 	}
 
-	printf ("\n\tLoss\t\tAccuracy\tSteps\n");
-	printf ("\t%f\t%f\t%d\n\n",
+	printf ("\n\tLoss\t\tSteps\n");
+	printf ("\t%f\t%d\n\n",
 		Np->Loss (),
-		Np->Accuracy (),
 		Np->Steps ());
 
 	bool accept_soln = true;

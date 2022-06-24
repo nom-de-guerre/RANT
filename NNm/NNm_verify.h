@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef __NNM_GRADIENT_VERIFIER__H__
 #define __NNM_GRADIENT_VERIFIER__H__
 
-#include <regression.h>
+#include <NNm.h>
 
 /*
  * This class demonstrates how to use difference equations to verify
@@ -47,25 +47,21 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
 
-class RegressionGrad_t : public Regression_t
+class RegressionGrad_t : public NNet_t
 {
 	dense_t			*rg_stratum;
 
 public:
 
-	RegressionGrad_t (int levels, int *width) :
-		Regression_t (levels, width, RPROP)
-	{
-	}
-
 	RegressionGrad_t (int Nlevels, int Nin, int Nout) :
-		Regression_t (Nlevels, Nin, Nout)
+		NNet_t (Nlevels, Nin, Nout)
 	{
 	}
 
 	void VerifyGradient (int level, IEEE_t h, IEEE_t *Xi)
 	{
 		assert (level > -1 && level < n_populated - 1);
+		stratum_t *bottomp = n_strata[n_populated - 1];
 
 		rg_stratum = dynamic_cast<dense_t *> (n_strata[level]);
 		if (rg_stratum == NULL)
@@ -99,12 +95,15 @@ public:
 
 			ripple = rg_stratum->s_response.raw ();
 
-			for (int i = level + 1; i < n_populated - 1; ++i)
+			for (int i = level + 1; i < n_populated; ++i)
 				ripple = n_strata[i]->_sAPI_f (ripple);
 
-			error = _API_f (ripple) - answer;
+#if 0
+			error = ripple[0] - answer;
 			error = 0.5 * error * error;
 			dL_diff = error;
+#endif
+			dL_diff = bottomp->_sAPI_Loss (&answer);
 
 			ripple = rg_stratum->s_response.raw ();
 
@@ -112,11 +111,15 @@ public:
 			rg_stratum->s_response (i, 0) =
 				ACTIVATION_FN (rg_stratum->de_dot (i, 0));
 
-			for (int i = level + 1; i < n_populated - 1; ++i)
+			for (int i = level + 1; i < n_populated; ++i)
 				ripple = n_strata[i]->_sAPI_f (ripple);
 
-			error = _API_f (ripple) - answer;
+#if 0
+			error = ripple[0] - answer;
 			error = 0.5 * error * error;
+#endif
+			error = bottomp->_sAPI_Loss (&answer);
+
 			dL_diff -= error;
 			dL_diff /= 2 * h;
 

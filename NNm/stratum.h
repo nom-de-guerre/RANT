@@ -31,6 +31,17 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <NeuralM.h>
 #include <strategy.h>
 
+#define RECTIFIER(X) log (1 + exp (X)) 
+#define SIGMOID_FN(X) (1 / (1 + exp (-X))) // derivative of rectifier 
+ 
+#ifdef __TANH_ACT_FN 
+#define ACTIVATION_FN(X) tanh(X) 
+#define DERIVATIVE_FN(Y) (1 - Y*Y) 
+#else 
+#define ACTIVATION_FN(X) SIGMOID_FN(X) 
+#define DERIVATIVE_FN(Y) (Y * (1 - Y)) 
+#endif 
+
 struct stratum_t
 {
 	const char				*s_Name;
@@ -50,8 +61,11 @@ struct stratum_t
 		s_Nnodes (N),
 		s_Nin (Nin),
 		s_delta (N, 1),
-		s_response (N, 1)
+		s_response (N, 1),
+		s_strat (NULL)
 	{
+		s_delta.zero ();
+		s_response.zero ();
 	}
 
 	virtual ~stratum_t (void)
@@ -77,6 +91,18 @@ struct stratum_t
 	virtual NeuralM_t * _sAPI_gradientM (void)
 	{
 		return &s_delta;
+	}
+
+	/*
+	 * This should only be called on loss layers, such as MSE,
+	 * and they must override it.
+	 *
+	 * It assumes that prior to invocation _sAPI_f has been called.
+	 *
+	 */
+	virtual IEEE_t _sAPI_Loss (IEEE_t const * const)
+	{
+		assert (false);
 	}
 
 	IEEE_t * z (void)

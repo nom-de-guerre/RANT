@@ -41,11 +41,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stratum.h>
 #include <dense.h>
 #include <logits.h>
+#include <softmax.h>
 #include <layerN.h>
+#include <MSE.h>
+#include <MLE.h>
 #include <RPROP.h>
 #include <ADAM.h>
 
-template<typename T> class NNet_t
+class NNet_t
 {
 protected:
 
@@ -73,6 +76,7 @@ protected:
 	IEEE_t					n_SGDn;			// % of batch to use
 	NoReplacementSamples_t	*n_SGDsamples;	// permuted samples
 
+	// Pre-processing for the arguments
 	bool				n_normalize;
 	IEEE_t				*n_normParams;
 	IEEE_t				*n_arg;
@@ -191,6 +195,11 @@ public:
 		n_halt = mse;
 	}
 
+	IEEE_t Loss (void)
+	{
+		return n_error;
+	}
+
 	bool Train (const DataSet_t * const);
 	bool Train (const DataSet_t * const, int); // used only when stand-alone
 
@@ -265,15 +274,38 @@ public:
 		n_strata[layer]->_sAPI_init (Nin);
 	}
 
-	/*
-	 * The next 4 call the specialization.  They are public as
-	 * CNN components need to access them to integrate training.
-	 *
-	 */
-	void Start (void);								// calls Cycle
-	IEEE_t Compute (IEEE_t *);						// calls f ()
-	inline IEEE_t Loss (void);						// calls Error
-	IEEE_t ComputeDerivative (const TrainingRow_t);	// calls bprop
+	void AddSoftmaxLayer (const int K, StrategyAlloc_t rule)
+	{
+		int layer = n_populated++;
+
+		assert (layer > 0 && layer < n_levels);
+		assert (n_strata[layer] == NULL);
+
+		int Nin = n_width[layer - 1];
+
+		n_width[layer] = K;
+		n_strata[layer] = new SoftmaxMLE_t (layer, K, Nin, rule);
+		n_strata[layer]->_sAPI_init (K);
+	}
+
+	void AddScalerMSELayer (StrategyAlloc_t rule)
+	{
+		assert (n_Nout == 1);
+
+		int layer = n_populated++;
+
+		assert (layer > 0 && layer < n_levels);
+		assert (n_strata[layer] == NULL);
+
+		int Nin = n_width[layer - 1];
+
+		n_width[layer] = Nin; // a 1:1 layer
+		n_strata[layer] = new ScalerMSE_t (layer, Nin, rule);
+		n_strata[layer]->_sAPI_init (1);
+	}
+
+	IEEE_t Compute (const TrainingRow_t);
+	void ComputeDerivative (const TrainingRow_t);
 
 	// The below are public so these objects can be integrated
 	void UpdateWeights (void)
@@ -284,7 +316,7 @@ public:
 
 	bool ExposeGradient (NeuralM_t &);
 
-	void SetNormalize (DataSet_t const * const S)
+	void SetNormalizePP (DataSet_t const * const S)
 	{
 		assert (S->Nin () == n_Nin);
 
