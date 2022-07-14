@@ -30,7 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdlib.h>
 #include <stdint.h>
 
-#include <softmaxNNm.h>
+#include <NNm.h>
 #include <options.h>
 
 #define N_POINTS	30
@@ -95,14 +95,12 @@ int main (int argc, char *argv[])
 	int N_layers = argc;
 
 	// { length, inputs,  ..., outputs }
-	int *layers = new int [N_layers + 3];
+	int *layers = new int [N_layers + 1];
 
-	layers[0] = N_layers + 2;
-	layers[1] = 2;							// 2 inputs
-	layers[N_layers + 2] = 4;				// 4 outputs
+	layers[0] = N_layers;
 
 	for (int i = 0; i < N_layers; ++i)
-		layers[i + 2] = atoi (argv[i]);
+		layers[i + 1] = atoi (argv[i]);
 
 	Run (params, layers);
 
@@ -111,13 +109,20 @@ int main (int argc, char *argv[])
 
 void Run (NNmConfig_t &params, int *layers)
 {
+	auto rule = (params.ro_flag ? ADAM : RPROP);
 	DataSet_t *O = BuildTrainingSet ();
-	SoftmaxNNm_t *Np = NULL;
+	NNet_t *Np = NULL;
 	double guess;
 
-	Np = new SoftmaxNNm_t (layers[0], layers + 1, RPROP);
+	// + 1 for the Softmax layer
+	Np = new NNet_t (layers[0] + 1, 2, 4);
 
 	Np->SetHalt (params.ro_haltCondition);
+
+	for (int i = 1; i < layers[0]; ++i)
+		Np->AddDenseLayer (layers[i], rule);
+
+	Np->AddSoftmaxLayer (4, rule);
 
 	try {
 
@@ -128,10 +133,9 @@ void Run (NNmConfig_t &params, int *layers)
 		printf ("ERROR: %s\n", excep);
 	}
 
-	printf ("\n\tLoss\t\tAccuracy\tSteps\n");
-	printf ("\t%f\t%f\t%d\n\n",
+	printf ("\n\tLoss\tSteps\n");
+	printf ("\t%f\t%d\n\n",
 		Np->Loss (),
-		Np->Accuracy (),
 		Np->Steps ());
 
 	bool accept_soln = true;
