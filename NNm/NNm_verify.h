@@ -98,11 +98,6 @@ public:
 			for (int i = level + 1; i < n_populated; ++i)
 				ripple = n_strata[i]->_sAPI_f (ripple);
 
-#if 0
-			error = ripple[0] - answer;
-			error = 0.5 * error * error;
-			dL_diff = error;
-#endif
 			dL_diff = bottomp->_sAPI_Loss (&answer);
 
 			ripple = rg_stratum->s_response.raw ();
@@ -114,10 +109,6 @@ public:
 			for (int i = level + 1; i < n_populated; ++i)
 				ripple = n_strata[i]->_sAPI_f (ripple);
 
-#if 0
-			error = ripple[0] - answer;
-			error = 0.5 * error * error;
-#endif
 			error = bottomp->_sAPI_Loss (&answer);
 
 			dL_diff -= error;
