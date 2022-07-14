@@ -34,12 +34,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <NNm.h>
 #include <options.h>
 
-#define N_POINTS	256
+#define N_POINTS	32
 
 #define PI 			3.141592653589793
 #define PI_2		1.570796326794897
 
-#define RANGE		PI
+#define RANGE		PI_2
 
 DataSet_t *BuildTrainingSet (int);
 void Run (NNmConfig_t &, int *);
@@ -82,9 +82,7 @@ void Run (NNmConfig_t &params, int *layers)
 		Np->AddDenseLayer (layers[i + 1], rule);
 
 	Np->AddScalerMSELayer (rule);
-
 	Np->SetHalt (params.ro_haltCondition);
-
 	Np->DisplayModel ();
 
 	try {
@@ -109,14 +107,14 @@ void Run (NNmConfig_t &params, int *layers)
 		guess = Np->Compute ((*O)[i]);
 
 		error = (*O)[i][1] - guess;
-		ratio = fabs (error) / (*O)[i][1];
+		ratio = 100 * fabs (error) / (*O)[i][1];
 		error *= error;
 		MSE += error;
 
 		if (error > params.ro_haltCondition)
 			++missed;
 
-		printf ("DJS_RESULT\t%1.8f\t%1.8f\t%1.8f\t%f\t%s\n",
+		printf ("DJS_RESULT\t%1.8f\t%1.8f\t%1.8f\t%f%%\t%s\n",
 			(*O)[i][0],
 			(*O)[i][1],
 			guess,
