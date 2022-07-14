@@ -92,6 +92,10 @@ public:
 		return is_N;
 	}
 
+	int * raw (void)
+	{
+		return is_samples;
+	}
 };
 
 #endif // header inclusion

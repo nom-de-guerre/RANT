@@ -55,6 +55,8 @@ struct stratum_t
 
 	strategy_t				*s_strat;
 
+	bool					s_frozen;
+
 	stratum_t (const char *namep, const int ID, const int N, const int Nin) :
 		s_Name (namep),
 		s_ID (ID),
@@ -62,7 +64,8 @@ struct stratum_t
 		s_Nin (Nin),
 		s_delta (N, 1),
 		s_response (N, 1),
-		s_strat (NULL)
+		s_strat (NULL),
+		s_frozen (true)
 	{
 		s_delta.zero ();
 		s_response.zero ();
@@ -77,7 +80,17 @@ struct stratum_t
 		return s_Nnodes;
 	}
 
-	virtual void _sAPI_init (const int) = 0;
+	void Thaw (void)
+	{
+		s_frozen = false;
+	}
+
+	void Freeze (void)
+	{
+		s_frozen = true;
+	}
+
+	virtual void _sAPI_init (void) = 0;
 	virtual IEEE_t * _sAPI_f (IEEE_t * const, bool = true) = 0;
 
 	virtual void _sAPI_gradient (stratum_t &) = 0;

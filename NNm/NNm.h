@@ -32,7 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#include <float.h>
+#include <float.h>		// FLT_EVAL_METHOD
 
 #include <data.h>
 #include <NeuralM.h>
@@ -40,7 +40,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <stratum.h>
 #include <dense.h>
-#include <logits.h>
+#include <identity.h>
 #include <softmax.h>
 #include <layerN.h>
 #include <MSE.h>
@@ -54,13 +54,13 @@ protected:
 
 	int					n_steps;
 
-	int					n_populated;
-
 	// morphology of the net
 	int					n_Nin;
 	int					n_Nout;
-	int					n_levels;
-	int					*n_width;		// array of lengths of n_nn
+	int					n_levels;		// available slots for layers
+	int					n_populated;	// slots occupied by layers
+
+	int					*n_width;		// array of lengths of n_levels
 	stratum_t			**n_strata;
 
 	int					n_Nweights;
@@ -87,6 +87,7 @@ protected:
 	
 public:
 
+#if 0
 	/*
 	 * levels is the number of layers, including the output.  width is an
 	 * array specifying the width of each level.  e.g., { 1, 4, 1 }, is
@@ -130,19 +131,17 @@ public:
 		{
 			n_width[i - 1] = width[i];
 			n_strata[i - 1] = new dense_t (i - 1, width[i], width[i - 1], rule);
-			n_strata[i - 1]->_sAPI_init (
-				i < n_levels ?
-				width[i + 1] :
-				width[i]);
+			n_strata[i - 1]->_sAPI_init ();
 		}
 	}
+#endif // deprecated constructor
 
 	NNet_t (const int levels, const int Nin, const int Nout) :
 		n_steps (0),
-		n_populated (0),
 		n_Nin (Nin),
 		n_Nout (Nout),
 		n_levels (levels),
+		n_populated (0),
 		n_Nweights (-1),
 		n_halt (1e-5),
 		n_error (nan (NULL)),
@@ -185,6 +184,16 @@ public:
 			delete n_SGDsamples;
 	}
 
+	int Nin (void)
+	{
+		return n_Nin;
+	}
+
+	int Nout (void)
+	{
+		return n_Nout;
+	}
+
 	void SetMaxIterations (int maxIterations)
 	{
 		n_maxIterations = maxIterations;
@@ -200,6 +209,7 @@ public:
 		return n_error;
 	}
 
+	bool TrainAndReset (DataSet_t const * const);
 	bool Train (const DataSet_t * const);
 	bool Train (const DataSet_t * const, int); // used only when stand-alone
 
@@ -242,10 +252,10 @@ public:
 
 		n_width[layer] = N;
 		n_strata[layer] = new dense_t (layer, N, Nin, rule);
-		n_strata[layer]->_sAPI_init (N);
+		n_strata[layer]->_sAPI_init ();
 	}
 
-	void AddLogitsLayer (int N, StrategyAlloc_t rule)
+	void AddIdentityLayer (int N, StrategyAlloc_t rule)
 	{
 		int layer = n_populated++;
 
@@ -255,8 +265,8 @@ public:
 		int Nin = (layer ? n_width[layer - 1] : n_Nin);
 
 		n_width[layer] = N;
-		n_strata[layer] = new logits_t (layer, N, Nin, rule);
-		n_strata[layer]->_sAPI_init (N);
+		n_strata[layer] = new identity_t (layer, N, Nin, rule);
+		n_strata[layer]->_sAPI_init ();
 	}
 
 	// Layer normalization, not batch normalization
@@ -271,7 +281,7 @@ public:
 
 		n_width[layer] = Nin;
 		n_strata[layer] = new layerN_t (layer, Nin, rule);
-		n_strata[layer]->_sAPI_init (Nin);
+		n_strata[layer]->_sAPI_init ();
 	}
 
 	void AddSoftmaxLayer (const int K, StrategyAlloc_t rule)
@@ -285,7 +295,7 @@ public:
 
 		n_width[layer] = K;
 		n_strata[layer] = new SoftmaxMLE_t (layer, K, Nin, rule);
-		n_strata[layer]->_sAPI_init (K);
+		n_strata[layer]->_sAPI_init ();
 	}
 
 	void AddScalerMSELayer (StrategyAlloc_t rule)
@@ -301,7 +311,7 @@ public:
 
 		n_width[layer] = Nin; // a 1:1 layer
 		n_strata[layer] = new ScalerMSE_t (layer, Nin, rule);
-		n_strata[layer]->_sAPI_init (1);
+		n_strata[layer]->_sAPI_init ();
 	}
 
 	IEEE_t Compute (const TrainingRow_t);
@@ -329,6 +339,14 @@ public:
 			n_normParams[i * 2] = S->Mean (i);
 			n_normParams[i * 2 + 1] = S->StdDev (i);
 		}
+	}
+
+	void Reset (void)
+	{
+		n_error = -1;
+
+		for (int i = 0; i < n_populated; ++i)
+			n_strata[i]->_sAPI_init ();
 	}
 
 	void DisplayModel (void)

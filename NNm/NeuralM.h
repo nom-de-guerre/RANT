@@ -172,6 +172,7 @@ struct NeuralM_t
 	 * multiply the vector.
 	 *
 	 */
+	inline
 	void MatrixVectorMult (NeuralM_t &A, IEEE_t *x)
 	{
 		IEEE_t *pA = A.sm_data;
@@ -191,6 +192,7 @@ struct NeuralM_t
 	 * Assumes first column is the bias, and ignores.
 	 *
 	 */
+	inline
 	void TransposeMatrixVectorMult (NeuralM_t &A, IEEE_t *vec)
 	{
 		IEEE_t *rowp = A.sm_data + 1; // skip bias

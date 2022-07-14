@@ -38,10 +38,10 @@ NNet_t::Compute (IEEE_t *x)
 			n_arg[i] /= n_normParams[2 * i + 1];
 		}
 
-		ripple = n_arg;
-
 	} else
-		ripple = x;
+		n_arg = x;
+
+	ripple = n_arg;
 
 	for (int layer = 0; layer < n_populated; ++layer)
 		ripple = n_strata[layer]->_sAPI_f (ripple);
@@ -59,12 +59,13 @@ NNet_t::ComputeDerivative (const TrainingRow_t x)
 	 *
 	 */
 	Compute (x);
+
 	n_error += n_strata[n_populated - 1]->_sAPI_Loss (x + n_Nin);
 	n_strata[n_populated - 1]->_sAPI_bprop (n_strata[n_populated - 1]->z ());
 
 	for (int level = n_populated - 2; level >= 0; --level)
 	{
-		Xi = (level > 0 ? n_strata[level - 1]->z () : x);
+		Xi = (level > 0 ? n_strata[level - 1]->z () : n_arg);
 
 		n_strata[level + 1]->_sAPI_gradient (*n_strata[level]);
 		n_strata[level]->_sAPI_bprop (Xi);
@@ -75,6 +76,14 @@ NNet_t::ComputeDerivative (const TrainingRow_t x)
  * ------------- The generic ANN Code ---------------
  *
  */
+
+bool
+NNet_t::TrainAndReset (DataSet_t const * const training)
+{
+	Reset ();
+
+	return Train (training);
+}
 
 bool
 NNet_t::Train (const DataSet_t * const training)
@@ -123,11 +132,11 @@ NNet_t::TrainWork (const DataSet_t * const training)
 		}
 
 		if (n_steps && (n_steps % n_keepalive) == 0)
-			printf ("Training Loss: %e\n", Loss ());
+			printf ("(%d) Training Loss: %e\n", n_steps, Loss ());
 	}
 
-	if (n_steps >= n_maxIterations)
-		throw ("Exceeded Iterations");
+	if (!solved)
+		return false;
 
 	return true;
 }

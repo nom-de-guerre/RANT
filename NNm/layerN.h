@@ -69,8 +69,10 @@ struct layerN_t : public stratum_t
 		delete [] ln_xhat;
 	}
 
-	void _sAPI_init (int Nout)
+	void _sAPI_init (void)
 	{
+		int Nout = s_Nin;
+
 		ln_dL.zero ();
 
 		// Glorot, W ~ [-r, r]

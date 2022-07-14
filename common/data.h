@@ -66,7 +66,7 @@ struct Categories_t
 	{
 	}
 
-	int N (void)
+	int N (void) const
 	{
 		return cc_code;
 	}
@@ -169,7 +169,7 @@ struct DataSet_t
 	int						t_N;
 	int						t_Nin;
 	int						t_Nout;
-	int						t_columns;
+	int						t_columns; // length of a row
 
 	TrainingRow_t			t_data;
 
@@ -211,12 +211,9 @@ struct DataSet_t
 	~DataSet_t (void)
 	{
 		delete [] t_data;
-
-		if (t_dictp)
-			delete t_dictp;
 	}
 
-	DataSet_t *Copy (void)
+	DataSet_t *Copy (void) const
 	{
 		DataSet_t *replica = new DataSet_t (t_N, t_Nin, t_Nout);
 
@@ -240,7 +237,7 @@ struct DataSet_t
 		return t_data + feature;
 	}
 
-	void Display (void)
+	void Display (void) const
 	{
 		for (int i = 0, index = 0; i < t_N; ++i)
 		{
@@ -253,7 +250,7 @@ struct DataSet_t
 
 	TrainingRow_t entry (const int index) const
 	{
-		return t_data + index * (t_Nout + t_Nin);
+		return t_data + index * (t_columns);
 	}
 
 	TrainingRow_t operator[] (int index) const
@@ -261,11 +258,10 @@ struct DataSet_t
 		return entry (index);
 	}
 
-	DataSet_t *Subset (int N, int indices [])
+	DataSet_t *Subset (int N, int const * const indices) const
 	{
 		DataSet_t *p = new DataSet_t (N, t_Nin, t_Nout);
-		size_t entrySize = t_Nin + t_Nout;
-		size_t len = sizeof (IEEE_t) * entrySize;
+		size_t len = sizeof (IEEE_t) * t_columns;
 		TrainingRow_t from, to;
 
 		to = p->Raw ();
@@ -274,8 +270,11 @@ struct DataSet_t
 		{
 			from = entry (indices[i]);
 			memcpy (to, from, len);
-			to += entrySize;
+			to += t_columns;
 		}
+
+		p->t_dictp = t_dictp;		// needs to be reference counted
+		p->t_schema = t_schema;
 
 		return p;
 	}

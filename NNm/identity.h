@@ -25,8 +25,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef _NN_DENSE__H__
-#define _NN_DENSE__H__
+#ifndef _NNm_IDENTITY__H__
 
 #include <assert.h>
 #include <stdlib.h>
@@ -41,50 +40,41 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * Implements a layer when training a neural network.
  *
  */
-struct dense_t : public stratum_t
+struct identity_t : public stratum_t
 {
 	// Matrices - per weight, s_Nnodes x s_Nin
-	NeuralM_t				de_W;
-	NeuralM_t				de_dL;
+	NeuralM_t				lo_W;
+	NeuralM_t				lo_dL;
 
 	// Vectors - per perceptron (node)
-	NeuralM_t				de_dot;			// Wx
+	NeuralM_t				lo_dot;			// Wx
 
-	dense_t (const int ID, const int N, const int Nin, StrategyAlloc_t rule) :
-		stratum_t ("dense", ID, N, Nin + 1),	// account for bias
-		de_W (N, Nin + 1),
-		de_dL (N, Nin + 1),
-		de_dot (N, 1)
+	identity_t (const int ID, const int N, const int Nin, StrategyAlloc_t rule) :
+		stratum_t ("softmax", ID, N, Nin + 1),		// account for bias
+		lo_W (N, Nin + 1),
+		lo_dL (N, Nin + 1),
+		lo_dot (N, 1)
 	{
-		s_strat = (*rule) (N, Nin + 1, de_W.raw (), de_dL.raw ());
+		s_strat = (*rule) (N, Nin + 1, lo_W.raw (), lo_dL.raw ());
 	}
 
-	dense_t (const int N, const int Nin, StrategyAlloc_t rule) :
-		stratum_t ("dense", -1, N, Nin + 1),	// account for bias
-		de_W (N, Nin + 1),
-		de_dL (N, Nin + 1),
-		de_dot (N, 1)
-	{
-		s_strat = (*rule) (N, Nin + 1, de_W.raw (), de_dL.raw ());
-	}
-
-	virtual ~dense_t (void)
+	virtual ~identity_t (void)
 	{
 	}
 
 	void _sAPI_init (void)
 	{
-		int Nout = de_W.rows ();
+		int Nout = lo_W.rows ();
 
-		de_dL.zero ();
+		lo_dL.zero ();
 
 		// Glorot, W ~ [-r, r]
 		IEEE_t r = sqrt (6.0 / (Nout + s_Nin));
-		IEEE_t *p = de_W.raw();
+		IEEE_t *p = lo_W.raw();
 		IEEE_t sample;
 
-		for (int i = de_W.rows () - 1; i >= 0; --i)
-			for (int j = de_W.columns () - 1; j >= 0; --j)
+		for (int i = lo_W.rows () - 1; i >= 0; --i)
+			for (int j = lo_W.columns () - 1; j >= 0; --j)
 			{
 				sample = (IEEE_t) rand () / RAND_MAX;
 				sample *= r;
@@ -105,13 +95,13 @@ struct dense_t : public stratum_t
 };
 
 void
-dense_t::_sAPI_gradient (stratum_t &Z)
+identity_t::_sAPI_gradient (stratum_t &Z)
 {
-	Z.s_delta.TransposeMatrixVectorMult (de_W, s_delta.raw ());
+	Z.s_delta.TransposeMatrixVectorMult (lo_W, s_delta.raw ());
 }
 
 void 
-dense_t::_sAPI_bprop (IEEE_t *xi, bool activation)
+identity_t::_sAPI_bprop (IEEE_t *xi, bool activation)
 {
 	/*
 	 *
@@ -125,13 +115,9 @@ dense_t::_sAPI_bprop (IEEE_t *xi, bool activation)
 	 *
 	 */
 
-	// Compute per node delta; skip if activation is the identity
-	for (int i = (activation ? 0 : s_Nnodes); i < s_Nnodes; ++i)
-		s_delta.sm_data[i] *= DERIVATIVE_FN (s_response.sm_data[i]);
-
 	// Apply the delta for per weight derivatives
 
-	IEEE_t *dL = de_dL.sm_data;
+	IEEE_t *dL = lo_dL.sm_data;
 	IEEE_t delta;
 
 	/*
@@ -154,19 +140,9 @@ dense_t::_sAPI_bprop (IEEE_t *xi, bool activation)
 }
 
 IEEE_t *
-dense_t::_sAPI_f (IEEE_t * const xi, bool activate)
+identity_t::_sAPI_f (IEEE_t * const xi, bool activate)
 {
-	de_dot.MatrixVectorMult (de_W, xi);
-
-	IEEE_t *p = s_response.sm_data;
-	IEEE_t *dot = de_dot.sm_data;
-
-	if (activate)
-		for (int i = 0; i < s_Nnodes; ++i)
-			*p++ = ACTIVATION_FN (*dot++);
-	else
-		for (int i = 0; i < s_Nnodes; ++i)
-			*p++ = *dot++;
+	s_response.MatrixVectorMult (lo_W, xi);
 
 	return s_response.sm_data;
 }

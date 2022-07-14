@@ -57,6 +57,11 @@ public:
 	{
 		return so_P[x];
 	}
+
+	int K (void)
+	{
+		return so_Nclasses;
+	}
 };
 
 /*
