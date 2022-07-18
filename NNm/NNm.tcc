@@ -61,7 +61,7 @@ NNet_t::ComputeDerivative (const TrainingRow_t x)
 	Compute (x);
 
 	n_error += n_strata[n_populated - 1]->_sAPI_Loss (x + n_Nin);
-	n_strata[n_populated - 1]->_sAPI_bprop (n_strata[n_populated - 1]->z ());
+	n_strata[n_populated - 1]->_sAPI_bprop (n_strata[n_populated - 2]->z ());
 
 	for (int level = n_populated - 2; level >= 0; --level)
 	{

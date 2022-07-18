@@ -98,13 +98,13 @@ int Softmax_t::ComputeSoftmax (IEEE_t const * const Xi)
 		}
 	}
 
-	assert (max >= 0.0 && max <= 1.0);
+	assert (max > 0.0 && max <= 1.0);
 	assert (factor > -1 && factor < so_Nclasses);
 
 	return factor;
 }
 
-void Softmax_t::bprop ( const int answer, IEEE_t * deltap)
+void Softmax_t::bprop (const int answer, IEEE_t * deltap)
 {
 	IEEE_t dL;
 

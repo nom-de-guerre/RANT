@@ -128,13 +128,8 @@ SoftmaxMLE_t::_sAPI_bprop (IEEE_t *xi, bool activation)
 		delta = s_delta.sm_data[i];
 		*dL++ += delta; // the Bias
 
-assert (!isnan (delta) && !isinf (delta));
-
 		for (int j = 1; j < s_Nin; ++j)
-{
-assert (!isnan (*dL) && !isinf (*dL));
 			*dL++ += delta * xi[j - 1];
-}
 	}
 }
 
@@ -153,7 +148,7 @@ SoftmaxMLE_t::_sAPI_Loss (IEEE_t const * const answers)
 {
 	IEEE_t loss = -log (ml_softm.P (answers[0]));
 	if (isnan (loss) || isinf (loss))
-		loss = -1;
+		loss = 1000000;
 
 	ml_softm.bprop (answers[0], s_delta.raw ());
 

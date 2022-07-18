@@ -89,19 +89,14 @@ RPROP_t::RPROP (int index)
 {
 	IEEE_t delta;
 	IEEE_t backtrack;
+	IEEE_t product;
 
-	if (r_Ei.sm_data[index] == 0.0 || r_dL[index] == 0.0)
-	{
-		delta = -SIGN (r_dL[index]) * r_delta.sm_data[index];
+	if (r_dL[index] == 0.0)
+		return;
 
-		if (isnan (delta))
-			throw ("Degenerate weight update");
+	product = r_dL[index] * r_Ei.sm_data[index];
 
-		r_learnable[index] += delta;
-
-		r_Ei.sm_data[index] = r_dL[index];
-
-	} else if (SIGN (r_dL[index]) == SIGN (r_Ei.sm_data[index])) {
+	if (product > 0.0) {
 
 		// (1)
 		delta = r_delta.sm_data[index] * ETA_PLUS;
@@ -120,7 +115,7 @@ RPROP_t::RPROP (int index)
 
 		r_Ei.sm_data[index] = r_dL[index];
 
-	} else {
+	} else if (product < 0.0) {
 
 		backtrack = r_delta.sm_data[index] * SIGN (r_Ei.sm_data[index]);
 
@@ -135,10 +130,21 @@ RPROP_t::RPROP (int index)
 		r_delta.sm_data[index] = delta;
 
 		// (2)
-		r_learnable[index] += backtrack;
+		r_learnable[index] -= backtrack;
 
 		// (3)
 		r_Ei.sm_data[index] = 0.0;
+
+	} else {
+
+		delta = -SIGN (r_dL[index]) * r_delta.sm_data[index];
+
+		if (isnan (delta))
+			throw ("Degenerate weight update");
+
+		r_learnable[index] += delta;
+
+		r_Ei.sm_data[index] = r_dL[index];
 	}
 
 	r_dL[index] = 0.0;

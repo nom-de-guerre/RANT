@@ -177,7 +177,7 @@ public:
 		if (n_normParams)
 			delete [] n_normParams;
 
-		if (n_arg)
+		if (n_normalize)
 			delete [] n_arg;
 
 		if (n_SGDsamples)
