@@ -122,7 +122,7 @@ void Run (NNmConfig_t &params, int *layers)
 	for (int i = 1; i < layers[0]; ++i)
 		Np->AddDenseLayer (layers[i], rule);
 
-	Np->AddSoftmaxLayer (4, rule);
+	Np->AddSoftmaxLayer (rule);
 
 	try {
 

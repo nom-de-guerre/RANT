@@ -131,7 +131,7 @@ NNet_t::TrainWork (const DataSet_t * const training)
 				n_maxIterations - n_steps);
 		}
 
-		if (n_steps && (n_steps % n_keepalive) == 0)
+		if (n_steps && n_keepalive && (n_steps % n_keepalive) == 0)
 			printf ("(%d) Training Loss: %e\n", n_steps, Loss ());
 	}
 

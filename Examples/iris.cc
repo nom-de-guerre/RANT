@@ -34,6 +34,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <read_csv.h>
 #include <data.h>
 #include <options.h>
+#include <kfold.h>
 
 void Run (NNmConfig_t &, int *);
 DataSet_t *LoadData (void);
@@ -70,7 +71,6 @@ void Run (NNmConfig_t &params, int *layers)
 {
 	DataSet_t *O = LoadData ();
 	NNet_t *Np = NULL;
-	double guess;
 	auto rule = (params.ro_flag ? ADAM : RPROP);
 
 	Np = new NNet_t (layers[0] + 1, 4, 3);
@@ -78,14 +78,28 @@ void Run (NNmConfig_t &params, int *layers)
 	for (int i = 1; i < layers[0]; ++i)
 		Np->AddDenseLayer (layers[i], rule);
 
-	Np->AddSoftmaxLayer (3, rule);
+	Np->AddSoftmaxLayer (rule);
 
 	Np->SetHalt (params.ro_haltCondition);
+	Np->SetMaxIterations (params.ro_maxIterations);
 	Np->SetAccuracy (); // Halt at 100% accuracy, even if above loss threshold
-	Np->SetKeepAlive (1); // Print every x epochs
+  	Np->SetKeepAlive (0); // Print every x epochs
 	Np->SetNormalizePP (O);
 
 	Np->DisplayModel ();
+
+#ifdef __FOLDED_RUN
+
+	confusion_t Cm (3);
+	kfold_t kf (O);
+
+	kf.ValidateConfM (Np, 3, Cm);
+
+	Cm.display ();
+
+	return;
+
+#else
 
 	try {
 
@@ -101,6 +115,7 @@ void Run (NNmConfig_t &params, int *layers)
 		Np->Loss (),
 		Np->Steps ());
 
+	double guess;
 	bool accept_soln = true;
 	bool correct;
 
@@ -134,6 +149,7 @@ void Run (NNmConfig_t &params, int *layers)
 		printf (" *** Solution REJECTED.\t%f\n",
 			(float) wrong / (float) N_POINTS);
 
+#endif // __FOLDED_RUN
 }
 
 bool includeFeature [] = { false, true, true, true, true, true };

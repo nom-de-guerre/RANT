@@ -48,6 +48,7 @@ class LoadCSV_t
 	uint8_t			*fs_datap;
 	int				fs_cursor;
 	ssize_t			fs_free;
+	ssize_t			fs_Bsize;
 
 	char			**fs_titles;
 
@@ -60,7 +61,19 @@ class LoadCSV_t
 	{
 		void *p = fs_datap + fs_cursor;
 
-		assert (req <= fs_free);
+		if (req > fs_free)
+		{
+			uint8_t *newSpace = new uint8_t [fs_Bsize * 2];
+
+			memcpy (newSpace, fs_datap, fs_Bsize);
+			fs_free += fs_Bsize;
+			fs_Bsize <<= 1;
+
+			delete [] fs_datap;
+
+			fs_datap = newSpace;
+			p = fs_datap + fs_cursor;
+		}
 
 		fs_free -= req;
 		fs_cursor += req;
@@ -168,6 +181,8 @@ class LoadCSV_t
 
 			if (process[i])
 			{
+				assert (index < fs_columns);
+
 				fs_titles[index] = strdup (buffer);
 				++index;
 			}
@@ -196,7 +211,7 @@ public:
 		if (rc)
 			throw (strerror (errno));
 
-		fs_free = mdata.st_size << 1;
+		fs_Bsize = fs_free = mdata.st_size << 1;
 
 		fs_fp = fopen (filepath, "r");
 		if (fs_fp == NULL)
@@ -219,6 +234,14 @@ public:
 			delete [] fs_schema;
 	}
 
+	char const * const ColumnName (int col) const
+	{
+		if (col < 0 || col > fs_columns)
+			return NULL;
+
+		return fs_titles[col];
+	}
+
 	void * Load (const int Nfeatures,
 		int &rows,
 		bool process[],
@@ -229,7 +252,7 @@ public:
 
 		if (header)
 		{
-			fs_columns = Nfeatures;
+			fs_columns = Nfeatures; // used in ReadHeader
 			fs_columns = ReadHeader (process);
 			if (fs_columns < 1)
 				return NULL;

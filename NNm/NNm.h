@@ -284,7 +284,7 @@ public:
 		n_strata[layer]->_sAPI_init ();
 	}
 
-	void AddSoftmaxLayer (const int K, StrategyAlloc_t rule)
+	void AddSoftmaxLayer (StrategyAlloc_t rule)
 	{
 		int layer = n_populated++;
 
@@ -293,8 +293,8 @@ public:
 
 		int Nin = n_width[layer - 1];
 
-		n_width[layer] = K;
-		n_strata[layer] = new SoftmaxMLE_t (layer, K, Nin, rule);
+		n_width[layer] = n_Nout;
+		n_strata[layer] = new SoftmaxMLE_t (layer, n_Nout, Nin, rule);
 		n_strata[layer]->_sAPI_init ();
 	}
 

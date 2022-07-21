@@ -167,6 +167,11 @@ struct NeuralM_t
 		return *(sm_data + (row * sm_columns) + column);
 	}
 
+	IEEE_t &Mentry (const int row, const int column)
+	{
+		return *(sm_data + (row * sm_columns) + column);
+	}
+
 	/*
 	 * Assumes first column is the bias (1), so used the submatrix
 	 * multiply the vector.
@@ -237,7 +242,7 @@ struct NeuralM_t
 
 	}
 
-	void display (const char * const msgp = NULL) const
+	void displayExp (const char * const msgp = NULL) const
 	{
 		if (msgp)
 			printf ("%s\n", msgp);
@@ -246,6 +251,19 @@ struct NeuralM_t
 		{
 			for (int j = 0; j < sm_columns; ++j, ++index)
 				printf ("%e, ", sm_data[index]);
+			printf ("\n");
+		}
+	}
+
+	void display (const char * const msgp = NULL) const
+	{
+		if (msgp)
+			printf ("%s\n", msgp);
+
+		for (int i = 0, index = 0; i < sm_rows; ++i)
+		{
+			for (int j = 0; j < sm_columns; ++j, ++index)
+				printf ("%f, ", sm_data[index]);
 			printf ("\n");
 		}
 	}
