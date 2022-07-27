@@ -351,6 +351,8 @@ public:
 
 	void DisplayModel (void)
 	{
+		printf ("Input (%d) ⟹ ", n_Nin);
+
 		for (int i = 0; i < n_populated; ++i)
 			printf ("%s (%d)\t%s",
 				n_strata[i]->s_Name,

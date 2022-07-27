@@ -418,6 +418,15 @@ public:
 
 		return O;
 	}
+
+	int findIndex (char const * const feature)
+	{
+		for (int i = 0; fs_titles[i] != NULL; ++i)
+			if (strcmp (feature, fs_titles[i]) == 0)
+				return i;
+
+		return -1;
+	}
 };
 
 #endif // header inclusion
