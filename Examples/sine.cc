@@ -106,8 +106,8 @@ void Run (NNmConfig_t &params, int *layers)
 	{
 		guess = Np->Compute ((*O)[i]);
 
-		error = (*O)[i][1] - guess;
-		ratio = 100 * fabs (error) / (*O)[i][1];
+		error = O->Answer(i) - guess;
+		ratio = 100 * fabs (error) / O->Answer(i);
 		error *= error;
 		MSE += error;
 
