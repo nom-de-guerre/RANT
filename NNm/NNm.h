@@ -213,6 +213,18 @@ public:
 	bool Train (const DataSet_t * const);
 	bool Train (const DataSet_t * const, int); // used only when stand-alone
 
+	void Thaw (void)
+	{
+		for (int i = 0; i < n_populated; ++i)
+			n_strata[i]->Thaw ();
+	}
+
+	void Freeze (void)
+	{
+		for (int i = 0; i < n_populated; ++i)
+			n_strata[i]->Freeze ();
+	}
+
 	int Steps (void) const
 	{
 		return n_steps;
@@ -357,7 +369,7 @@ public:
 			printf ("%s (%d)\t%s",
 				n_strata[i]->s_Name,
 				n_strata[i]->s_Nnodes,
-				(i + 1 == n_populated ? "\n" : "⟹\t"));
+				(i + 1 == n_populated ? "\n" : "⟹ "));
 	}
 };
 

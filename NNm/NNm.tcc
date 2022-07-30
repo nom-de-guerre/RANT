@@ -114,6 +114,8 @@ NNet_t::TrainWork (const DataSet_t * const training)
 	if (n_useSGD)
 		n_SGDsamples = new NoReplacementSamples_t (training->N ());
 
+	Thaw ();
+
 	for (n_steps = 0;
 		(n_steps < n_maxIterations) && !solved;
 		++n_steps)
@@ -134,6 +136,8 @@ NNet_t::TrainWork (const DataSet_t * const training)
 		if (n_steps && n_keepalive && (n_steps % n_keepalive) == 0)
 			printf ("(%d) Training Loss: %e\n", n_steps, Loss ());
 	}
+
+	Freeze ();
 
 	if (!solved)
 		return false;
