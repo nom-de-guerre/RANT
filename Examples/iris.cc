@@ -56,11 +56,10 @@ int main (int argc, char *argv[])
 	// { length, inputs,  ..., outputs }
 	int *layers = new int [N_layers + 1];
 
+	layers[0] = N_layers;
+
 	for (int i = 0; i < N_layers; ++i)
 		layers[i + 1] = atoi (argv[i]);
-
-	++N_layers; // logits
-	layers[0] = N_layers;
 
 	Run (params, layers);
 
@@ -75,8 +74,8 @@ void Run (NNmConfig_t &params, int *layers)
 
 	Np = new NNet_t (layers[0] + 1, 4, 3);
 
-	for (int i = 1; i < layers[0]; ++i)
-		Np->AddDenseLayer (layers[i], rule);
+	for (int i = 0; i < layers[0]; ++i)
+		Np->AddDenseLayer (layers[i + 1], rule);
 
 	Np->AddSoftmaxLayer (rule);
 

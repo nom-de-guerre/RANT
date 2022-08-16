@@ -46,7 +46,7 @@ struct ScalerMSE_t : public stratum_t
 	NeuralM_t				ms_dL;
 
 	ScalerMSE_t (const int ID, const int Nin, StrategyAlloc_t rule) :
-		stratum_t ("MSE", ID, 1, Nin),
+		stratum_t ("MSE", ID, 1, Nin + 1),
 		ms_W (1, Nin + 1),
 		ms_dL (1, Nin + 1)
 	{
@@ -60,16 +60,20 @@ struct ScalerMSE_t : public stratum_t
 	void _sAPI_init (void)
 	{
 		for (int i = 0; i < s_Nin; ++i)
-			ms_W.sm_data[i] = rand () / RAND_MAX - 1.0;
+			ms_W.sm_data[i] = ((IEEE_t) rand () / RAND_MAX) - 0.5;
 
 		ms_dL.zero ();
-
 	}
 
 	virtual IEEE_t * _sAPI_f (IEEE_t * const, bool = true);
 	virtual void _sAPI_gradient (stratum_t &);
 	virtual void _sAPI_bprop (IEEE_t *, bool = true);
 	virtual IEEE_t _sAPI_Loss (IEEE_t const * const);
+
+	virtual int _sAPI_Trainable (void)
+	{
+		return ms_W.N ();
+	}
 
 	virtual void StrategyMono (const int index)
 	{

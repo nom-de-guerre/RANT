@@ -95,6 +95,11 @@ struct layerN_t : public stratum_t
 	virtual void _sAPI_gradient (stratum_t &);
 	virtual void _sAPI_bprop (IEEE_t *, bool = true);
 
+	virtual int _sAPI_Trainable (void)
+	{
+		return ln_params.N ();
+	}
+
 	virtual void StrategyMono (const int index)
 	{
 		return; // over-ride when debugging or instrumenting

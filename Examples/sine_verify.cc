@@ -75,14 +75,14 @@ void Run (int *layers)
 	double soln_MSE = 5e-7;
 
 	DataSet_t *O = BuildTrainingSet (N_POINTS);
-	RegressionGrad_t *Np = NULL;
+	VerifyGrad_t *Np = NULL;
 
-	Np = new RegressionGrad_t (layers[0] + 2, 1, 1);
+	Np = new VerifyGrad_t (layers[0] + 2, 1, 1);
 
 	for (int i = 0; i < layers[0]; ++i)
 		Np->AddDenseLayer (layers[i + 1], RPROP);
 
-	Np->AddNormalizationLayer (RPROP);
+//	Np->AddNormalizationLayer (RPROP);
 	Np->AddScalerMSELayer (RPROP);
 
 	Np->SetHalt (soln_MSE);
@@ -97,6 +97,8 @@ void Run (int *layers)
 
 		// Ignore
 	}
+
+	printf ("Loss\t%e\n", Np->Loss ());
 
 	// We only examine the input layer and the hidden layers
 	for (int i = 0; i < layers[0]; ++i)

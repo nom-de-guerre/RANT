@@ -38,6 +38,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <NeuralM.h>
 #include <sampling.h>
 
+// Layers
 #include <stratum.h>
 #include <dense.h>
 #include <identity.h>
@@ -45,6 +46,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <layerN.h>
 #include <MSE.h>
 #include <MLE.h>
+#include <dropout.h>
+
+// Strategies
 #include <RPROP.h>
 #include <ADAM.h>
 
@@ -194,6 +198,16 @@ public:
 		return n_Nout;
 	}
 
+	int Nparameters (void)
+	{
+		int N = 0;
+
+		for (int i = 0; i < n_populated; ++i)
+			N += n_strata[i]->_sAPI_Trainable ();
+
+		return N;
+	}
+
 	void SetMaxIterations (int maxIterations)
 	{
 		n_maxIterations = maxIterations;
@@ -204,9 +218,14 @@ public:
 		n_halt = mse;
 	}
 
-	IEEE_t Loss (void)
+	IEEE_t Loss (void) const
 	{
 		return n_error;
+	}
+
+	IEEE_t Accuracy (void) const
+	{
+		return nan (NULL);
 	}
 
 	bool TrainAndReset (DataSet_t const * const);
@@ -300,13 +319,27 @@ public:
 	{
 		int layer = n_populated++;
 
-		assert (layer > 0 && layer < n_levels);
+		assert (layer >= 0 && layer < n_levels);
 		assert (n_strata[layer] == NULL);
 
 		int Nin = n_width[layer - 1];
 
 		n_width[layer] = n_Nout;
 		n_strata[layer] = new SoftmaxMLE_t (layer, n_Nout, Nin, rule);
+		n_strata[layer]->_sAPI_init ();
+	}
+
+	void AddDropoutLayer (IEEE_t p_retain)
+	{
+		int layer = n_populated++;
+
+		assert (layer > 0 && layer < n_levels);
+		assert (n_strata[layer] == NULL);
+
+		int Nin = n_width[layer - 1];
+
+		n_width[layer] = Nin;
+		n_strata[layer] = new dropout_t (Nin, p_retain);
 		n_strata[layer]->_sAPI_init ();
 	}
 
@@ -321,7 +354,7 @@ public:
 
 		int Nin = n_width[layer - 1];
 
-		n_width[layer] = Nin; // a 1:1 layer
+		n_width[layer] = 1;
 		n_strata[layer] = new ScalerMSE_t (layer, Nin, rule);
 		n_strata[layer]->_sAPI_init ();
 	}
@@ -351,6 +384,11 @@ public:
 			n_normParams[i * 2] = S->Mean (i);
 			n_normParams[i * 2 + 1] = S->StdDev (i);
 		}
+	}
+
+	IEEE_t IndividualLoss (IEEE_t answer)
+	{
+		return n_strata[n_populated - 1]->_sAPI_Loss (&answer);
 	}
 
 	void Reset (void)

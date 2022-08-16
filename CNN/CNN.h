@@ -39,10 +39,11 @@ class CNN_t
 protected: // for inheritors to perform validation etc.
 
 	int					cn_Nlayers;			// Maximum layers supported
-	int					cn_N;				// Number of layers created
+	int					cn_populated;				// Number of layers created
 	int					cn_Nclasses;
 	int					cn_rows;
 	int					cn_columns;
+	int					cn_Nin;
 	int					cn_Nsubsamples;
 	int					cn_maxIterations;
 	int					cn_steps;
@@ -59,10 +60,11 @@ public:
 		   const int Nlayers, 
 		   const int Nclasses) :
 		cn_Nlayers (Nlayers),
-		cn_N (0),
+		cn_populated (0),
 		cn_Nclasses (Nclasses),
 		cn_rows (rows),
 		cn_columns (columns),
+		cn_Nin (rows * columns),
 		cn_Nsubsamples (5000),
 		cn_maxIterations (200),
 		cn_steps (0),
@@ -76,7 +78,7 @@ public:
 
 	~CNN_t (void)
 	{
-		for (int i = 0; i < cn_N; ++i)
+		for (int i = 0; i < cn_populated; ++i)
 			if (cn_layers[i])
 				delete cn_layers[i];
 
@@ -115,8 +117,8 @@ public:
 		const int fwidth, 
 		const int mwidth)
 	{
-		assert (cn_N < cn_Nlayers);
-		const int layer = cn_N++;
+		assert (cn_populated < cn_Nlayers);
+		const int layer = cn_populated++;
 
 		cn_layers[layer] = new layer_t (N, layer_t::CONVOLVE, fwidth, mwidth);
 
@@ -130,8 +132,8 @@ public:
 		const int mwidth,
 		const int * const stripeProgram)
 	{
-		assert (cn_N < cn_Nlayers);
-		const int layer = cn_N++;
+		assert (cn_populated < cn_Nlayers);
+		const int layer = cn_populated++;
 
 		cn_layers[layer] = new layer_t (Nprograms, 
 			Nin, 
@@ -147,8 +149,8 @@ public:
 		const int fwidth, 
 		const int mwidth)
 	{
-		assert (cn_N < cn_Nlayers);
-		const int layer = cn_N++;
+		assert (cn_populated < cn_Nlayers);
+		const int layer = cn_populated++;
 
 		if (layer && N > 1)
 			assert (cn_layers[layer - 1]->N () == N);
@@ -166,8 +168,8 @@ public:
 		const int fwidth, 
 		const int mwidth)
 	{
-		assert (cn_N < cn_Nlayers);
-		const int layer = cn_N++;
+		assert (cn_populated < cn_Nlayers);
+		const int layer = cn_populated++;
 
 		if (layer && N > 1)
 			assert (cn_layers[layer - 1]->N () == N);
@@ -182,12 +184,13 @@ public:
 		const int Nlayers,
 		StrategyAlloc_t rule = ADAM)
 	{
-		assert (cn_N < cn_Nlayers);
-		const int layer = cn_N++;
+		assert (cn_populated < cn_Nlayers);
+		const int layer = cn_populated++;
+		const int Nin = (layer ?
+							cn_layers[layer - 1]->TotalOut () :
+							cn_Nin);
 
-		layers[0] = cn_layers[layer - 1]->TotalOut ();
-
-		cn_layers[layer] = new layer_t (layers, Nlayers, rule);
+		cn_layers[layer] = new layer_t (layers, Nlayers, Nin, cn_Nclasses, rule);
 
 		return true;
 	}
@@ -201,10 +204,10 @@ public:
 	{
 		cn_layers[0]->f (datap);
 
-		for (int i = 1; i < cn_N; ++i)
+		for (int i = 1; i < cn_populated; ++i)
 			cn_layers[i]->f (cn_layers[i - 1]);
 
-		int answer = cn_layers [cn_N - 1]->Signal ();
+		int answer = cn_layers [cn_populated - 1]->Signal ();
 
 		assert (answer >= 0 && answer <= cn_Nclasses);
 
@@ -215,7 +218,7 @@ public:
 	{
 		bool halt = false;
 		cn_steps = 0;		// to support restart
-		full_t *finalp = cn_layers[cn_N - 1]->Bottom ();
+		full_t *finalp = cn_layers[cn_populated - 1]->Bottom ();
 
 		if (cn_order && cn_order->N () != p->N ())
 		{
@@ -238,7 +241,7 @@ public:
 					finalp->Loss (),
 					finalp->Accuracy ());
 
-			for (int i = 0; i < cn_N; ++i)
+			for (int i = 0; i < cn_populated; ++i)
 				cn_layers[i]->UpdateWeights ();
 		}
 
@@ -266,12 +269,12 @@ public:
 	{
 		cn_layers[0]->ForwardTraining (&example, answer);
 
-		for (int j = 1; j < cn_N; ++j)
+		for (int j = 1; j < cn_populated; ++j)
 			cn_layers[j]->ForwardTraining (cn_layers[j - 1], answer);
 
-		cn_layers[cn_N - 1]->BackwardTraining ();
+		cn_layers[cn_populated - 1]->BackwardTraining ();
 
-		for (int j = cn_N - 1; j > 0; --j)
+		for (int j = cn_populated - 1; j > 0; --j)
 			cn_layers[j - 1]->BackwardTraining (cn_layers[j]);
 	}
 
@@ -282,7 +285,7 @@ public:
 
 	int LayerRows (const int level) const
 	{
-		if (level >= cn_N)
+		if (level >= cn_populated)
 			return -1;
 
 		return cn_layers[level]->mapDim ();
@@ -290,7 +293,7 @@ public:
 
 	int Nplanes (const int level) const
 	{
-		if (level >= cn_N)
+		if (level >= cn_populated)
 			return -1;
 
 		return cn_layers[level]->Nplanes ();
@@ -298,7 +301,7 @@ public:
 
 	void DumpMaps (const int level)
 	{
-		if (level >= cn_N)
+		if (level >= cn_populated)
 			return;
 
 		cn_layers[level]->DumpMaps ();
@@ -306,7 +309,7 @@ public:
 
 	int ActiveLayers (void) const
 	{
-		return cn_N;
+		return cn_populated;
 	}
 
 	int Steps (void) const
@@ -316,12 +319,12 @@ public:
 
 	IEEE_t Loss (void)
 	{
-		return cn_layers[cn_N - 1]->Bottom ()->Loss ();
+		return cn_layers[cn_populated - 1]->Bottom ()->Loss ();
 	}
 
-	SoftmaxNNm_t * Bottom (void)
+	NNet_t * Bottom (void)
 	{
-		return static_cast<SoftmaxNNm_t *> (cn_layers[cn_N - 1]->Bottom ());
+		return static_cast<NNet_t *> (cn_layers[cn_populated - 1]->Bottom ());
 	}
 };
 

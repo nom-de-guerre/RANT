@@ -54,7 +54,7 @@ public:
 		ff_G (NULL)
 	{
 		// on that order, used for Glorot
-		ff_filter->_sAPI_init (mwidth * mwidth);
+		ff_filter->_sAPI_init ();
 	}
 
 	filter_t (const int fwidth, const int mwidth, const int Nin, int *program) :
@@ -66,7 +66,7 @@ public:
 		ff_G (NULL)
 	{
 		ma_iwidth = mwidth;
-		ff_filter->_sAPI_init (mwidth * mwidth * Nin);
+		ff_filter->_sAPI_init ();
 	}
 
 	~filter_t (void)

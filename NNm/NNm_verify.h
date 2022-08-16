@@ -47,13 +47,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
 
-class RegressionGrad_t : public NNet_t
+class VerifyGrad_t : public NNet_t
 {
 	dense_t			*rg_stratum;
 
 public:
 
-	RegressionGrad_t (int Nlevels, int Nin, int Nout) :
+	VerifyGrad_t (int Nlevels, int Nin, int Nout) :
 		NNet_t (Nlevels, Nin, Nout)
 	{
 	}
@@ -85,9 +85,13 @@ public:
 		IEEE_t dL_diff;
 		IEEE_t error;
 		IEEE_t answer = Xi[n_Nin];
+		IEEE_t save;
+
 		for (int i = 0; i < N; ++i)
 		{
-			dL_bp = G.raw () [i];
+			dL_bp = G (i, 0);
+
+			save = rg_stratum->de_dot (i, 0);
 
 			rg_stratum->de_dot (i, 0) += h;
 			rg_stratum->s_response (i, 0) =
@@ -102,7 +106,7 @@ public:
 
 			ripple = rg_stratum->s_response.raw ();
 
-			rg_stratum->de_dot (i, 0) -= 2 * h;
+			rg_stratum->de_dot (i, 0) = save - h;
 			rg_stratum->s_response (i, 0) =
 				ACTIVATION_FN (rg_stratum->de_dot (i, 0));
 
@@ -111,10 +115,12 @@ public:
 
 			error = bottomp->_sAPI_Loss (&answer);
 
+//printf ("DJS\t%e\t%e\t", dL_diff, error);
+
 			dL_diff -= error;
 			dL_diff /= 2 * h;
 
-			rg_stratum->de_dot (i, 0) += h;
+			rg_stratum->de_dot (i, 0) = save;
 			rg_stratum->s_response (i, 0) =
 				ACTIVATION_FN (rg_stratum->de_dot (i, 0));
 
@@ -130,7 +136,7 @@ public:
 			IEEE_t ratio = (fabs (dL_bp) - fabs (dL_diff)) /
 							(fabs (dL_bp) + fabs (dL_diff));
 
-			printf ("∆\t%f\t%f\t%f\n",
+			printf ("∆\t%e\t%e\t%f\n",
 				dL_bp,
 				dL_diff,
 				fabs (ratio));

@@ -228,7 +228,11 @@ public:
 		ll_Nin = Nin;
 	}
 
-	layer_t (const int * const layers, const int Nlayers, StrategyAlloc_t rule) :
+	layer_t (const int * const layers,
+			const int Nlayers,
+			const int Nin,
+			const int K,
+			StrategyAlloc_t rule) :
 		ll_flags (0),
 		ll_N (1),
 		ll_type (FULL),
@@ -237,7 +241,7 @@ public:
 		assert (MAXPLANES >= Nlayers);
 
 		ll_maps = new mapAPI_t *;
-		ll_maps[0] = new full_t (layers, Nlayers, rule);
+		ll_maps[0] = new full_t (layers, Nlayers, Nin, K, rule);
 
 		ll_Nin = layers[0];
 	}

@@ -93,12 +93,16 @@ struct stratum_t
 	virtual void _sAPI_init (void) = 0;
 	virtual IEEE_t * _sAPI_f (IEEE_t * const, bool = true) = 0;
 
+	// Place dL/dz in the caller s_delta
 	virtual void _sAPI_gradient (stratum_t &) = 0;
+
+	// Update learnable parameters.  s_delta contains dL/dz: NOT delta
 	virtual void _sAPI_bprop (IEEE_t *, bool = true) = 0;
 
 	virtual void _sAPI_strategy (void)
 	{
-		s_strat->_tAPI_strategy ();
+		if (s_strat)
+			s_strat->_tAPI_strategy ();
 	}
 
 	virtual NeuralM_t * _sAPI_gradientM (void)
@@ -116,6 +120,11 @@ struct stratum_t
 	virtual IEEE_t _sAPI_Loss (IEEE_t const * const)
 	{
 		assert (false);
+	}
+
+	virtual int _sAPI_Trainable (void)
+	{
+		return 0;
 	}
 
 	IEEE_t * z (void)

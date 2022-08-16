@@ -94,6 +94,11 @@ struct SoftmaxMLE_t : public stratum_t
 	virtual void _sAPI_bprop (IEEE_t *, bool = true);
 	virtual IEEE_t _sAPI_Loss (IEEE_t const * const);
 
+	virtual int _sAPI_Trainable (void)
+	{
+		return ml_W.N ();
+	}
+
 	virtual void StrategyMono (const int index)
 	{
 		return; // over-ride when debugging or instrumenting
@@ -109,8 +114,6 @@ SoftmaxMLE_t::_sAPI_gradient (stratum_t &Z)
 void 
 SoftmaxMLE_t::_sAPI_bprop (IEEE_t *xi, bool activation)
 {
-	// Apply the delta for per weight derivatives
-
 	IEEE_t *dL = ml_dL.sm_data;
 	IEEE_t delta;
 

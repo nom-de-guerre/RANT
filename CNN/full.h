@@ -32,10 +32,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <ANT.h>
 
-#include <softmaxNNm.h>
+#include <NNm.h>
 #include <layer.h>
 
-class full_t : public SoftmaxNNm_t, public mapAPI_t
+class full_t : public NNet_t, public mapAPI_t
 {
 	int				re_Nin;
 
@@ -44,13 +44,24 @@ class full_t : public SoftmaxNNm_t, public mapAPI_t
 
 public:
 
-	full_t (const int * const layers, const int Nlayers, StrategyAlloc_t rule) :
-		SoftmaxNNm_t (Nlayers, layers, rule),
-		mapAPI_t (layers[0]),
-		re_Nin (layers[0]),
+	full_t (const int * const layers,
+			const int Nlayers,
+			const int Nin,				// Number of inputs
+			const int K,				// Number of categories
+			StrategyAlloc_t rule) :
+		NNet_t (Nlayers + 1, Nin, K),
+		mapAPI_t (Nin),
+		re_Nin (Nin),
 		re_input (new IEEE_t [re_Nin + 1]), // + 1 for training - the answer
 		re_gradient (re_Nin, 1, ma_map.raw ())
 	{
+		for (int i = 0; i < Nlayers; ++i)
+			AddDenseLayer (layers[i], rule);
+
+		AddSoftmaxLayer (rule);
+
+		printf ("ANN: ");
+		DisplayModel ();
 	}
 
 	~full_t (void)
@@ -104,7 +115,8 @@ public:
 	bool Update (void)
 	{
 		UpdateWeights ();
-		Start ();
+printf ("UPDATE\t%e\n", n_error);
+		n_error = 0;
 
 		return true;
 	}
