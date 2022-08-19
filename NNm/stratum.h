@@ -33,13 +33,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #define RECTIFIER(X) log (1 + exp (X)) 
 #define SIGMOID_FN(X) (1 / (1 + exp (-X))) // derivative of rectifier 
+#define SIGMOID_DERIV(Y) (Y * (1 - Y)) 
  
 #ifdef __TANH_ACT_FN 
 #define ACTIVATION_FN(X) tanh(X) 
 #define DERIVATIVE_FN(Y) (1 - Y*Y) 
 #else 
 #define ACTIVATION_FN(X) SIGMOID_FN(X) 
-#define DERIVATIVE_FN(Y) (Y * (1 - Y)) 
+#define DERIVATIVE_FN(Y) SIGMOID_DERIV(Y)
 #endif 
 
 struct stratum_t

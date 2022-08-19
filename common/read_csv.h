@@ -312,7 +312,7 @@ public:
 
 			fs_columns = 0;
 			for (int i = 0; i < Nfeatures; ++i)
-				if (process[i])
+				if (!process || process[i])
 					++fs_columns;
 		}
 
@@ -340,7 +340,7 @@ public:
 			}
 
 			entries = fscanf (fs_fp, ("%s\n"), buffer);
-			if (process && process[Nfeatures - 1])
+			if (!process || process[Nfeatures - 1])
 			{
 				ProcessEntry (buffer, &dict);
 				if (fs_rows)

@@ -25,8 +25,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-IEEE_t
-NNet_t::Compute (IEEE_t *x)
+IEEE_t *
+NNet_t::ComputeWork (IEEE_t *x)
 {
 	IEEE_t *ripple;
 
@@ -46,7 +46,7 @@ NNet_t::Compute (IEEE_t *x)
 	for (int layer = 0; layer < n_populated; ++layer)
 		ripple = n_strata[layer]->_sAPI_f (ripple);
 
-	return ripple[0];
+	return ripple;
 }
 
 void
@@ -58,11 +58,11 @@ NNet_t::ComputeDerivative (const TrainingRow_t x)
 	 * Initiate the recurrence by triggering the loss function.
 	 *
 	 */
-	Compute (x);
+	ComputeWork (x);
 
 	n_error += n_strata[n_populated - 1]->_sAPI_Loss (x + n_Nin);
 	if (n_populated > 1)
-		n_strata[n_populated - 1]->_sAPI_bprop (n_strata[n_populated - 2]->z ());
+		n_strata[n_populated - 1]->_sAPI_bprop (n_strata[n_populated-2]->z ());
 
 	for (int level = n_populated - 2; level >= 0; --level)
 	{

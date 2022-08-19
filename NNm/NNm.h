@@ -44,9 +44,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <identity.h>
 #include <softmax.h>
 #include <layerN.h>
+#include <dropout.h>
+
 #include <MSE.h>
 #include <MLE.h>
-#include <dropout.h>
+#include <multiLabel.h>
 
 // Strategies
 #include <RPROP.h>
@@ -359,7 +361,32 @@ public:
 		n_strata[layer]->_sAPI_init ();
 	}
 
-	IEEE_t Compute (const TrainingRow_t);
+	void AddMultiCLayer (StrategyAlloc_t rule)
+	{
+		int layer = n_populated++;
+
+		assert (layer >= 0 && layer < n_levels);
+		assert (n_strata[layer] == NULL);
+
+		int Nin = (layer ? n_width[layer - 1] : n_Nin);
+
+		n_width[layer] = n_Nout;
+		n_strata[layer] = new multiL_t (layer, n_Nout, Nin, rule);
+		n_strata[layer]->_sAPI_init ();
+	}
+
+	IEEE_t *ComputeWork (const TrainingRow_t);
+
+	IEEE_t * const Classify (const TrainingRow_t x)
+	{
+		return ComputeWork (x);
+	}
+
+	IEEE_t Compute (const TrainingRow_t x)
+	{
+		return ComputeWork (x)[0];
+	}
+
 	void ComputeDerivative (const TrainingRow_t);
 
 	// The below are public so these objects can be integrated

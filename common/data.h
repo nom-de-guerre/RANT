@@ -289,6 +289,11 @@ struct DataSet_t
 		return *(t_data + index * (t_Nout + t_Nin) + t_Nin);
 	}
 
+	IEEE_t * const AnswerVec (const int index) const
+	{
+		return (t_data + index * (t_Nout + t_Nin) + t_Nin);
+	}
+
 	int N (void) const
 	{
 		return t_N;
