@@ -41,6 +41,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #define STR_FEATURE 16
 
+#define BUF_LEN 128
+
 class LoadCSV_t
 {
 	FILE			*fs_fp;
@@ -86,28 +88,41 @@ class LoadCSV_t
 		const char *p = buffer;
 		int classID;
 		bool is_numeric = true;
-		bool is_float = false;
+		bool dpoint = false;
+		bool expon = false;
 
-		while (*p)
-		{
-			if (*p < '0' || *p > '9')
-			{
-				is_numeric = false;
-				if (is_float) {
-
-					is_float = false;
-					break;
-
-				} else if (*p == '.') {
-					is_float = true;
-				} else
-					break; // treat as string
-			}
-
+		if (*p == '-' || *p == '+')
 			++p;
+
+		for (; *p; ++p)
+		{
+			if (*p >= '0' && *p <= '9')
+				continue;
+			else if (*p == '.')
+			{
+				if (dpoint == false)
+					dpoint = true;
+				else {
+
+					is_numeric = false;
+					break; // not a number
+				}
+			} else if (*p == 'e') {
+
+				if (expon == false)
+					expon = true;
+				else {
+
+					is_numeric = false;
+					break; // not a number
+				}
+
+				if (p[1] == '+' || p[1] == '-')
+					++p;
+			}
 		}
 
-		if (is_numeric || is_float)
+		if (is_numeric) // use dpoint if you care about integers
 		{
 			*((IEEE_t *) Consume (sizeof (IEEE_t))) = atof (buffer);
 
@@ -160,7 +175,7 @@ class LoadCSV_t
 
 	int ReadHeader (bool process [])
 	{
-		char buffer[64];
+		char buffer[BUF_LEN];
 		int index = 0;
 		int entries;
 
@@ -179,7 +194,7 @@ class LoadCSV_t
 				return -1;
 			}
 
-			if (process[i])
+			if (!process || process[i])
 			{
 				assert (index < fs_columns);
 
@@ -247,7 +262,7 @@ public:
 		bool process[],
 		bool header = true)
 	{
-		char buffer[64];
+		char buffer[BUF_LEN];
 		int entries=1;
 
 		if (header)
@@ -296,7 +311,7 @@ public:
 	{
 		DataSet_t *O;
 		Categories_t dict;
-		char buffer[64];
+		char buffer[BUF_LEN];
 		int entries=1;
 		types_e type;
 		int used;
@@ -340,6 +355,9 @@ public:
 			}
 
 			entries = fscanf (fs_fp, ("%s\n"), buffer);
+			if (entries != 1)
+				break;
+
 			if (!process || process[Nfeatures - 1])
 			{
 				ProcessEntry (buffer, &dict);
@@ -349,8 +367,7 @@ public:
 						fs_schema[used] = type;
 			}
 
-			if (entries == 1)
-				++fs_rows;
+			++fs_rows;
 		}
 
 		O = new DataSet_t (fs_rows, 
@@ -372,7 +389,7 @@ public:
 	{
 		DataSet_t *O = NULL;
 		Categories_t dict;
-		char buffer[64];
+		char buffer[BUF_LEN];
 		int entries=1;
 
 		if (header)
@@ -428,6 +445,8 @@ public:
 		return -1;
 	}
 };
+
+#undef BUF_LEN
 
 #endif // header inclusion
 
