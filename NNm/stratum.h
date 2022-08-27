@@ -123,6 +123,7 @@ struct stratum_t
 		assert (false);
 	}
 
+	// returns the number of learnable parameters in the layer
 	virtual int _sAPI_Trainable (void)
 	{
 		return 0;
