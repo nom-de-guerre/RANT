@@ -119,7 +119,8 @@ class LoadCSV_t
 
 				if (p[1] == '+' || p[1] == '-')
 					++p;
-			}
+			} else
+				is_numeric = false;
 		}
 
 		if (is_numeric) // use dpoint if you care about integers
@@ -129,6 +130,7 @@ class LoadCSV_t
 			return types_e::IEEE;
 
 		} else if (dictp) {
+
 			classID = dictp->Encode (buffer);
 			*((IEEE_t *) Consume (sizeof (IEEE_t))) = classID;
 
