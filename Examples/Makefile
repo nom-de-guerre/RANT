@@ -6,6 +6,18 @@ CFLAGS=-Wall -I. $(OPTIONS) $(DEBUG) $(INCLUDES)
 HDEPS = $(wildcard *.h) $(wildcard ../common/*h) $(wildcard ../NNm/*)
 DEPS = Makefile $(HDEPS)
 
+diabetes: diabetes.cc $(DEPS) $(HDEPS)
+	$(CC) -o $@ $(CFLAGS) diabetes.cc
+
+enzymes: enzymes.cc $(DEPS) $(HDEPS)
+	$(CC) -o $@ $(CFLAGS) enzymes.cc
+
+water: water.cc $(DEPS) $(HDEPS)
+	$(CC) -o $@ $(CFLAGS) water.cc
+
+MNIST: MNIST.cc $(DEPS) $(HDEPS)
+	$(CC) -o $@ $(CFLAGS) MNIST.cc
+
 iris: iris.cc $(DEPS) $(HDEPS)
 	$(CC) -o $@ $(CFLAGS) iris.cc
 
@@ -18,10 +30,14 @@ sine: sine.cc $(DEPS) $(HDEPS)
 sine_verify: sine_verify.cc $(DEPS) $(HDEPS)
 	$(CC) -o $@ $(CFLAGS) sine_verify.cc
 
-all: sine classify iris sine_verify
+all: sine classify iris sine_verify MNIST water enzymes diabetes
 
 clean:
 	rm classify
 	rm sine
 	rm iris
 	rm sine_verify
+	rm MNIST
+	rm water
+	rm enzymes
+	rm diabetes

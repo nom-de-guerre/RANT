@@ -8,6 +8,10 @@ Examples/sine
 Examples/classify
 Examples/iris
 Examples/sine_verify
+Examples/MNIST
+Examples/diabetes
+Examples/water
+Examples/enzymes
 **/.DS_Store
 **/*.swp
 Private
