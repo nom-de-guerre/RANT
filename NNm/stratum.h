@@ -30,6 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <NeuralM.h>
 #include <strategy.h>
+#include <shape.h>
 
 #define RECTIFIER(X) log (1 + exp (X)) 
 #define SIGMOID_FN(X) (1 / (1 + exp (-X))) // derivative of rectifier 
@@ -43,7 +44,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define DERIVATIVE_FN(Y) SIGMOID_DERIV(Y)
 #endif 
 
-struct stratum_t
+struct stratum_t : shape_t
 {
 	const char				*s_Name;
 	const int				s_ID;
@@ -58,7 +59,23 @@ struct stratum_t
 
 	bool					s_frozen;
 
+	stratum_t (const char *namep, const int ID, const shape_t &X) :
+		shape_t (X),
+		s_Name (namep),
+		s_ID (ID),
+		s_Nnodes (-1),
+		s_Nin (X.len ()),
+		s_delta (X.sh_N * X.sh_rows, X.sh_columns),
+		s_response (X.sh_N * X.sh_rows, X.sh_columns),
+		s_strat (NULL),
+		s_frozen (true)
+	{
+		s_delta.zero ();
+		s_response.zero ();
+	}
+
 	stratum_t (const char *namep, const int ID, const int N, const int Nin) :
+		shape_t (N),
 		s_Name (namep),
 		s_ID (ID),
 		s_Nnodes (N),
@@ -132,6 +149,11 @@ struct stratum_t
 	IEEE_t * z (void)
 	{
 		return s_response.raw ();
+	}
+
+	shape_t &GetShape (void)
+	{
+		return (shape_t &) *this;
 	}
 };
 

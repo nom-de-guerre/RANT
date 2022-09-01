@@ -25,8 +25,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef _NN_MATRIX__H__
-#define _NN_MATRIX__H__
+#ifndef _NN_NNET_ANT_BASE__H__
+#define _NN_NNET_ANT_BASE__H__
 
 #include <assert.h>
 #include <stdlib.h>
@@ -45,6 +45,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <softmax.h>
 #include <layerN.h>
 #include <dropout.h>
+#include <convolve.h>
 
 #include <MSE.h>
 #include <MLE.h>
@@ -71,9 +72,13 @@ protected:
 
 	int					n_Nweights;
 
-	IEEE_t				n_halt;			// target loss
-	IEEE_t				n_error;		// current loss
-	bool				n_accuracy;		// halt training at 100% correct
+	IEEE_t				n_halt;				// target loss
+
+	IEEE_t				n_error;			// current loss
+
+	int					n_accuracy;			// N correct in epoch
+	bool				n_HaltOnAccuracy;	// halt training at 100% correct
+
 	int					n_maxIterations;
 	int					n_keepalive;	// how often to print status
 
@@ -93,55 +98,6 @@ protected:
 	
 public:
 
-#if 0
-	/*
-	 * levels is the number of layers, including the output.  width is an
-	 * array specifying the width of each level.  e.g., { 1, 4, 1 }, is
-	 * an SLP with a single input, 4 hidden and 1 output perceptron.
-	 *
-	 */
-	NNet_t (const int levels,
-			const int * const width, 
-			StrategyAlloc_t rule) :
-		n_steps (0),
-		n_populated (levels - 1),
-		n_Nin (width[0]),
-		n_Nout (width[levels - 1]),
-		n_levels (levels - 1), // no state for input
-		n_halt (1e-5),
-		n_error (nan (NULL)),
-		n_accuracy (false),
-		n_maxIterations (5000),
-		n_keepalive (100),
-		n_useSGD (false),
-		n_SGDn (nan(NULL)),
-		n_SGDsamples (NULL),
-		n_normalize (false),
-		n_normParams (NULL),
-		n_arg (NULL)
-	{
-		n_Nweights = 0;
-		// width = # inputs, width 1, ..., # outputs
-
-		for (int i = levels - 1; i > 0; --i)
-			n_Nweights += width[i] * (width[i - 1] + 1); // + 1 for bias
-
-		n_strata = new stratum_t * [n_levels];
-		n_width = new int [n_levels];
-
-		printf ("In\tOut\tTrainable\n");
-		printf ("%d\t%d\t%d\n", n_Nin, n_Nout, n_Nweights);
-
-		// start at 1, ignore inputs
-		for (int i = 1; i <= n_levels; ++i)
-		{
-			n_width[i - 1] = width[i];
-			n_strata[i - 1] = new dense_t (i - 1, width[i], width[i - 1], rule);
-			n_strata[i - 1]->_sAPI_init ();
-		}
-	}
-#endif // deprecated constructor
-
 	NNet_t (const int levels, const int Nin, const int Nout) :
 		n_steps (0),
 		n_Nin (Nin),
@@ -151,7 +107,7 @@ public:
 		n_Nweights (-1),
 		n_halt (1e-5),
 		n_error (nan (NULL)),
-		n_accuracy (false),
+		n_HaltOnAccuracy (false),
 		n_maxIterations (5000),
 		n_keepalive (100),
 		n_useSGD (false),
@@ -253,12 +209,12 @@ public:
 
 	void SetAccuracy (void)
 	{
-		n_accuracy = true;
+		n_HaltOnAccuracy = true;
 	}
 
 	void TurnOffAccuracy (void)
 	{
-		n_accuracy = false;
+		n_HaltOnAccuracy = false;
 	}
 
 	void SetSGD (IEEE_t percentage)
@@ -281,8 +237,8 @@ public:
 		assert (layer >= 0 && layer < n_levels);
 		assert (n_strata[layer] == NULL);
 
-		int Nin = (layer ? n_width[layer - 1] : n_Nin);
-
+		int Nin = (layer ? n_strata[layer - 1]->len () : n_Nin);
+printf ("Nin %d\n", Nin);
 		n_width[layer] = N;
 		n_strata[layer] = new dense_t (layer, N, Nin, rule);
 		n_strata[layer]->_sAPI_init ();
@@ -375,9 +331,42 @@ public:
 		n_strata[layer]->_sAPI_init ();
 	}
 
+	void AddConvolutionLayer (int N, int fwidth, StrategyAlloc_t rule)
+	{
+		int layer = n_populated++;
+
+		assert (layer >= 0 && layer < n_levels);
+		assert (n_strata[layer] == NULL);
+
+		shape_t Xin;
+
+		if (layer == 0) {
+
+			Xin = shape_t (1, sqrt (n_Nin), sqrt (n_Nin));
+
+		} else {
+
+			Xin = n_strata[layer - 1]->GetShape ();
+			if (Xin.isFlat ())
+			{
+				IEEE_t dim = sqrt (Xin.sh_rows);
+
+				if (dim != floor (sqrt (Xin.sh_rows)))
+					throw ("Illegal Shape");
+
+				Xin.sh_columns = (int) sqrt (Xin.sh_rows);
+				Xin.sh_rows = Xin.sh_columns;
+			}
+		}
+
+		n_strata[layer] = new convolve_t (layer, N, fwidth, Xin, rule);
+		n_width[layer] = (static_cast<convolve_t *> (n_strata[layer]))->N ();
+		n_strata[layer]->_sAPI_init ();
+	}
+
 	IEEE_t *ComputeWork (const TrainingRow_t);
 
-	IEEE_t * const Classify (const TrainingRow_t x)
+	IEEE_t * const ComputeVec (const TrainingRow_t x)
 	{
 		return ComputeWork (x);
 	}
@@ -426,7 +415,7 @@ public:
 			n_strata[i]->_sAPI_init ();
 	}
 
-	void DisplayModel (void)
+	void DisplayModel (void) const
 	{
 		printf ("Input (%d) ⟹ ", n_Nin);
 
@@ -435,6 +424,21 @@ public:
 				n_strata[i]->s_Name,
 				n_strata[i]->s_Nnodes,
 				(i + 1 == n_populated ? "\n" : "⟹ "));
+	}
+
+	void DisplayShape (void) const
+	{
+		for (int i = 0; i < n_populated; ++i)
+			n_strata[i]->GetShape ().Display ();
+	}
+
+	void DumpMaps (const int level)
+	{
+		auto convp = dynamic_cast<convolve_t *> (n_strata[level]);
+		if (convp == NULL)
+			return;
+
+		convp->DumpMaps ();
 	}
 };
 

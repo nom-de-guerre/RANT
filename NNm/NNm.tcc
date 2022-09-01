@@ -123,6 +123,7 @@ NNet_t::TrainWork (const DataSet_t * const training)
 		++n_steps)
 	{
 		n_error = 0.0;
+		n_accuracy = 0;
 
 		try {
 
@@ -165,6 +166,9 @@ NNet_t::Step (const DataSet_t * const training)
 	}
 
 	n_error /= batch;
+
+	if (n_HaltOnAccuracy && n_accuracy == batch)
+		done = true;
 
 	done = n_error <= n_halt;
 	if (!done)
