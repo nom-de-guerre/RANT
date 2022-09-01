@@ -104,7 +104,6 @@ void Run (NNmConfig_t &params, int *layers)
 		Np->Steps ());
 
 	bool accept_soln = true;
-	bool correct;
 
 	int N_POINTS = 20; // O->N ();
 	int wrong = 0;
