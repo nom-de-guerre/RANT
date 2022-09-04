@@ -63,7 +63,7 @@ struct stratum_t : shape_t
 		shape_t (X),
 		s_Name (namep),
 		s_ID (ID),
-		s_Nnodes (-1),
+		s_Nnodes (X.sh_N),
 		s_Nin (X.len ()),
 		s_delta (X.sh_N * X.sh_rows, X.sh_columns),
 		s_response (X.sh_N * X.sh_rows, X.sh_columns),
