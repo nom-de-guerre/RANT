@@ -153,8 +153,6 @@ printf ("\t_____________________________________________________________________
 			100 * (float) wrong / (K_LABELS * (float) N_POINTS));
 }
 
-bool includeFeature [] = { false, true, true, true, true, true };
-
 DataSet_t *LoadData (void)
 {
 	LoadCSV_t Z ("/Users/dsantry/Scratch/Data/water-quality-nom.csv");
