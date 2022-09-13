@@ -29,8 +29,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define __DJS_FILTER__H__
 
 #include <NNm.h>
+#include <convolve.h>
 
-class filter_t
+class filter_t : public discrete_t
 {
 	int				ff_width;		// only square filters currently supported
 	int				ff_isize;
@@ -67,33 +68,35 @@ public:
 		delete ff_strategy;
 	}
 
-	void f (IEEE_t *inputp, IEEE_t *outputp)
+	virtual void f (IEEE_t *inputp, IEEE_t *outputp)
 	{
 		Convolve (inputp, outputp);
 	}
 
-	void UpdateWeights (void)
+	virtual void UpdateWeights (void)
 	{
 		ff_strategy->_tAPI_strategy ();
 	}
 
-	void bprop (IEEE_t *gradp, IEEE_t *inputp)
+	virtual void BPROP (IEEE_t *gradp, IEEE_t *inputp)
 	{
 		ComputeDerivatives (gradp, inputp);
 	}
 
-	void Propagate (IEEE_t *fromp, IEEE_t *top)
+	virtual void Propagate (IEEE_t *fromp, IEEE_t *top)
 	{
 		ComputeGradient (fromp, top);
 	}
 
 	void ComputeDerivatives (IEEE_t *, IEEE_t *);
-	void Convolve (IEEE_t *, IEEE_t *);
+	void Convolve (IEEE_t const * const, IEEE_t *);
 	void ComputeGradient (IEEE_t *, IEEE_t *);
 };
 
 void
-filter_t::Convolve (__restrict IEEE_t *imagep, __restrict IEEE_t *omap)
+filter_t::Convolve (
+	__restrict IEEE_t const * const imagep,
+	__restrict IEEE_t *omap)
 {
 	__restrict IEEE_t const * const filterp = ff_W.raw () + 1;
 	int stride = ff_isize - ff_width;

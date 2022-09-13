@@ -35,48 +35,78 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <float.h>
 
 #include <NNm.h>
-#include <filter.h>
+
+/*
+ * The API to the convolution class.
+ *
+ */
+
+struct discrete_t
+{
+	discrete_t (void)
+	{
+	}
+
+	~discrete_t (void)
+	{
+	}
+
+	virtual void f (IEEE_t *, IEEE_t *) = 0; 
+	virtual void UpdateWeights (void) = 0;
+	virtual void BPROP (IEEE_t *, IEEE_t *) = 0;
+	virtual void Propagate (IEEE_t *, IEEE_t *) = 0;
+};
 
 /*
  * Implements a layer when training a neural network.
  *
  */
 
+template <typename T>
 struct convolve_t : public stratum_t
 {
-	filter_t				**cn_filters;
+	T						**cn_fwidths;
 
-	int						cn_filter;
+	int						cn_fwidth;
 
 	int						cn_imapSize;
 	bool					cn_oneToOne;
+
+	typedef enum { INVALID, SLIDE, JUMP } e_mode;
+	e_mode					cn_mode;
 
 	convolve_t (const int ID,
 				const int N,
 				const int fwidth,
 				const shape_t Xin,
-				StrategyAlloc_t rule) :
+				StrategyAlloc_t rule,
+				const e_mode mode = SLIDE) : 
 		stratum_t ("convolv",
 				ID,
 				shape_t (N, 
-						Xin.sh_rows - fwidth + 1,
-						Xin.sh_columns - fwidth + 1)),
-		cn_filter (fwidth),
+						(mode == SLIDE ?
+						 Xin.sh_rows - fwidth + 1 :
+						 Xin.sh_rows / fwidth),
+						(mode == SLIDE ?
+						 Xin.sh_rows - fwidth + 1 :
+						 Xin.sh_rows / fwidth))),
+		cn_fwidth (fwidth),
 		cn_imapSize (Xin.mapSize ()),
 		cn_oneToOne (1 == Xin.sh_N)
 	{
-		cn_filters = new filter_t * [sh_N];
+		cn_fwidths = new T * [sh_N];
 
 		for (int i = 0; i < sh_N; ++i)
-			cn_filters[i] = new filter_t (fwidth, Xin.sh_rows, rule);
+			cn_fwidths[i] = new T (cn_fwidth, Xin.sh_rows, rule);
 	}
 
 	virtual ~convolve_t (void)
 	{
+#if 0
 		for (int i = 0; i < sh_N; ++i)
-			delete cn_filters[i];
-
-		delete cn_filters;
+			delete cn_fwidths[i];
+#endif
+		delete cn_fwidths;
 	}
 
 	int N (void) const
@@ -86,7 +116,7 @@ struct convolve_t : public stratum_t
 
 	void _sAPI_init (void)
 	{
-		// done in the filter_t constructor
+		// done in the discrete_t constructor
 	}
 
 	virtual IEEE_t * _sAPI_f (IEEE_t * const, bool = true);
@@ -96,12 +126,12 @@ struct convolve_t : public stratum_t
 	virtual void _sAPI_strategy (void)
 	{
 		for (int i = 0; i < sh_N; ++i)
-			cn_filters[i]->UpdateWeights ();
+			cn_fwidths[i]->UpdateWeights ();
 	}
 
 	virtual int _sAPI_Trainable (void)
 	{
-		return sh_N * cn_filter * cn_filter + sh_N;
+		return sh_N * cn_fwidth * cn_fwidth + sh_N;
 	}
 
 	virtual void StrategyMono (const int index)
@@ -115,23 +145,23 @@ struct convolve_t : public stratum_t
 	}
 };
 
-void
-convolve_t::_sAPI_gradient (stratum_t &Z)
+template <typename T> void
+convolve_t<T>::_sAPI_gradient (stratum_t &Z)
 {
 	IEEE_t *targetp = Z.s_delta.raw ();
 	IEEE_t *gradp = s_delta.raw ();
 
 	for (int i = 0; i < sh_N; ++i)
 	{
-		cn_filters[i]->Propagate (gradp, targetp);
+		cn_fwidths[i]->Propagate (gradp, targetp);
 
 		gradp += mapSize ();
 		targetp += cn_imapSize;
 	}
 }
 
-void 
-convolve_t::_sAPI_bprop (IEEE_t *xi, bool activation)
+template <typename T> void 
+convolve_t<T>::_sAPI_bprop (IEEE_t *xi, bool activation)
 {
 	/*
 	 *
@@ -151,15 +181,15 @@ convolve_t::_sAPI_bprop (IEEE_t *xi, bool activation)
 
 	for (int i = 0; i < sh_N; ++i)
 	{
-		cn_filters[i]->bprop (gradp, inputp);
+		cn_fwidths[i]->BPROP (gradp, inputp);
 
 		gradp += block;
 		inputp += cn_imapSize;
 	}
 }
 
-IEEE_t *
-convolve_t::_sAPI_f (IEEE_t * const xi, bool activate)
+template <typename T> IEEE_t *
+convolve_t<T>::_sAPI_f (IEEE_t * const xi, bool activate)
 {
 	IEEE_t *inputp = xi;
 	IEEE_t *outputp = s_response.raw ();
@@ -167,7 +197,7 @@ convolve_t::_sAPI_f (IEEE_t * const xi, bool activate)
 
 	for (int i = 0; i < sh_N; ++i)
 	{
-		cn_filters[i]->f (inputp, outputp);
+		cn_fwidths[i]->f (inputp, outputp);
 
 		outputp += block;
 		if (!cn_oneToOne)
@@ -176,6 +206,9 @@ convolve_t::_sAPI_f (IEEE_t * const xi, bool activate)
 
 	return s_response.sm_data;
 }
+
+#include <filter.h>
+#include <Mpool.h>
 
 #endif // header inclusion
 

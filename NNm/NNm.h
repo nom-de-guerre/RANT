@@ -238,7 +238,6 @@ public:
 		assert (n_strata[layer] == NULL);
 
 		int Nin = (layer ? n_strata[layer - 1]->len () : n_Nin);
-printf ("Nin %d\n", Nin);
 		n_width[layer] = N;
 		n_strata[layer] = new dense_t (layer, N, Nin, rule);
 		n_strata[layer]->_sAPI_init ();
@@ -352,15 +351,57 @@ printf ("Nin %d\n", Nin);
 				IEEE_t dim = sqrt (Xin.sh_rows);
 
 				if (dim != floor (sqrt (Xin.sh_rows)))
-					throw ("Illegal Shape");
+					throw ("Filter Illegal Shape");
 
 				Xin.sh_columns = (int) sqrt (Xin.sh_rows);
 				Xin.sh_rows = Xin.sh_columns;
 			}
 		}
 
-		n_strata[layer] = new convolve_t (layer, N, fwidth, Xin, rule);
-		n_width[layer] = (static_cast<convolve_t *> (n_strata[layer]))->N ();
+		auto p = new convolve_t<filter_t> (layer, N, fwidth, Xin, rule);
+		n_strata[layer] = p;
+		n_width[layer] = p->N ();
+		n_strata[layer]->_sAPI_init ();
+	}
+
+	void AddMaxPoolLayer (int N, int fwidth)
+	{
+		int layer = n_populated++;
+
+		assert (layer >= 0 && layer < n_levels);
+		assert (n_strata[layer] == NULL);
+
+		shape_t Xin;
+
+		if (layer == 0) {
+
+			Xin = shape_t (1, sqrt (n_Nin), sqrt (n_Nin));
+
+		} else {
+
+			Xin = n_strata[layer - 1]->GetShape ();
+			if (Xin.isFlat ())
+			{
+				IEEE_t dim = sqrt (Xin.sh_rows);
+
+				if (dim != floor (sqrt (Xin.sh_rows)))
+					throw ("Pool Illegal Shape");
+
+				Xin.sh_columns = (int) sqrt (Xin.sh_rows);
+				Xin.sh_rows = Xin.sh_columns;
+			}
+		}
+
+		auto *p = new convolve_t<Mpool_t> (
+			layer,
+			N,
+			fwidth,
+			Xin,
+			NULL,
+			convolve_t<Mpool_t>::e_mode::JUMP);
+
+		n_strata[layer] = p;
+		n_width[layer] = p->N ();
 		n_strata[layer]->_sAPI_init ();
 	}
 
@@ -434,11 +475,22 @@ printf ("Nin %d\n", Nin);
 
 	void DumpMaps (const int level)
 	{
-		auto convp = dynamic_cast<convolve_t *> (n_strata[level]);
-		if (convp == NULL)
+		if (level < 0 || level >= n_populated)
 			return;
 
-		convp->DumpMaps ();
+		auto fp = dynamic_cast<convolve_t <filter_t> *> (n_strata[level]);
+		if (fp != NULL)
+		{
+			fp->DumpMaps ();
+
+			return;
+		}
+
+		auto mp = dynamic_cast<convolve_t <Mpool_t> *> (n_strata[level]);
+		if (mp == NULL)
+			return;
+
+		mp->DumpMaps ();
 	}
 };
 

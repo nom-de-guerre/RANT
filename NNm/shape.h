@@ -91,6 +91,11 @@ struct shape_t
 			sh_columns);
 	}
 
+	bool Single (void)
+	{
+		return (sh_N == 1 ? true : false);
+	}
+
 	bool isFlat (void) const
 	{	
 		return (sh_columns == 1 ? true : false);
