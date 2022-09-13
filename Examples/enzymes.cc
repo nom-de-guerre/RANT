@@ -25,6 +25,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
+/*
+ * The data set for this example can be found here:
+ * https://www.kaggle.com/datasets/gopalns/ec-mixed-class
+ *
+ */
+
 #include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
