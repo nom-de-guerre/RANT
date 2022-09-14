@@ -95,7 +95,7 @@ void Run (NNmConfig_t &params, const int Nlayers, int *layers)
 	Np = new VerifyGrad_t (Nlayers + 3, IMAGEDIM * IMAGEDIM, 10);
 #else
 	NNet_t *Np = NULL;
-	Np = new NNet_t (Nlayers + 3, IMAGEDIM * IMAGEDIM, 10);
+	Np = new NNet_t (Nlayers + 5, IMAGEDIM * IMAGEDIM, 10);
 #endif
 
 	Np->SetHalt (params.ro_haltCondition);
@@ -106,11 +106,14 @@ void Run (NNmConfig_t &params, const int Nlayers, int *layers)
 #define NMAPS	10
 
 	Np->AddConvolutionLayer (NMAPS, 3, rule);
+	Np->AddMaxPoolLayer (NMAPS, 2);
 
 	for (int i = 0; i < Nlayers; ++i)
 		Np->AddDenseLayer (layers[i], rule);
 
 	Np->AddSoftmaxLayer (rule);
+
+	printf ("Learnable parameters: %d\n", Np->Nparameters ());
 
 	Np->DisplayModel ();
 	Np->DisplayShape ();
@@ -118,12 +121,16 @@ void Run (NNmConfig_t &params, const int Nlayers, int *layers)
 	Np->Train (data.mn_datap, params.ro_maxIterations);
 
 #if 0
-	plane_t obj (IMAGEDIM, IMAGEDIM, data.mn_datap->entry (5247));
+	int EXAMPLE = rand () % 60000;
+
+	plane_t obj (IMAGEDIM, IMAGEDIM, data.mn_datap->entry (EXAMPLE));
 	obj.displayImage ("");
 
-	int guess = (int) Np->Compute ((*data.mn_datap)[5247]);
+	Np->Compute ((*data.mn_datap)[EXAMPLE]);
 
 	Np->DumpMaps (0);
+	Np->DumpMaps (1);
+
 #endif
 
 #ifdef __VERIFY_GRAD
