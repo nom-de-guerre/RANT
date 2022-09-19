@@ -100,13 +100,13 @@ void Run (NNmConfig_t &params, const int Nlayers, int *layers)
 
 	Np->SetHalt (params.ro_haltCondition);
 	Np->SetMaxIterations (params.ro_maxIterations);
-	Np->SetKeepAlive (10);
+	// Np->SetKeepAlive (10);
 	Np->SetSGD (params.ro_Nsamples);
 
 #define NMAPS	10
 
-	Np->AddConvolutionLayer (NMAPS, 3, rule);
-	Np->AddMaxPoolLayer (NMAPS, 2);
+//	Np->AddConvolutionLayer (NMAPS, 3, rule);
+//	Np->AddMaxPoolLayer (NMAPS, 2);
 
 	for (int i = 0; i < Nlayers; ++i)
 		Np->AddDenseLayer (layers[i], rule);

@@ -36,8 +36,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 int main (int argc, char *argv[])
 {
 	MNIST_t data (
-		"../../../Data/MNIST/train-images.idx3-ubyte",
-		"../../../Data/MNIST/train-labels.idx1-ubyte");
+		"../../../Neural Networks/Data/MNIST/train-images.idx3-ubyte",
+		"../../../Neural Networks/Data/MNIST/train-labels.idx1-ubyte");
 
 	for (int i = 1; i < argc; ++i)
 	{

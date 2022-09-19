@@ -54,24 +54,22 @@ int main (int argc, char *argv[])
 	argv += consumed;
 
 #define MAX_ENTRIES 16
-	int Nlayers = 4;
+	int Nlayers = 3;
 	int layers [MAX_ENTRIES];
 
 	layers[0] = -1;
 
 	if (argc == 0)
 	{
-		layers[1] = 100;
-		layers[2] = 50;
-		layers[3] = 10;
+		layers[0] = 100;
+		layers[1] = 50;
+		layers[2] = 10;
 
 	} else {
 
-		Nlayers = argc + 2;
+		Nlayers = argc;
 		for (int i = 0; i < argc; ++i)
-			layers[i + 1] = atoi (argv[i]);
-
-		layers[argc + 1] = 10; // Number of categories
+			layers[i] = atoi (argv[i]);
 	}
 
 	try {
@@ -98,13 +96,13 @@ void Run (NNmConfig_t &params, const int Nlayers, int *layers)
 	MNIST_t test (fullpath_data, fullpath_labels);
 
 	CNN_t CNN (IMAGEDIM, IMAGEDIM, 3, 10);
-	CNN.setSGDSamples (params.ro_Nsamples);
+	CNN.setSGDSamples (params.ro_Nsamples * 60000);
 	CNN.setHaltMetric (params.ro_haltCondition);
 	CNN.setMaxIterations (params.ro_maxIterations);
 
-#define NMAPS	10
+#define NMAPS	1
 
-	int dim = CNN.AddConvolutionLayer (NMAPS, 5, IMAGEDIM);
+	int dim = CNN.AddConvolutionLayer (NMAPS, 3, IMAGEDIM);
 	dim = CNN.AddMaxPoolSlideLayer (NMAPS, 2, dim);
 
 	if (params.ro_flag) {

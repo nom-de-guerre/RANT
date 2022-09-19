@@ -53,7 +53,7 @@ void Validate (CNN_t &model, DataSet_t *datap, IEEE_t &accuracy, IEEE_t &loss)
 	int incorrect = 0;
 	int answer;
 
-	SoftmaxNNm_t *softp = model.Bottom ();
+//	NNet_t *softp = model.Bottom ();
 
 	accuracy = 0;
 	loss = 0;
@@ -68,7 +68,7 @@ void Validate (CNN_t &model, DataSet_t *datap, IEEE_t &accuracy, IEEE_t &loss)
 		if (k != answer)
 			++incorrect;
 
-		loss += -log (softp->P(answer));
+//		loss += -log (softp->P(answer));
 	}
 
 	IEEE_t ratio = (IEEE_t) incorrect;

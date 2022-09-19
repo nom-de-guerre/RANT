@@ -34,7 +34,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <MNIST.h>
 
-#include <softmaxNNm.h>
+#include <NNm.h>
 #include <options.h>
 
 void Run (NNmConfig_t &, int *);
@@ -42,8 +42,6 @@ void Run (NNmConfig_t &, int *);
 int main (int argc, char *argv[])
 {
 	NNmConfig_t params;
-
-	printf ("bytes\t%d\n", sizeof (IEEE_t));
 
 	int consumed = params.Parse (argc, argv);
 
@@ -55,14 +53,12 @@ int main (int argc, char *argv[])
 	srand (params.ro_seed);
 
 	// { length, inputs,  ..., outputs }
-	int *layers = new int [argc + 3];
+	int *layers = new int [argc + 1];
 
-	layers[0] = argc + 2;
-	layers[1] = 784;					// 28x28 inputs
-	layers[argc + 2] = 10;				// 3 outputs
+	layers[0] = argc;
 
-	for (int i = 0; i < argc; ++i)
-		layers[i + 2] = atoi (argv[i]);
+	for (int i = 1; i <= argc; ++i)
+		layers[i] = atoi (argv[i - 1]);
 
 	try {
 
@@ -75,7 +71,7 @@ int main (int argc, char *argv[])
 	}
 }
 
-double Validate (SoftmaxNNm_t &model, DataSet_t *datap)
+double Validate (NNet_t &model, DataSet_t *datap)
 {
     int incorrect = 0;
 
@@ -97,7 +93,7 @@ double Validate (SoftmaxNNm_t &model, DataSet_t *datap)
 	a = 1000000 * start.tv_sec + start.tv_usec;
 	b = 1000000 * end.tv_sec + end.tv_usec;
 
-	printf ("TIME\t%f\n",
+	printf ("TIME\t%f µs\n",
 		(double) (b - a) / datap->t_N);
 
     double ratio = (double) incorrect;
@@ -112,6 +108,12 @@ char fullpath_labels [MAXPATHLEN];
 
 void Run (NNmConfig_t &params, int *layers)
 {
+	bool dropout = params.ro_flag; // false;
+	int Nlayers = layers[0];
+	StrategyAlloc_t rule = RPROP; // ADAM;
+
+	layers++;
+
 	sprintf (fullpath_data, "%s/train-images.idx3-ubyte", params.ro_path);
 	sprintf (fullpath_labels, "%s/train-labels.idx1-ubyte", params.ro_path);
 	MNIST_t data (fullpath_data, fullpath_labels);
@@ -120,13 +122,27 @@ void Run (NNmConfig_t &params, int *layers)
 	sprintf (fullpath_labels, "%s/t10k-labels.idx1-ubyte", params.ro_path);
 	MNIST_t test (fullpath_data, fullpath_labels);
 
-	double SGD = 0.1; // params.ro_Nsamples / (double) 100;
-	SoftmaxNNm_t NNs (layers + 1, layers[0], RPROP);
+	double SGD = params.ro_Nsamples;
+
+	NNet_t NNs (Nlayers + 1 + (dropout ? 1 : 0),
+		IMAGEBYTES,
+		10);
 
 	NNs.SetHalt (params.ro_haltCondition);
-	NNs.SetAccuracy ();
 	NNs.SetSGD (SGD);
 	NNs.SetKeepAlive (10);
+
+	for (int i = 0; i < Nlayers; ++i)
+		NNs.AddDenseLayer (layers[i], rule);
+
+	if (dropout)
+		NNs.AddDropoutLayer (0.5);
+
+	NNs.AddSoftmaxLayer (rule);
+
+	printf ("Trainable Parameters %d\n", NNs.Nparameters ());
+
+	NNs.DisplayModel ();
 
 	try {
 
@@ -137,9 +153,12 @@ void Run (NNmConfig_t &params, int *layers)
         printf ("Ignore? %s\n", excep);
     }
 
+	printf ("Loss %f\n", NNs.Loss ());
+
 	printf ("Verifying...\n");
 
-	double ratio = Validate (NNs, test.mn_datap);
+	// double ratio = Validate (NNs, test.mn_datap);
+	double ratio = Validate (NNs, data.mn_datap);
 
 	printf ("%.2f%% incorrect\n", ratio);
 }
