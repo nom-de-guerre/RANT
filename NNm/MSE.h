@@ -118,7 +118,7 @@ ScalerMSE_t::_sAPI_f (IEEE_t * const xi, bool activate)
 IEEE_t
 ScalerMSE_t::_sAPI_Loss (IEEE_t const * const answers)
 {
-	IEEE_t loss = 0.0;
+	IEEE_t loss;
 
 	loss = s_delta.sm_data[0] = s_response.sm_data[0] - answers[0];
 	loss *= loss;

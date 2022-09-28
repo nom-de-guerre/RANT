@@ -31,7 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdint.h>
 #include <math.h>
 
-#include <NNm_verify.h>
+#include <NNm.h>
 
 #define N_POINTS	32
 
@@ -75,17 +75,20 @@ void Run (int *layers)
 	double soln_MSE = 5e-7;
 
 	DataSet_t *O = BuildTrainingSet (N_POINTS);
-	VerifyGrad_t *Np = NULL;
 
-	Np = new VerifyGrad_t (layers[0] + 2, 1, 1);
-
-	for (int i = 0; i < layers[0]; ++i)
-		Np->AddDenseLayer (layers[i + 1], RPROP);
-
-//	Np->AddNormalizationLayer (RPROP);
-	Np->AddScalerMSELayer (RPROP);
+	NNet_t *Np = new NNet_t (layers[0] + 2, 1, 1);
 
 	Np->SetHalt (soln_MSE);
+
+	for (int i = 0; i < layers[0]; ++i)
+{
+if (i == 1)
+	Np->AddVerificationLayer ();
+		Np->AddDenseLayer (layers[i + 1], RPROP);
+}
+//	Np->AddVerificationLayer ();
+
+	Np->AddScalerMSELayer (RPROP);
 
 	Np->DisplayModel ();
 
@@ -100,12 +103,13 @@ void Run (int *layers)
 
 	printf ("Loss\t%e\n", Np->Loss ());
 
-	// We only examine the input layer and the hidden layers
-	for (int i = 0; i < layers[0]; ++i)
-	{
-		int sample = rand () % N_POINTS;
-		Np->VerifyGradient (i, 1e-7, (*O)[sample]);
-	}
+	// auto fp = Np->DifferencingLayer (layers[1]);
+	auto fp = Np->DifferencingLayer (1);
+
+	assert (fp);
+
+	int sample = rand () % N_POINTS;
+	fp->VerifyGradient (Np, 1e-7, (*O)[sample]);
 }
 
 DataSet_t *BuildTrainingSet (int N)

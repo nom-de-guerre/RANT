@@ -131,6 +131,11 @@ struct NeuralM_t
 		return true;
 	}
 
+	void Accept (IEEE_t *Xi)
+	{
+		memcpy (sm_data, Xi, sizeof (IEEE_t) * sm_len);
+	}
+
 	IEEE_t *raw (void)
 	{
 		return sm_data;

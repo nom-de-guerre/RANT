@@ -102,6 +102,8 @@ void Run (NNmConfig_t &params, int *layers)
 	double MSE = 0;
 	double ratio;
 
+	printf ("\t\tx\t\ty\t\tinference\terror\n");
+
 	for (int i = 0; i < N_POINTS; ++i)
 	{
 		guess = Np->Compute ((*O)[i]);

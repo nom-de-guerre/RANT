@@ -47,6 +47,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <dropout.h>
 #include <convolve.h>
 
+struct verify_t;
+
 #include <MSE.h>
 #include <MLE.h>
 #include <multiLabel.h>
@@ -146,17 +148,17 @@ public:
 			delete n_SGDsamples;
 	}
 
-	int Nin (void)
+	int Nin (void) const
 	{
 		return n_Nin;
 	}
 
-	int Nout (void)
+	int Nout (void) const
 	{
 		return n_Nout;
 	}
 
-	int Nparameters (void)
+	int Nparameters (void) const
 	{
 		int N = 0;
 
@@ -405,6 +407,8 @@ public:
 		n_strata[layer]->_sAPI_init ();
 	}
 
+	void AddVerificationLayer (void);
+
 	IEEE_t *ComputeWork (const TrainingRow_t);
 
 	IEEE_t * const ComputeVec (const TrainingRow_t x)
@@ -448,6 +452,13 @@ public:
 		return n_strata[n_populated - 1]->_sAPI_Loss (&answer);
 	}
 
+	verify_t *DifferencingLayer (const int level);
+
+	stratum_t *Bottom (void)
+	{
+		return n_strata[n_populated - 1];
+	}
+
 	void Reset (void)
 	{
 		n_error = -1;
@@ -473,7 +484,7 @@ public:
 			n_strata[i]->GetShape ().Display ();
 	}
 
-	void DumpMaps (const int level)
+	void DumpMaps (const int level) const
 	{
 		if (level < 0 || level >= n_populated)
 			return;
@@ -492,7 +503,31 @@ public:
 
 		mp->DumpMaps ();
 	}
+
+	friend verify_t;
 };
+
+#include <verify.h>
+
+void NNet_t::AddVerificationLayer (void)
+{
+	int layer = n_populated++;
+
+	assert (layer >= 0 && layer < n_levels);
+	assert (n_strata[layer] == NULL);
+
+	n_width[layer] = (layer == 0 ? n_Nin : n_width[layer - 1]);
+	n_strata[layer] = new verify_t (layer, n_width[layer]);
+}
+
+verify_t *NNet_t::DifferencingLayer (const int level)
+{
+	if (level < 0 || level >= n_populated)
+		return NULL;
+
+	verify_t *fp = dynamic_cast<verify_t *> (n_strata[level]);
+	return fp;
+}
 
 #include <NNm.tcc>
 
