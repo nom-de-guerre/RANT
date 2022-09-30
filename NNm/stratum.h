@@ -28,6 +28,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef _NN_STRATUM__H__
 #define _NN_STRATUM__H__
 
+#include <string.h>
+#include <stdlib.h>
+
 #include <NeuralM.h>
 #include <strategy.h>
 #include <shape.h>
@@ -46,7 +49,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 struct stratum_t : shape_t
 {
-	const char				*s_Name;
+	char					*s_Name;
 	const int				s_ID;
 
 	int						s_Nnodes;
@@ -61,7 +64,7 @@ struct stratum_t : shape_t
 
 	stratum_t (const char *namep, const int ID, const shape_t &X) :
 		shape_t (X),
-		s_Name (namep),
+		s_Name (namep ? strdup (namep) : NULL),
 		s_ID (ID),
 		s_Nnodes (X.sh_N),
 		s_Nin (X.len ()),
@@ -76,7 +79,7 @@ struct stratum_t : shape_t
 
 	stratum_t (const char *namep, const int ID, const int N, const int Nin) :
 		shape_t (N),
-		s_Name (namep),
+		s_Name (namep ? strdup (namep) : NULL),
 		s_ID (ID),
 		s_Nnodes (N),
 		s_Nin (Nin),
@@ -91,6 +94,8 @@ struct stratum_t : shape_t
 
 	virtual ~stratum_t (void)
 	{
+		if (s_Name)
+			free (s_Name);
 	}
 
 	int N (void) const
