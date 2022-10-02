@@ -74,24 +74,9 @@ struct dense_t : public stratum_t
 
 	void _sAPI_init (void)
 	{
-		int Nout = de_W.rows ();
+		InitLearnable (de_W.N (), de_W.raw ());
 
 		de_dL.zero ();
-
-		// Glorot, W ~ [-r, r]
-		IEEE_t r = sqrt (6.0 / (Nout + s_Nin));
-		IEEE_t *p = de_W.raw();
-		IEEE_t sample;
-
-		for (int i = de_W.rows () - 1; i >= 0; --i)
-			for (int j = de_W.columns () - 1; j >= 0; --j)
-			{
-				sample = (IEEE_t) rand () / RAND_MAX;
-				sample *= r;
-				if (rand () % 2)
-					sample = -sample;
-				*p++ = sample;
-			}
 	}
 
 	virtual IEEE_t * _sAPI_f (IEEE_t * const, bool = true);
@@ -163,17 +148,17 @@ dense_t::_sAPI_f (IEEE_t * const xi, bool activate)
 {
 	de_dot.MatrixVectorMult (de_W, xi);
 
-	IEEE_t *p = s_response.sm_data;
-	IEEE_t *dot = de_dot.sm_data;
+	IEEE_t *p = s_response.raw ();
+	IEEE_t *dot = de_dot.raw ();
 
 	if (activate)
 		for (int i = 0; i < s_Nnodes; ++i)
-			*p++ = ACTIVATION_FN (*dot++);
+			*p++ = ACTIVATION_FN (dot[i]);
 	else
 		for (int i = 0; i < s_Nnodes; ++i)
 			*p++ = *dot++;
 
-	return s_response.sm_data;
+	return s_response.raw ();
 }
 
 #endif // header inclusion

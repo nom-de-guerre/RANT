@@ -42,6 +42,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifdef __TANH_ACT_FN 
 #define ACTIVATION_FN(X) tanh(X) 
 #define DERIVATIVE_FN(Y) (1 - Y*Y) 
+#elif __RELU
+#define ACTIVATION_FN(X) ((X) < 0.0 ? 0.0 : (X))
+#define DERIVATIVE_FN(Y) (Y > 0.0 ? 1.0 : 0.0)
+#elif __IDENTITY
+#define ACTIVATION_FN(X) (X)
+#define DERIVATIVE_FN(Y) 1.0
 #else 
 #define ACTIVATION_FN(X) SIGMOID_FN(X) 
 #define DERIVATIVE_FN(Y) SIGMOID_DERIV(Y)
@@ -111,6 +117,20 @@ struct stratum_t : shape_t
 	void Freeze (void)
 	{
 		s_frozen = true;
+	}
+
+	void InitLearnable (const int N, IEEE_t *learnable)
+	{
+//		IEEE_t r = sqrt (6.0 / (Nout + s_Nin));
+		IEEE_t sample;
+		IEEE_t *p = learnable;
+
+		for (int i = 0; i < N; ++i)
+		{
+			sample = (IEEE_t) rand () / RAND_MAX;
+
+			*p++ = sample;
+		}
 	}
 
 	virtual void _sAPI_init (void) = 0;

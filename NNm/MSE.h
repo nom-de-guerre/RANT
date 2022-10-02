@@ -59,8 +59,7 @@ struct ScalerMSE_t : public stratum_t
 
 	void _sAPI_init (void)
 	{
-		for (int i = 0; i < s_Nin; ++i)
-			ms_W.sm_data[i] = ((IEEE_t) rand () / RAND_MAX) - 0.5;
+		InitLearnable (ms_W.N (), ms_W.raw ());
 
 		ms_dL.zero ();
 	}

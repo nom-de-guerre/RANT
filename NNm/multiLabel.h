@@ -74,24 +74,9 @@ struct multiL_t : public stratum_t
 
 	void _sAPI_init (void)
 	{
-		int Nout = mx_W.rows ();
+		InitLearnable (mx_W.rows (), mx_W.raw ());
 
 		mx_dL.zero ();
-
-		// Glorot, W ~ [-r, r]
-		IEEE_t r = sqrt (6.0 / (Nout + s_Nin));
-		IEEE_t *p = mx_W.raw();
-		IEEE_t sample;
-
-		for (int i = mx_W.rows () - 1; i >= 0; --i)
-			for (int j = mx_W.columns () - 1; j >= 0; --j)
-			{
-				sample = (IEEE_t) rand () / RAND_MAX;
-				sample *= r;
-				if (rand () % 2)
-					sample = -sample;
-				*p++ = sample;
-			}
 	}
 
 	virtual IEEE_t * _sAPI_f (IEEE_t * const, bool = true);

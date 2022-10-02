@@ -69,22 +69,7 @@ struct SoftmaxMLE_t : public stratum_t
 
 	void _sAPI_init (void)
 	{
-		int Nout = ml_softm.K ();
-
-		// Glorot, W ~ [-r, r]
-		IEEE_t r = sqrt (6.0 / (Nout + s_Nin));
-		IEEE_t *p = ml_W.raw();
-		IEEE_t sample;
-
-		for (int i = ml_W.rows () - 1; i >= 0; --i)
-			for (int j = ml_W.columns () - 1; j >= 0; --j)
-			{
-				sample = (IEEE_t) rand () / RAND_MAX;
-				sample *= r;
-				if (rand () % 2)
-					sample = -sample;
-				*p++ = sample;
-			}
+		InitLearnable (ml_W.N (), ml_W.raw ());
 
 		ml_dL.zero ();
 	}
