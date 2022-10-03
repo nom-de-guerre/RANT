@@ -1,15 +1,34 @@
-There are four directories.  
 
-NNm, which is a very simple implementation of a RPROP+ neural network.  There
- are simple examples of its use in the Examples directory.  There are two
- examples: regression and classification.  Make all will produce
-sine and classify.  The command line for both accepts the network architecture.
-Try 4 3 1 for sine and 7 4 4 for classify.  The number of inputs are implicit
- as they are determined by the program.
+There are 3 directories.  
 
-CNN is a primitive convolutional network.  It includes a few examples that
-train with the MNIST data set.  There are 3 examples.  digits.cc,
-simpleProgram.cc and LeNet5.cc.  The latter is a crude approximation.  In
-particular it uses Softmax, not radial functions, and C5 is a NN, not a
-convolutional layer.
+NNm: The ANT library.  The code that implements the core system is found here.
+   NNm.h and NNm.tcc are the core system implementing NNet_t.  The remaining
+   files implement update strategies (ADAM and RPROP+) and layers.  Only
+   dense feed-forward ANNs are supported.  The fully connected (dense) 
+   restriction can be overcome by entering zeros in a weight matrix.
+
+common: miscellaeous headers implementing ancillary functionality.
+
+Examples: A directory with a number of examples.  The examples exhibit
+   regression, multiclass classification and multilabel classification.
+
+There are 4 activation functions available.  The default is the sigmoid.  To
+override this behaviour define one of the following at compile time:
+
+	(default): sigmoid: x --> (0, 1)
+
+	__TANH_ACT_FN : tanh activation function R: --> (-1, 1)
+
+	__RELU : max (0, x)
+
+	__IDENTITY : x --> x
+
+The Makefile in Examples accepts compile time arguments with OUTSIDE.
+
+Activation functions are specified at compile time for run-time 
+performance.  iris.cc runs in 0.04 seconds ({20, 20} dense ANN), Keras
+takes 25 seconds: 625x faster (M1 SoC).
+
+Keras is more flexible, but for certain applications the C++ CPU optimized
+approach makes sense.
 
