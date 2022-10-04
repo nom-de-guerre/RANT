@@ -20,9 +20,9 @@ Examples: A directory with a number of examples.  The examples exhibit
 There are 4 activation functions available.  The default is the sigmoid.  To
 override this behaviour define one of the following at compile time:
 
-	(default): sigmoid: x --> (0, 1)
+	(default): sigmoid: x --> [0, 1]
 
-	__TANH_ACT_FN : tanh activation function R: --> (-1, 1)
+	__TANH_ACT_FN : tanh activation function R: --> [-1, 1]
 
 	__RELU : max (0, x)
 
