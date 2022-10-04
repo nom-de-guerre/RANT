@@ -17,6 +17,9 @@ common: miscellaeous headers implementing ancillary functionality.
 Examples: A directory with a number of examples.  The examples exhibit
    regression, multiclass classification and multilabel classification.
 
+The data files that the examples depend are documented in the individual
+files.
+
 There are 4 activation functions available.  The default is the sigmoid.  To
 override this behaviour define one of the following at compile time:
 
