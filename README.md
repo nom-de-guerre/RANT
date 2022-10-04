@@ -1,4 +1,9 @@
 
+This is the Another Neural Toy (ANT) project.  It is an implementation of
+neural network training and support libraries in C++.  It includes support
+for regression and classification.  Classification can be either multiclass
+or multilabel.
+
 There are 3 directories.  
 
 NNm: The ANT library.  The code that implements the core system is found here.
