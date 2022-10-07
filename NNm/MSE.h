@@ -53,6 +53,11 @@ struct ScalerMSE_t : public stratum_t
 		s_strat = (*rule) (1, Nin + 1, ms_W.raw (), ms_dL.raw ());
 	}
 
+	ScalerMSE_t (FILE *fp) : stratum_t ("MSE")
+	{
+		Load (fp);
+	}
+
 	virtual ~ScalerMSE_t (void)
 	{
 	}
@@ -77,6 +82,49 @@ struct ScalerMSE_t : public stratum_t
 	virtual void StrategyMono (const int index)
 	{
 		return; // over-ride when debugging or instrumenting
+	}
+
+	virtual int _sAPI_Store (FILE *fp)
+	{
+		fprintf (fp, "@MSE\n");
+		fprintf (fp, "@Dim\t%d\t%d\n", ms_W.rows (), ms_W.columns ());
+		ms_W.displayExp ("@Weights", fp);
+
+		return 0;
+	}
+
+	int Load (FILE *fp)
+	{
+		char buffer[MAXLAYERNAME];
+        int rows, columns;
+        int rc;
+
+        rc = fscanf (fp, "%s %d %d\n", buffer, &rows, &columns);
+        if (rc != 3)
+            throw ("Invalid MSE dim");
+
+		if (strcmp ("@Dim", buffer) != 0)
+			throw ("Invalid MSE dim");
+
+        if (rows < 1)
+            throw ("invalid dense rows");
+
+        if (columns < 1)
+            throw ("invalid dense columns");
+
+        s_Nnodes = rows;
+        s_Nin = columns - 1;
+		s_response.resize (rows, 1);
+
+		rc = fscanf (fp, "%s\n", buffer);
+		if (rc != 1)
+			throw ("No Weights");
+
+        rc = ms_W.Load (fp, rows, columns);
+        if (rc)
+            throw ("Bad MSE Weights");
+
+		return 0;
 	}
 };
 

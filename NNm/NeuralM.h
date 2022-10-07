@@ -28,6 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef __DJS_NeuralMatrix__H__
 #define __DJS_NeuralMatrix__H__
 
+#include <stdio.h>
 #include <string.h>
 
 #include <ANT.h>
@@ -237,8 +238,10 @@ struct NeuralM_t
 
 	void resize (const int rows, const int columns)
 	{
-		delete [] sm_data;
+		if (sm_data && sm_releaseMemory)
+			delete [] sm_data;
 
+		sm_releaseMemory = true;
 		sm_rows = rows;
 		sm_columns = columns;
 		sm_len = rows * columns;
@@ -247,16 +250,40 @@ struct NeuralM_t
 
 	}
 
-	void displayExp (const char * const msgp = NULL) const
+	int Load (FILE *fp, const int rows, const int columns)
+	{
+		resize (rows, columns);
+		IEEE_t *p = raw ();
+		int rc;
+
+		for (int i = 0; i < sm_rows; ++i)
+		{
+			for (int j = 0; j < sm_columns; ++j)
+			{
+				rc = fscanf (fp, "%le,", p);
+
+				if (rc != 1)
+					return -1;
+
+				++p;
+			}
+
+			fscanf (fp, "\n");
+		}
+
+		return 0;
+	}
+
+	void displayExp (const char * const msgp = NULL, FILE *fp=stdout) const
 	{
 		if (msgp)
-			printf ("%s\n", msgp);
+			fprintf (fp, "%s\n", msgp);
 
 		for (int i = 0, index = 0; i < sm_rows; ++i)
 		{
 			for (int j = 0; j < sm_columns; ++j, ++index)
-				printf ("%e, ", sm_data[index]);
-			printf ("\n");
+				fprintf (fp, "%le, ", sm_data[index]);
+			fprintf (fp, "\n");
 		}
 	}
 
@@ -272,6 +299,8 @@ struct NeuralM_t
 					sm_data[index],
 					(j + 1 != sm_columns ? "," : "\n"));
 		}
+
+		printf ("\n");
 	}
 };
 

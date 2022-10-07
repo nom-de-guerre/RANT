@@ -47,14 +47,10 @@ struct dense_t : public stratum_t
 	NeuralM_t				de_W;
 	NeuralM_t				de_dL;
 
-	// Vectors - per perceptron (node)
-	NeuralM_t				de_dot;			// Wx
-
 	dense_t (const int ID, const int N, const int Nin, StrategyAlloc_t rule) :
 		stratum_t ("dense", ID, N, Nin + 1),	// account for bias
 		de_W (N, Nin + 1),
-		de_dL (N, Nin + 1),
-		de_dot (N, 1)
+		de_dL (N, Nin + 1)
 	{
 		s_strat = (*rule) (N, Nin + 1, de_W.raw (), de_dL.raw ());
 	}
@@ -62,10 +58,14 @@ struct dense_t : public stratum_t
 	dense_t (const int N, const int Nin, StrategyAlloc_t rule) :
 		stratum_t ("dense", -1, N, Nin + 1),	// account for bias
 		de_W (N, Nin + 1),
-		de_dL (N, Nin + 1),
-		de_dot (N, 1)
+		de_dL (N, Nin + 1)
 	{
 		s_strat = (*rule) (N, Nin + 1, de_W.raw (), de_dL.raw ());
+	}
+
+	dense_t (FILE *fp) : stratum_t ("Dense")
+	{
+		Load (fp);
 	}
 
 	virtual ~dense_t (void)
@@ -91,6 +91,49 @@ struct dense_t : public stratum_t
 	virtual void StrategyMono (const int index)
 	{
 		return; // over-ride when debugging or instrumenting
+	}
+
+	virtual int _sAPI_Store (FILE *fp)
+	{
+		fprintf (fp, "@Dense\n");
+		fprintf (fp, "@Dim\t%d\t%d\n", de_W.rows (), de_W.columns ());
+		de_W.displayExp ("@Weights", fp);
+
+		return 0;
+	}
+
+	int Load (FILE *fp)
+	{
+		char buffer[MAXLAYERNAME];
+		int rows, columns;
+		int rc;
+
+		rc = fscanf (fp, "%s %d %d\n", buffer, &rows, &columns);
+		if (rc != 3)
+			throw ("Invalid dense_t dim");
+
+		if (strcmp ("@Dim", buffer) != 0)
+			throw ("dense_t missing @Dim");
+
+		if (rows < 1)
+			throw ("invalid dense rows");
+
+		if (columns < 1)
+			throw ("invalid dense columns");
+
+		s_Nnodes = rows;
+		s_Nin = columns - 1;
+		s_response.resize (rows, 1);
+
+		rc = fscanf (fp, "%s\n", buffer);
+		if (rc != 1)
+			throw ("No Weights");
+
+		rc = de_W.Load (fp, rows, columns);
+		if (rc)
+			throw ("Bad Dense Weights");
+
+		return 0;
 	}
 };
 
@@ -146,17 +189,12 @@ dense_t::_sAPI_bprop (IEEE_t *xi, bool activation)
 IEEE_t *
 dense_t::_sAPI_f (IEEE_t * const xi, bool activate)
 {
-	de_dot.MatrixVectorMult (de_W, xi);
+	s_response.MatrixVectorMult (de_W, xi);
 
 	IEEE_t *p = s_response.raw ();
-	IEEE_t *dot = de_dot.raw ();
 
-	if (activate)
-		for (int i = 0; i < s_Nnodes; ++i)
-			*p++ = ACTIVATION_FN (dot[i]);
-	else
-		for (int i = 0; i < s_Nnodes; ++i)
-			*p++ = *dot++;
+	for (int i = 0; i < s_Nnodes; ++i)
+		*p++ = ACTIVATION_FN (*p);
 
 	return s_response.raw ();
 }

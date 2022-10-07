@@ -53,6 +53,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define DERIVATIVE_FN(Y) SIGMOID_DERIV(Y)
 #endif 
 
+#define MAXLAYERNAME 32			// Maximum length of the name of a layer type
+
 struct stratum_t : shape_t
 {
 	char					*s_Name;
@@ -96,6 +98,20 @@ struct stratum_t : shape_t
 	{
 		s_delta.zero ();
 		s_response.zero ();
+	}
+
+	// Used for loading a model from a file
+	stratum_t (const char *namep) :
+		shape_t (-1),
+		s_Name (namep ? strdup (namep) : NULL),
+		s_ID (-1),
+		s_Nnodes (-1),
+		s_Nin (-1),
+		s_delta (),
+		s_response (),
+		s_strat (NULL),
+		s_frozen (true)
+	{
 	}
 
 	virtual ~stratum_t (void)
@@ -151,6 +167,13 @@ struct stratum_t : shape_t
 	virtual NeuralM_t * _sAPI_gradientM (void)
 	{
 		return &s_delta;
+	}
+
+	virtual int _sAPI_Store (FILE *fp)
+	{
+		assert (false);
+
+		return 0;
 	}
 
 	/*

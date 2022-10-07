@@ -98,7 +98,33 @@ protected:
 	bool Step(const DataSet_t * const training);
 	bool Halt (DataSet_t const * const);
 	
+	void LoadModel (const char *);
+
 public:
+
+	NNet_t (const char *filename) :
+		n_steps (-1),
+		n_Nin (-1),
+		n_Nout (-1),
+		n_levels (-1),
+		n_populated (0),
+		n_width (NULL),
+		n_strata (NULL),
+		n_Nweights (-1),
+		n_halt (1e-5),
+		n_error (nan (NULL)),
+		n_HaltOnAccuracy (false),
+		n_maxIterations (5000),
+		n_keepalive (-1),
+		n_useSGD (false),
+		n_SGDn (nan(NULL)),
+		n_SGDsamples (NULL),
+		n_normalize (false),
+		n_normParams (NULL),
+		n_arg (NULL)
+	{
+		LoadModel (filename);
+	}
 
 	NNet_t (const int levels, const int Nin, const int Nout) :
 		n_steps (0),
@@ -136,7 +162,8 @@ public:
 
 		delete [] n_strata;
 
-		delete [] n_width;
+		if (n_width)
+			delete [] n_width;
 
 		if (n_normParams)
 			delete [] n_normParams;
@@ -418,7 +445,11 @@ public:
 
 	IEEE_t Compute (const TrainingRow_t x)
 	{
-		return ComputeWork (x)[0];
+		IEEE_t *y;
+
+		y = ComputeWork (x);
+
+		return *y;
 	}
 
 	void ComputeDerivative (const TrainingRow_t);
@@ -465,6 +496,51 @@ public:
 
 		for (int i = 0; i < n_populated; ++i)
 			n_strata[i]->_sAPI_init ();
+	}
+
+	int SaveModel (const char *file, bool overwrite=true)
+	{
+		FILE *fp;
+
+		if (overwrite)
+			 fp = fopen (file, "w+");
+		else
+			 fp = fopen (file, "w+x");
+
+		if (fp == NULL)
+			return errno;
+
+		fprintf (fp, "@Version\t1.0\n");
+		fprintf (fp, "@Topology\t%d\t%d\t%d\n",
+			n_Nin,
+			n_populated,
+			n_Nout);
+
+		if (n_normalize)
+		{
+			fprintf (fp, "@Preprocess\n");
+
+			for (int i = 0; i < n_populated; ++i)
+				fprintf (fp, "\t%e\t%e\n",
+					n_normParams[2 * i],
+					n_normParams[2 * i + 1]);
+		}
+
+		fprintf (fp, "@Layers\n");
+
+		for (int i = 0; i < n_populated; ++i)
+			n_strata[i]->_sAPI_Store (fp);
+
+		fclose (fp);
+
+		return 0;
+	}
+
+	int LoadPreprocessing (FILE *fp)
+	{
+		assert (false);
+
+		return 0;
 	}
 
 	void DisplayModel (void) const

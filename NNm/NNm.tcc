@@ -177,3 +177,94 @@ NNet_t::Step (const DataSet_t * const training)
 	return done;
 }
 
+void NNet_t::LoadModel (const char *filename)
+{
+	FILE *fp = fopen (filename, "r");
+	int rc;
+
+	if (fp == NULL)
+		throw (strerror (errno));
+
+	{
+		float version;
+		char buffer[512];
+
+		rc = fscanf (fp, "%s %f\n", buffer, &version);
+		if (rc != 2)
+			throw ("Invalid version");
+
+		if (strcmp ("@Version", buffer) != 0)
+			throw ("Invalid version line");
+
+		if (version != 1.0)
+			throw ("Invalid version number");
+	}
+
+	{
+		char buffer[512];
+
+		rc = fscanf (fp, "%s %d %d %d\n",
+			buffer,
+			&n_Nin,
+			&n_populated,
+			&n_Nout);
+
+		if (rc != 4)
+			throw ("Invalid topology");
+
+		if (strcmp ("@Topology", buffer) != 0)
+			throw ("Invalid topology line");
+
+		if (n_Nin < 1)
+			throw ("Bad Nin");
+
+		if (n_populated < 1)
+			throw ("Bad number of layers");
+
+		if (n_Nout < 1)
+			throw ("Bad Nout");
+
+		n_levels = n_populated;
+		n_strata = new stratum_t * [n_populated];
+	}
+
+	bool working = true;
+
+	do {
+
+		char buffer[512];
+
+		rc = fscanf (fp, "%s\n", buffer);
+		if (rc != 1)
+			throw ("Invalid NNet config");
+
+		if (strcmp ("@Layers", buffer) == 0)
+			working = false;
+		else if (strcmp ("@Preprocess", buffer) == 0)
+			LoadPreprocessing (fp);
+		else
+			throw ("Invalid NNet Cmd");
+
+	} while (working);
+
+	for (int i = 0; i < n_populated; ++i)
+	{
+		char lType[MAXLAYERNAME];
+
+		fscanf (fp, "%s\n", lType);
+
+		if (strcmp (lType, "@Dense") == 0)
+			n_strata[i] = new dense_t (fp);
+		else if (strcmp (lType, "@MSE") == 0)
+			n_strata[i] = new ScalerMSE_t (fp);
+#if 0
+		else if (strcmp (lType, "@MLE") == 0)
+			n_strata = new MLE_t (fp);
+#endif
+		else
+			throw ("Unknown Layer");
+	}
+
+	fclose (fp);
+}
+
