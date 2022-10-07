@@ -12,7 +12,7 @@ NNm: The ANT library.  The code that implements the core system is found here.
    dense feed-forward ANNs are supported.  The fully connected (dense) 
    restriction can be overcome by entering zeros in a weight matrix.
 
-common: miscellaeous headers implementing ancillary functionality.
+common: miscellaneous headers implementing ancillary functionality.
 
 Examples: A directory with a number of examples.  The examples exhibit
    regression, multiclass classification and multilabel classification.
