@@ -520,7 +520,7 @@ public:
 		{
 			fprintf (fp, "@Preprocess\n");
 
-			for (int i = 0; i < n_populated; ++i)
+			for (int i = 0; i < n_Nin; ++i)
 				fprintf (fp, "\t%e\t%e\n",
 					n_normParams[2 * i],
 					n_normParams[2 * i + 1]);
@@ -538,7 +538,16 @@ public:
 
 	int LoadPreprocessing (FILE *fp)
 	{
-		assert (false);
+		n_normalize = true;
+		n_normParams = new IEEE_t [n_Nin * 2];
+		n_arg = new IEEE_t [n_Nin];
+
+		for (int i = 0; i < n_Nin; ++i)
+		{
+			fscanf (fp, "%le\t%le\n",
+				n_normParams + (2 * i),
+				n_normParams + (2 * i) + 1);
+		}
 
 		return 0;
 	}

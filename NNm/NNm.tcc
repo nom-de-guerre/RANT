@@ -257,10 +257,8 @@ void NNet_t::LoadModel (const char *filename)
 			n_strata[i] = new dense_t (fp);
 		else if (strcmp (lType, "@MSE") == 0)
 			n_strata[i] = new ScalerMSE_t (fp);
-#if 0
 		else if (strcmp (lType, "@MLE") == 0)
-			n_strata = new MLE_t (fp);
-#endif
+			n_strata[i] = new SoftmaxMLE_t (fp, n_Nout);
 		else
 			throw ("Unknown Layer");
 	}

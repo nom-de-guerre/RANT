@@ -35,7 +35,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <options.h>
 #include <NNm.h>
-#include <NNm_verify.h>
 
 #include <plane.h>
 
@@ -80,33 +79,40 @@ char fullpath_labels [MAXPATHLEN];
 
 void Run (NNmConfig_t &params, const int Nlayers, int *layers)
 {
-	sprintf (fullpath_data, "%s/train-images.idx3-ubyte", params.ro_path);
-	sprintf (fullpath_labels, "%s/train-labels.idx1-ubyte", params.ro_path);
+	snprintf (fullpath_data,
+		MAXPATHLEN,
+		"%s/train-images.idx3-ubyte",
+		params.ro_path);
+	snprintf (fullpath_labels,
+		MAXPATHLEN,
+		"%s/train-labels.idx1-ubyte",
+		params.ro_path);
 	MNIST_t data (fullpath_data, fullpath_labels);
 
-	sprintf (fullpath_data, "%s/t10k-images.idx3-ubyte", params.ro_path);
-	sprintf (fullpath_labels, "%s/t10k-labels.idx1-ubyte", params.ro_path);
+	snprintf (fullpath_data,
+		MAXPATHLEN,
+		"%s/t10k-images.idx3-ubyte",
+		params.ro_path);
+	snprintf (fullpath_labels,
+		MAXPATHLEN,
+		"%s/t10k-labels.idx1-ubyte",
+		params.ro_path);
 	MNIST_t test (fullpath_data, fullpath_labels);
 
 	auto rule = (params.ro_flag ? ADAM : RPROP);
 
-#ifdef __VERIFY_GRAD
-	VerifyGrad_t *Np = NULL;
-	Np = new VerifyGrad_t (Nlayers + 3, IMAGEDIM * IMAGEDIM, 10);
-#else
 	NNet_t *Np = NULL;
 	Np = new NNet_t (Nlayers + 5, IMAGEDIM * IMAGEDIM, 10);
-#endif
 
 	Np->SetHalt (params.ro_haltCondition);
 	Np->SetMaxIterations (params.ro_maxIterations);
-	// Np->SetKeepAlive (10);
+	Np->SetKeepAlive (10);
 	Np->SetSGD (params.ro_Nsamples);
 
-#define NMAPS	10
-
-//	Np->AddConvolutionLayer (NMAPS, 3, rule);
-//	Np->AddMaxPoolLayer (NMAPS, 2);
+#ifdef NMAPS
+	Np->AddConvolutionLayer (NMAPS, 3, rule);
+	Np->AddMaxPoolLayer (NMAPS, 2);
+#endif
 
 	for (int i = 0; i < Nlayers; ++i)
 		Np->AddDenseLayer (layers[i], rule);
@@ -119,23 +125,6 @@ void Run (NNmConfig_t &params, const int Nlayers, int *layers)
 	Np->DisplayShape ();
 
 	Np->Train (data.mn_datap, params.ro_maxIterations);
-
-#if 0
-	int EXAMPLE = rand () % 60000;
-
-	plane_t obj (IMAGEDIM, IMAGEDIM, data.mn_datap->entry (EXAMPLE));
-	obj.displayImage ("");
-
-	Np->Compute ((*data.mn_datap)[EXAMPLE]);
-
-	Np->DumpMaps (0);
-	Np->DumpMaps (1);
-
-#endif
-
-#ifdef __VERIFY_GRAD
-	Np->VerifyGradient (0, 1e-7, (*data.mn_datap)[5247]);
-#endif
 
 	printf ("Loss\t%f\n", Np->Loss ());
 

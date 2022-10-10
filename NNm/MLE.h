@@ -63,6 +63,13 @@ struct SoftmaxMLE_t : public stratum_t
 		s_strat = (*rule) (K, Nin + 1, ml_W.raw (), ml_dL.raw ());
 	}
 
+	SoftmaxMLE_t (FILE *fp, const int K) :
+		stratum_t ("softmax"),
+		ml_softm (K)
+	{
+		Load (fp);
+	}
+
 	virtual ~SoftmaxMLE_t (void)
 	{
 	}
@@ -87,6 +94,49 @@ struct SoftmaxMLE_t : public stratum_t
 	virtual void StrategyMono (const int index)
 	{
 		return; // over-ride when debugging or instrumenting
+	}
+
+	virtual int _sAPI_Store (FILE *fp)
+	{
+		fprintf (fp, "@MLE\n");
+		fprintf (fp, "@Dim\t%d\t%d\n", ml_W.rows (), ml_W.columns ());
+		ml_W.displayExp ("@Weights", fp);
+
+		return 0;
+	}
+
+	int Load (FILE *fp)
+	{
+        char buffer[MAXLAYERNAME];
+        int rows, columns;
+        int rc;
+
+        rc = fscanf (fp, "%s %d %d\n", buffer, &rows, &columns);
+        if (rc != 3)
+            throw ("Invalid MLE dim");
+
+        if (strcmp ("@Dim", buffer) != 0)
+            throw ("Invalid MLE dim");
+
+        if (rows < 1)
+            throw ("invalid dense rows");
+
+        if (columns < 1)
+            throw ("invalid dense columns");
+
+        s_Nnodes = rows;
+        s_Nin = columns - 1;
+        s_response.resize (rows, 1);
+
+        rc = fscanf (fp, "%s\n", buffer);
+        if (rc != 1)
+            throw ("No Weights");
+
+        rc = ml_W.Load (fp, rows, columns);
+        if (rc)
+            throw ("Bad MLE Weights");
+
+        return 0;
 	}
 };
 
