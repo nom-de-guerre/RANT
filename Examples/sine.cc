@@ -125,6 +125,8 @@ void Run (NNmConfig_t &params, int *layers)
 	}
 
 	MSE /= O->t_N;
+	MSE *= 0.5;
+
 	printf ("Loss\t%e in %d iterations.\n", MSE, Np->Steps ());
 
 	if (MSE > params.ro_haltCondition)
@@ -147,7 +149,7 @@ void Run (NNmConfig_t &params, int *layers)
 			guess);
 	}
 
-	printf ("Test MSE: %e\n", MSE / O->t_N);
+	printf ("Test MSE: %e\n", 0.5 * MSE / O->t_N);
 
 	if (missed)
 		printf ("Missed: %d\n", missed);
