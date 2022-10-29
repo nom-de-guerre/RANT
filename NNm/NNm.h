@@ -102,6 +102,12 @@ protected:
 
 public:
 
+	/*
+	 * Use this constructor to load a model from a file.
+	 *
+	 * It will not be further trainable.
+	 *
+	 */
 	NNet_t (const char *filename) :
 		n_steps (-1),
 		n_Nin (-1),
@@ -272,6 +278,11 @@ public:
 		n_strata[layer]->_sAPI_init ();
 	}
 
+	/*
+	 * Layers that comprise an ANN.
+	 *
+	 */
+
 	void AddIdentityLayer (int N, StrategyAlloc_t rule)
 	{
 		int layer = n_populated++;
@@ -301,20 +312,6 @@ public:
 		n_strata[layer]->_sAPI_init ();
 	}
 
-	void AddSoftmaxLayer (StrategyAlloc_t rule)
-	{
-		int layer = n_populated++;
-
-		assert (layer >= 0 && layer < n_levels);
-		assert (n_strata[layer] == NULL);
-
-		int Nin = n_width[layer - 1];
-
-		n_width[layer] = n_Nout;
-		n_strata[layer] = new SoftmaxMLE_t (layer, n_Nout, Nin, rule);
-		n_strata[layer]->_sAPI_init ();
-	}
-
 	void AddDropoutLayer (IEEE_t p_retain)
 	{
 		int layer = n_populated++;
@@ -326,36 +323,6 @@ public:
 
 		n_width[layer] = Nin;
 		n_strata[layer] = new dropout_t (Nin, p_retain);
-		n_strata[layer]->_sAPI_init ();
-	}
-
-	void AddScalerMSELayer (StrategyAlloc_t rule)
-	{
-		assert (n_Nout == 1);
-
-		int layer = n_populated++;
-
-		assert (layer > 0 && layer < n_levels);
-		assert (n_strata[layer] == NULL);
-
-		int Nin = n_width[layer - 1];
-
-		n_width[layer] = 1;
-		n_strata[layer] = new ScalerMSE_t (layer, Nin, rule);
-		n_strata[layer]->_sAPI_init ();
-	}
-
-	void AddMultiCLayer (StrategyAlloc_t rule)
-	{
-		int layer = n_populated++;
-
-		assert (layer >= 0 && layer < n_levels);
-		assert (n_strata[layer] == NULL);
-
-		int Nin = (layer ? n_width[layer - 1] : n_Nin);
-
-		n_width[layer] = n_Nout;
-		n_strata[layer] = new multiL_t (layer, n_Nout, Nin, rule);
 		n_strata[layer]->_sAPI_init ();
 	}
 
@@ -436,13 +403,73 @@ public:
 
 	void AddVerificationLayer (void);
 
+	/*
+	 * Loss layers.
+	 *
+	 */
+
+	// Multiclass classification - cross-entropy loss
+	void AddSoftmaxLayer (StrategyAlloc_t rule)
+	{
+		int layer = n_populated++;
+
+		assert (layer >= 0 && layer < n_levels);
+		assert (n_strata[layer] == NULL);
+
+		int Nin = n_width[layer - 1];
+
+		n_width[layer] = n_Nout;
+		n_strata[layer] = new SoftmaxMLE_t (layer, n_Nout, Nin, rule);
+		n_strata[layer]->_sAPI_init ();
+	}
+
+	// Regression - mean-squared error loss
+	void AddScalerMSELayer (StrategyAlloc_t rule)
+	{
+		assert (n_Nout == 1);
+
+		int layer = n_populated++;
+
+		assert (layer >= 0 && layer < n_levels);
+		assert (n_strata[layer] == NULL);
+
+		int Nin = n_width[layer - 1];
+
+		n_width[layer] = 1;
+		n_strata[layer] = new ScalerMSE_t (layer, Nin, rule);
+		n_strata[layer]->_sAPI_init ();
+	}
+
+	// Multilabel classification - per-label sigmoid and MSE
+	void AddMultiCLayer (StrategyAlloc_t rule)
+	{
+		int layer = n_populated++;
+
+		assert (layer >= 0 && layer < n_levels);
+		assert (n_strata[layer] == NULL);
+
+		int Nin = (layer ? n_width[layer - 1] : n_Nin);
+
+		n_width[layer] = n_Nout;
+		n_strata[layer] = new multiL_t (layer, n_Nout, Nin, rule);
+		n_strata[layer]->_sAPI_init ();
+	}
+
 	IEEE_t *ComputeWork (const TrainingRow_t);
 
+	/*
+	 * Used for multilabel classification.
+	 *
+	 */
 	IEEE_t * const ComputeVec (const TrainingRow_t x)
 	{
 		return ComputeWork (x);
 	}
 
+	/*
+	 * Scaler.  Used for regression and classification.
+	 *
+	 */
 	IEEE_t Compute (const TrainingRow_t x)
 	{
 		IEEE_t *y;
@@ -498,6 +525,10 @@ public:
 			n_strata[i]->_sAPI_init ();
 	}
 
+	/*
+	 * Save a trained model to a file.
+	 *
+	 */
 	int SaveModel (const char *file, bool overwrite=true)
 	{
 		FILE *fp;
@@ -536,6 +567,12 @@ public:
 		return 0;
 	}
 
+	/*
+	 * Read the pre-processing parameters for a trained ANN from a saved model.
+	 *
+	 * Called from LoadModel.
+	 *
+	 */
 	int LoadPreprocessing (FILE *fp)
 	{
 		n_normalize = true;
@@ -552,6 +589,10 @@ public:
 		return 0;
 	}
 
+	/*
+	 * Print the info for each layer in the ANN.
+	 *
+	 */
 	void DisplayModel (void) const
 	{
 		printf ("Input (%d) ⟹ ", n_Nin);
@@ -563,12 +604,20 @@ public:
 				(i + 1 == n_populated ? "\n" : "⟹ "));
 	}
 
+	/*
+	 * Print the output shape of each layer.
+	 *
+	 */
 	void DisplayShape (void) const
 	{
 		for (int i = 0; i < n_populated; ++i)
 			n_strata[i]->GetShape ().Display ();
 	}
 
+	/*
+	 * Print the map for a CNN or a Maxpool layer.
+	 *
+	 */
 	void DumpMaps (const int level) const
 	{
 		if (level < 0 || level >= n_populated)
@@ -591,6 +640,13 @@ public:
 
 	friend verify_t;
 };
+
+/*
+ * Code to verify layers with differencing equations.
+ *
+ * BEWARE OF DISCONTINUITIES
+ *
+ */
 
 #include <verify.h>
 
