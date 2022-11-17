@@ -137,13 +137,17 @@ struct stratum_t : shape_t
 
 	void InitLearnable (const int N, IEEE_t *learnable)
 	{
-//		IEEE_t r = sqrt (6.0 / (Nout + s_Nin));
+		IEEE_t r = sqrt (6.0 / (s_response.rows () + s_Nin));
 		IEEE_t sample;
 		IEEE_t *p = learnable;
 
 		for (int i = 0; i < N; ++i)
 		{
 			sample = (IEEE_t) rand () / RAND_MAX;
+			sample *= r;
+
+			if (rand () % 2)
+				sample = -sample;
 
 			*p++ = sample;
 		}

@@ -36,7 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <NeuralM.h>
 
-#define ALPHA		0.01
+#define ALPHA		0.001
 #define BETA1		0.9
 #define BETA2		0.999
 #define EPSILON		1e-7

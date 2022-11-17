@@ -66,10 +66,10 @@ protected:
 	// morphology of the net
 	int					n_Nin;
 	int					n_Nout;
-	int					n_levels;		// available slots for layers
-	int					n_populated;	// slots occupied by layers
+	int					n_levels;			// available slots for layers
+	int					n_populated;		// slots occupied by layers
 
-	int					*n_width;		// array of lengths of n_levels
+	int					*n_width;			// array of lengths of n_levels
 	stratum_t			**n_strata;
 
 	int					n_Nweights;
@@ -82,7 +82,7 @@ protected:
 	bool				n_HaltOnAccuracy;	// halt training at 100% correct
 
 	int					n_maxIterations;
-	int					n_keepalive;	// how often to print status
+	int					n_keepalive;		// how often to print status
 
 	// Stochastic Gradient Descent Implementation
 	bool					n_useSGD;		// SGD turned on
