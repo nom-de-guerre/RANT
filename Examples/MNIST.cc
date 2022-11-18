@@ -106,7 +106,7 @@ void Run (NNmConfig_t &params, const int Nlayers, int *layers)
 
 	Np->SetHalt (params.ro_haltCondition);
 	Np->SetMaxIterations (params.ro_maxIterations);
-	Np->SetKeepAlive (10);
+	Np->SetKeepAlive (100);
 	Np->SetSGD (params.ro_Nsamples);
 
 #ifdef NMAPS
