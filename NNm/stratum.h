@@ -42,10 +42,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifdef __TANH_ACT_FN 
 #define ACTIVATION_FN(X) tanh(X) 
 #define DERIVATIVE_FN(Y) (1 - Y*Y) 
-#elif __RELU
+#elif defined (__RELU)
 #define ACTIVATION_FN(X) ((X) < 0.0 ? 0.0 : (X))
 #define DERIVATIVE_FN(Y) (Y > 0.0 ? 1.0 : 0.0)
-#elif __IDENTITY
+#elif defined(__IDENTITY)
 #define ACTIVATION_FN(X) (X)
 #define DERIVATIVE_FN(Y) 1.0
 #else 
