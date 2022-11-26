@@ -282,7 +282,10 @@ struct NeuralM_t
 		for (int i = 0, index = 0; i < sm_rows; ++i)
 		{
 			for (int j = 0; j < sm_columns; ++j, ++index)
-				fprintf (fp, "%le, ", sm_data[index]);
+				fprintf (fp, "%le%s ",
+					sm_data[index],
+					(j + 1 != sm_columns ? "," : ""));
+
 			fprintf (fp, "\n");
 		}
 	}
@@ -298,9 +301,9 @@ struct NeuralM_t
 				printf ("%f%s ",
 					sm_data[index],
 					(j + 1 != sm_columns ? "," : ""));
-		}
 
-		printf ("\n");
+			printf ("\n");
+		}
 	}
 };
 

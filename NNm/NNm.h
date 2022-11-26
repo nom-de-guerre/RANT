@@ -529,7 +529,7 @@ public:
 	 * Save a trained model to a file.
 	 *
 	 */
-	int SaveModel (const char *file, bool overwrite=true)
+	bool SaveModel (const char *file, bool overwrite=true)
 	{
 		FILE *fp;
 
@@ -564,7 +564,7 @@ public:
 
 		fclose (fp);
 
-		return 0;
+		return true;
 	}
 
 	/*
