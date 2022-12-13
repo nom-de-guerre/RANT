@@ -221,7 +221,6 @@ public:
 		fs_columns (0),
 		fs_schema (NULL)
 	{
-		extern int errno;
 		struct stat mdata;
 
 		int rc = stat (filepath, &mdata);

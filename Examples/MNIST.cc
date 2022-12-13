@@ -31,6 +31,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdlib.h>
 #include <stdint.h>
 
+/*
+ * The rectified linear activation function and ADAM are needed.
+ *
+ */
+
+#define __RELU
+
+bool show_max = false;
+
 #include <MNIST.h>
 
 #include <options.h>
@@ -106,7 +115,7 @@ void Run (NNmConfig_t &params, const int Nlayers, int *layers)
 
 	Np->SetHalt (params.ro_haltCondition);
 	Np->SetMaxIterations (params.ro_maxIterations);
-	Np->SetKeepAlive (100);
+	Np->SetKeepAlive (5);
 	Np->SetSGD (params.ro_Nsamples);
 
 #ifdef NMAPS

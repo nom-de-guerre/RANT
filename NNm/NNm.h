@@ -328,6 +328,9 @@ public:
 
 	void AddConvolutionLayer (int N, int fwidth, StrategyAlloc_t rule)
 	{
+		if (N < 1)
+			return;
+
 		int layer = n_populated++;
 
 		assert (layer >= 0 && layer < n_levels);
@@ -362,6 +365,9 @@ public:
 
 	void AddMaxPoolLayer (int N, int fwidth)
 	{
+		if (N < 1)
+			return;
+
 		int layer = n_populated++;
 
 		assert (layer >= 0 && layer < n_levels);
