@@ -164,7 +164,7 @@ dense_t::_sAPI_bprop (IEEE_t *xi, bool activation)
 
 	// Apply the delta for per weight derivatives
 
-	IEEE_t *dL = de_dL.sm_data;
+	IEEE_t * __restrict dL = de_dL.sm_data;
 	IEEE_t delta;
 
 	/*
@@ -191,10 +191,13 @@ dense_t::_sAPI_f (IEEE_t * const xi, bool activate)
 {
 	s_response.MatrixVectorMult (de_W, xi);
 
-	IEEE_t *p = s_response.raw ();
+	IEEE_t * __restrict p = s_response.raw ();
 
 	for (int i = 0; i < s_Nnodes; ++i)
-		*p++ = ACTIVATION_FN (*p);
+	{
+		*p = ACTIVATION_FN (*p);
+		++p;
+	}
 
 	return s_response.raw ();
 }

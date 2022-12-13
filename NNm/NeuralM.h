@@ -48,7 +48,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
 
-inline IEEE_t DotProduct (const int N, IEEE_t *x, IEEE_t *y)
+inline IEEE_t DotProduct (const int N, IEEE_t * __restrict x, IEEE_t * __restrict y)
 {
 	IEEE_t dot = 0;
 	for (int i = 0; i < N; ++i)
@@ -268,7 +268,7 @@ struct NeuralM_t
 				++p;
 			}
 
-			fscanf (fp, "\n");
+			(void) fscanf (fp, "\n");
 		}
 
 		return 0;

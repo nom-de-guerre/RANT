@@ -81,16 +81,16 @@ public:
 	 * class specific helper functions.
 	 *
 	 */
-	void Pool (__restrict IEEE_t const * const , __restrict IEEE_t *);
+	void Pool (IEEE_t const * const , IEEE_t * __restrict);
 	void ComputeGradient (IEEE_t const * const, IEEE_t *gradp);
 };
 
 void
 Mpool_t::Pool (
-	__restrict IEEE_t const * const imagep,
-	__restrict IEEE_t *omap)
+	IEEE_t const * const imagep,
+	IEEE_t * __restrict omap)
 {
-	__restrict int *rindexp = mp_rindex;
+	int * __restrict rindexp = mp_rindex;
 	bool reset = true;
 
 	for (int base = 0, linear = 0, row = 0; row < mp_idim; ++row)
@@ -128,10 +128,10 @@ Mpool_t::Pool (
 
 void
 Mpool_t::ComputeGradient (
-	__restrict IEEE_t const * const deltap,
-	__restrict IEEE_t *gradp)
+	IEEE_t const * const deltap,
+	IEEE_t * __restrict gradp)
 {
-	__restrict int *rindexp = mp_rindex;
+	int * __restrict rindexp = mp_rindex;
 	int halt = mp_idim * mp_idim;
 
 	memset (gradp, 0, halt * sizeof (IEEE_t));

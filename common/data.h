@@ -399,7 +399,7 @@ struct DataSet_t
 	void Zscore (const int feature, bool centre = true)
 	{
 		IEEE_t stddev = StdDev (feature);
-		IEEE_t mean = (centre ? Mean (feature) : nan (NULL));
+		IEEE_t mean = (centre ? Mean (feature) : nan (""));
 		int stride;
 		IEEE_t *column;
 

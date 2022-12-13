@@ -253,7 +253,9 @@ void NNet_t::LoadModel (const char *filename)
 	{
 		char lType[MAXLAYERNAME];
 
-		fscanf (fp, "%s\n", lType);
+		rc = fscanf (fp, "%s\n", lType);
+		if (rc != 1)
+			throw ("Invalid NNm");
 
 		if (strcmp (lType, "@Dense") == 0)
 			n_strata[i] = new dense_t (fp);

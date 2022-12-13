@@ -58,8 +58,8 @@ struct layerN_t : public stratum_t
 		ln_params (N, 2),
 		ln_dL (N, 2),
 		ln_xhat (new IEEE_t [N]),
-		ln_mu (nan (NULL)),
-		ln_sigma (nan (NULL))
+		ln_mu (nan ("")),
+		ln_sigma (nan (""))
 	{
 		s_strat = (*rule) (N, 2, ln_params.raw (), ln_dL.raw ());
 	}

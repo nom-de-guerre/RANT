@@ -118,12 +118,12 @@ public:
 		n_strata (NULL),
 		n_Nweights (-1),
 		n_halt (1e-5),
-		n_error (nan (NULL)),
+		n_error (nan ("")),
 		n_HaltOnAccuracy (false),
 		n_maxIterations (5000),
 		n_keepalive (-1),
 		n_useSGD (false),
-		n_SGDn (nan(NULL)),
+		n_SGDn (nan("")),
 		n_SGDsamples (NULL),
 		n_normalize (false),
 		n_normParams (NULL),
@@ -140,12 +140,12 @@ public:
 		n_populated (0),
 		n_Nweights (-1),
 		n_halt (1e-5),
-		n_error (nan (NULL)),
+		n_error (nan ("")),
 		n_HaltOnAccuracy (false),
 		n_maxIterations (5000),
 		n_keepalive (100),
 		n_useSGD (false),
-		n_SGDn (nan(NULL)),
+		n_SGDn (nan("")),
 		n_SGDsamples (NULL),
 		n_normalize (false),
 		n_normParams (NULL),
@@ -218,7 +218,7 @@ public:
 
 	IEEE_t Accuracy (void) const
 	{
-		return nan (NULL);
+		return nan ("");
 	}
 
 	bool TrainAndReset (DataSet_t const * const);
@@ -581,9 +581,11 @@ public:
 
 		for (int i = 0; i < n_Nin; ++i)
 		{
-			fscanf (fp, "%le\t%le\n",
+			int rc = fscanf (fp, "%le\t%le\n",
 				n_normParams + (2 * i),
 				n_normParams + (2 * i) + 1);
+			if (rc != 2)
+				throw ("Bad PP Layer");
 		}
 
 		return 0;

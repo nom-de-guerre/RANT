@@ -95,10 +95,10 @@ public:
 
 void
 filter_t::Convolve (
-	__restrict IEEE_t const * const imagep,
-	__restrict IEEE_t *omap)
+	IEEE_t const * const imagep,
+	IEEE_t * __restrict omap)
 {
-	__restrict IEEE_t const * const filterp = ff_W.raw () + 1;
+	IEEE_t const * const filterp = ff_W.raw () + 1;
 	int stride = ff_isize - ff_width;
 
 	for (int start = 0, index = 0, i = 0;
@@ -124,9 +124,9 @@ filter_t::Convolve (
  *
  */
 void
-filter_t::ComputeGradient (__restrict IEEE_t *fromp, __restrict IEEE_t *top)
+filter_t::ComputeGradient (IEEE_t * __restrict fromp, IEEE_t * __restrict top)
 {
-	__restrict IEEE_t * filterp = 1 + ff_W.raw ();
+	IEEE_t * __restrict filterp = 1 + ff_W.raw ();
 	int stride = ff_isize - ff_width;
 
 	for (int start = 0, index = 0, i = 0;
@@ -153,9 +153,9 @@ filter_t::ComputeGradient (__restrict IEEE_t *fromp, __restrict IEEE_t *top)
  */
 
 void
-filter_t::ComputeDerivatives (__restrict IEEE_t *dO, __restrict IEEE_t *input)
+filter_t::ComputeDerivatives (IEEE_t * __restrict dO, IEEE_t * __restrict input)
 {
-	__restrict IEEE_t * dW = ff_dL.raw () + 1;
+	IEEE_t * __restrict dW = ff_dL.raw () + 1;
 	int stride = ff_isize - ff_width;
 
 	for (int start = 0, index = 0, i = 0;
