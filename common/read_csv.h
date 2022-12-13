@@ -314,7 +314,7 @@ public:
 		Categories_t dict;
 		char buffer[BUF_LEN];
 		int entries=1;
-		types_e type;
+		types_e type = IGNORE;
 		int used;
 
 		if (header)
