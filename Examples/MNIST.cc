@@ -44,6 +44,7 @@ bool show_max = false;
 
 #include <options.h>
 #include <NNm.h>
+#include <confusion.h>
 
 #include <plane.h>
 
@@ -115,7 +116,6 @@ void Run (NNmConfig_t &params, const int Nlayers, int *layers)
 
 	Np->SetHalt (params.ro_haltCondition);
 	Np->SetMaxIterations (params.ro_maxIterations);
-	Np->SetKeepAlive (5);
 	Np->SetSGD (params.ro_Nsamples);
 
 #ifdef NMAPS
@@ -137,17 +137,13 @@ void Run (NNmConfig_t &params, const int Nlayers, int *layers)
 
 	printf ("Loss\t%f\n", Np->Loss ());
 
-	printf ("Verifying...\n");
+	confusion_t Cm (10);
+	Cm.Update (test.mn_datap, Np);
 
-	int wrong = 0;
-	for (int i = 0; i < data.mn_datap->N (); ++i)
-	{
-		int guess = (int) Np->Compute ((*data.mn_datap)[i]);
-		if (guess != data.mn_datap->Answer (i))
-			++wrong;
-	}
+	Cm.displayInt ("Cm");
+	printf ("\n\n");
+	Cm.DumpStats ();
 
-	double ratio = (double) wrong / data.mn_datap->N ();
-	printf ("%.2f%% incorrect\n", 100 * ratio);
+	printf ("Correct %f%%\n", 100 * Cm.ratioCorrect ());
 }
 
