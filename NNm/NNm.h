@@ -422,7 +422,7 @@ public:
 		assert (layer >= 0 && layer < n_levels);
 		assert (n_strata[layer] == NULL);
 
-		int Nin = n_width[layer - 1];
+		int Nin = (layer == 0 ? n_Nin :  n_width[layer - 1]);
 
 		n_width[layer] = n_Nout;
 		n_strata[layer] = new SoftmaxMLE_t (layer, n_Nout, Nin, rule);

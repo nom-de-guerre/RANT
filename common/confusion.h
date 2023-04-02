@@ -124,6 +124,34 @@ public:
 		return GetMeasure (k, confusion_t::FalseNegatives);
 	}
 
+	int NumberCorrect (void) const
+	{
+		int correct = 0;
+
+		for (int i = 0; i < cm_K; ++i)
+			correct += GetTP (i);
+
+		return correct;
+	}
+
+	float ratioCorrect (void) const
+	{
+		return (float) NumberCorrect () / (float) cm_N;
+	}
+
+	void DumpStats (void)  const
+	{
+		printf ("\tTP\tFP\tTN\tFN\n");
+
+		for (int i = 0; i < cm_K; ++i)
+			printf ("(%d)\t%d\t%d\t%d\t%d\n",
+				i,
+				GetTP (i),
+				GetFP (i),
+				GetTN (i),
+				GetFN (i));
+	}
+
 private:
 
 	void Fill (DataSet_t *O, NNet_t *Mp)

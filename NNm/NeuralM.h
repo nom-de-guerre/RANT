@@ -305,6 +305,22 @@ struct NeuralM_t
 			printf ("\n");
 		}
 	}
+
+	void displayInt (const char * const msgp = NULL) const
+	{
+		if (msgp)
+			printf ("%s\n", msgp);
+
+		for (int i = 0, index = 0; i < sm_rows; ++i)
+		{
+			for (int j = 0; j < sm_columns; ++j, ++index)
+				printf ("%d%s\t",
+					(int) sm_data[index],
+					(j + 1 != sm_columns ? "," : ""));
+
+			printf ("\n");
+		}
+	}
 };
 
 #endif // header inclusion

@@ -41,6 +41,7 @@ struct NNmConfig_t
 	int				ro_maxIterations;
 	char			*ro_path;
 	bool			ro_flag;
+	char			*ro_save;
 
 	NNmConfig_t () :
 		ro_seed (time (NULL)),
@@ -48,8 +49,15 @@ struct NNmConfig_t
 		ro_haltCondition (1e-5),
 		ro_maxIterations (100),
 		ro_path ((char *) DEFAULT_PATH),
-		ro_flag (false)
+		ro_flag (false),
+		ro_save (NULL)
 	{}
+
+	~NNmConfig_t (void)
+	{
+		if (ro_save)
+			free (ro_save);
+	}
 
 	int Parse (int argc, char *argv[]);
 
@@ -69,12 +77,12 @@ int NNmConfig_t::Parse (int argc, char *argv[])
 
 	while (true)
 	{
-		opt = getopt (argc, argv, "s:n:t:i:p:qh");
+		opt = getopt (argc, argv, "s:r:n:t:i:p:qh");
 		if (opt == -1)
 			break;
 
 		switch (opt) {
-		case 's':
+		case 'r':
 
 			ro_seed = atoi (optarg);
 			count += 2;
@@ -116,9 +124,16 @@ int NNmConfig_t::Parse (int argc, char *argv[])
 
 			break;
 
+		case 's':
+
+			ro_save = strdup (optarg);
+			count += 2;
+
+			break;
+
 		case 'h':
 
-			printf ("usage: %s [-i iterations] [-s seed] [-n samples] [-t halt condition] [application options]\n",
+			printf ("usage: %s [-i iterations] [-r seed] [-n samples] [-t halt condition] [application options]\n",
 				argv[0]);
 			exit (-1);
 
