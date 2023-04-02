@@ -82,10 +82,10 @@ void Run (NNmConfig_t &params, int *layers)
 	Np->SetHalt (params.ro_haltCondition);
 	Np->SetMaxIterations (params.ro_maxIterations);
 	Np->SetAccuracy (); // Halt at 100% accuracy, even if above loss threshold
-	Np->SetKeepAlive (10); // Print every x epochs
 	Np->SetNormalizePP (O);
 
 	Np->DisplayModel ();
+	printf ("Learnable parameters %d\n", Np->Nparameters ());
 
 #ifdef __FOLDED_RUN
 
