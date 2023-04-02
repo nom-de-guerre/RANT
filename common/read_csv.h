@@ -186,6 +186,7 @@ class LoadCSV_t
 		for (int i = 0; i < fs_columns - 1; ++i)
 		{
 			entries = fscanf (fs_fp, "%[^,],", buffer);
+
 			if (entries != 1)
 			{
 				for (int j = 0; j < i; ++j)
