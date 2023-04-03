@@ -169,7 +169,15 @@ filter_t::ComputeDerivatives (IEEE_t * __restrict dO, IEEE_t * __restrict input)
 
 			for (int f_idx = 0, k = 0; k < ff_width; ++k, i_idx += stride)
 				for (int l = 0; l < ff_width; ++l, ++f_idx, ++i_idx)
+{
+assert (f_idx < ff_W.N ());
+assert (index < ff_isize * ff_isize);
+assert (i_idx < ff_isize * ff_isize);
+assert (isnan (dW[f_idx]) == 0);
+assert (isnan (dO[index]) == 0);
+assert (isnan (input[i_idx]) == 0);
 					dW[f_idx] += dO[index] * input[i_idx];
+}
 			//      ∂L/∂f =   ∑   (∂L/∂O)  • ∂O/∂f
 		}
 	}

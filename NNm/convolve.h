@@ -76,12 +76,13 @@ struct convolve_t : public stratum_t
 	e_mode					cn_mode;
 
 	convolve_t (const int ID,
+				const char *type,
 				const int N,
 				const int fwidth,
 				const shape_t Xin,
 				StrategyAlloc_t rule,
 				const e_mode mode = SLIDE) : 
-		stratum_t ("convolv",
+		stratum_t (type,
 				ID,
 				shape_t (N, 
 						(mode == SLIDE ?

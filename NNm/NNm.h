@@ -326,7 +326,7 @@ public:
 		n_strata[layer]->_sAPI_init ();
 	}
 
-	void AddConvolutionLayer (int N, int fwidth, StrategyAlloc_t rule)
+	void AddFilterLayer (int N, int fwidth, StrategyAlloc_t rule)
 	{
 		if (N < 1)
 			return;
@@ -340,6 +340,10 @@ public:
 
 		if (layer == 0) {
 
+			double rows = sqrt (n_Nin);
+
+			assert (floor (rows) == ceil (rows));
+
 			Xin = shape_t (1, sqrt (n_Nin), sqrt (n_Nin));
 
 		} else {
@@ -349,15 +353,20 @@ public:
 			{
 				IEEE_t dim = sqrt (Xin.sh_rows);
 
-				if (dim != floor (sqrt (Xin.sh_rows)))
-					throw ("Filter Illegal Shape");
+				assert (floor (dim) == ceil (dim));
 
 				Xin.sh_columns = (int) sqrt (Xin.sh_rows);
 				Xin.sh_rows = Xin.sh_columns;
 			}
 		}
 
-		auto p = new convolve_t<filter_t> (layer, N, fwidth, Xin, rule);
+		auto p = new convolve_t<filter_t> (
+			layer, 
+			"filter", 
+			N, 
+			fwidth, 
+			Xin, 
+			rule);
 		n_strata[layer] = p;
 		n_width[layer] = p->N ();
 		n_strata[layer]->_sAPI_init ();
@@ -386,8 +395,7 @@ public:
 			{
 				IEEE_t dim = sqrt (Xin.sh_rows);
 
-				if (dim != floor (sqrt (Xin.sh_rows)))
-					throw ("Pool Illegal Shape");
+				assert (floor (dim) == ceil (dim));
 
 				Xin.sh_columns = (int) sqrt (Xin.sh_rows);
 				Xin.sh_rows = Xin.sh_columns;
@@ -396,6 +404,7 @@ public:
 
 		auto *p = new convolve_t<Mpool_t> (
 			layer,
+			"Maxpool",
 			N,
 			fwidth,
 			Xin,
