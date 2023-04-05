@@ -82,7 +82,7 @@ struct shape_t
 		return sh_length;
 	}
 
-	void Display (const char *title = NULL)
+	void Display (const char *title = NULL) const
 	{
 		printf ("%s\t%d, %d, %d\n",
 			(title ? title : ""),
@@ -91,7 +91,12 @@ struct shape_t
 			sh_columns);
 	}
 
-	bool Single (void)
+	int N (void) const
+	{
+		return sh_N;
+	}
+
+	bool Single (void) const
 	{
 		return (sh_N == 1 ? true : false);
 	}
