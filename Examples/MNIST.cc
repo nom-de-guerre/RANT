@@ -119,7 +119,7 @@ void Run (NNmConfig_t &params, const int Nlayers, int *layers)
 	Np->SetSGD (params.ro_Nsamples);
 
 #ifdef NMAPS
-	Np->AddConvolutionLayer (NMAPS, 3, rule);
+	Np->AddFilterLayer (NMAPS, 3, rule);
 	Np->AddMaxPoolLayer (NMAPS, 2);
 #endif
 
