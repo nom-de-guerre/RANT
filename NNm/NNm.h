@@ -283,7 +283,7 @@ public:
 	 *
 	 */
 
-	void AddIdentityLayer (int N, StrategyAlloc_t rule)
+	void AddIdentityLayer (void)
 	{
 		int layer = n_populated++;
 
@@ -292,8 +292,8 @@ public:
 
 		int Nin = (layer ? n_width[layer - 1] : n_Nin);
 
-		n_width[layer] = N;
-		n_strata[layer] = new identity_t (layer, N, Nin, rule);
+		n_width[layer] = Nin;
+		n_strata[layer] = new identity_t (layer, Nin);
 		n_strata[layer]->_sAPI_init ();
 	}
 
@@ -357,6 +357,8 @@ public:
 
 				Xin.sh_columns = (int) sqrt (Xin.sh_rows);
 				Xin.sh_rows = Xin.sh_columns;
+			} else {
+				assert (N == Xin.N ());
 			}
 		}
 

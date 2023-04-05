@@ -89,11 +89,11 @@ struct convolve_t : public stratum_t
 						 Xin.sh_rows - fwidth + 1 :
 						 Xin.sh_rows / fwidth),
 						(mode == SLIDE ?
-						 Xin.sh_rows - fwidth + 1 :
-						 Xin.sh_rows / fwidth))),
+						 Xin.sh_columns - fwidth + 1 :
+						 Xin.sh_columns / fwidth))),
 		cn_fwidth (fwidth),
 		cn_imapSize (Xin.mapSize ()),
-		cn_oneToOne (1 == Xin.sh_N)
+		cn_oneToOne (Xin.sh_N > 1)
 	{
 		cn_fwidths = new T * [sh_N];
 
@@ -152,12 +152,15 @@ convolve_t<T>::_sAPI_gradient (stratum_t &Z)
 	IEEE_t *targetp = Z.s_delta.raw ();
 	IEEE_t *gradp = s_delta.raw ();
 
+	Z.s_delta.zero ();
+
 	for (int i = 0; i < sh_N; ++i)
 	{
 		cn_fwidths[i]->Propagate (gradp, targetp);
 
 		gradp += mapSize ();
-		targetp += cn_imapSize;
+		if (cn_oneToOne)
+			targetp += cn_imapSize;
 	}
 }
 
@@ -185,7 +188,8 @@ convolve_t<T>::_sAPI_bprop (IEEE_t *xi, bool activation)
 		cn_fwidths[i]->BPROP (gradp, inputp);
 
 		gradp += block;
-		inputp += cn_imapSize;
+		if (cn_oneToOne)
+			inputp += cn_imapSize;
 	}
 }
 
@@ -201,7 +205,7 @@ convolve_t<T>::_sAPI_f (IEEE_t * const xi, bool activate)
 		cn_fwidths[i]->f (inputp, outputp);
 
 		outputp += block;
-		if (!cn_oneToOne)
+		if (cn_oneToOne)
 			inputp += cn_imapSize;
 	}
 

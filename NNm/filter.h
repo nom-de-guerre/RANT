@@ -58,7 +58,8 @@ public:
 		ff_strategy = (*rule) (1, 1+fwidth * fwidth, ff_W.raw (), ff_dL.raw ());
 
 		for (int i = 0; i < ff_W.N (); ++i)
-			ff_W (0, i) = (double) rand () / RAND_MAX;
+			ff_W (0, i) = 1.0; // (double) rand () / RAND_MAX;
+			// ff_W (0, i) = (double) rand () / RAND_MAX;
 
 		ff_dL.zero ();
 	}
