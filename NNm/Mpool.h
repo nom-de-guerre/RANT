@@ -52,7 +52,7 @@ public:
 	{
 	}
 
-	~Mpool_t (void)
+	virtual ~Mpool_t (void)
 	{
 		delete [] mp_rindex;
 	}

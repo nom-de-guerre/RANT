@@ -133,7 +133,8 @@ int NNmConfig_t::Parse (int argc, char *argv[])
 
 		case 'h':
 
-			printf ("usage: %s [-i iterations] [-r seed] [-n samples] [-t halt condition] [application options]\n",
+			printf
+				("usage: %s [-i iterations] [-r seed] [-n samples] [-t halt condition] [application options]\n",
 				argv[0]);
 			exit (-1);
 

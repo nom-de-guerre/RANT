@@ -103,10 +103,9 @@ struct convolve_t : public stratum_t
 
 	virtual ~convolve_t (void)
 	{
-#if 0
 		for (int i = 0; i < sh_N; ++i)
 			delete cn_fwidths[i];
-#endif
+
 		delete cn_fwidths;
 	}
 

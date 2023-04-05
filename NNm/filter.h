@@ -64,7 +64,7 @@ public:
 		ff_dL.zero ();
 	}
 
-	~filter_t (void)
+	virtual ~filter_t (void)
 	{
 		delete ff_strategy;
 	}

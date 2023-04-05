@@ -38,8 +38,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #define __RELU
 
-bool show_max = false;
-
 #include <MNIST.h>
 
 #include <options.h>
