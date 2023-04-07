@@ -80,7 +80,10 @@ void Run (NNmConfig_t &params, int *layers)
 	NNet_t *Np = NULL;
 	auto rule = (params.ro_flag ? ADAM : RPROP);
 
-	Np = new NNet_t (layers[0] + 1, 175 - K_LABELS, K_LABELS);
+	// +2, softmax and PP
+	Np = new NNet_t (layers[0] + 2, 175 - K_LABELS, K_LABELS);
+
+	Np->AddPreProcessingLayer (O);
 
 	for (int i = 0; i < layers[0]; ++i)
 		Np->AddDenseLayer (layers[i + 1], rule);
@@ -91,7 +94,6 @@ void Run (NNmConfig_t &params, int *layers)
 	Np->SetMaxIterations (params.ro_maxIterations);
 	Np->SetAccuracy (); // Halt at 100% accuracy, even if above loss threshold
   	Np->SetKeepAlive (100); // Print every x epochs
-	Np->SetNormalizePP (O);
 
 	Np->DisplayModel ();
 

@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2020, Douglas Santry
+Copyright (c) 2023, Douglas Santry
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -25,8 +25,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef _NNm_IDENTITY__H__
-#define _NNm_IDENTITY__H__
+#ifndef _NNm_PPLAYER__H__
+#define _NNm_PPLAYER__H__
 
 #include <assert.h>
 #include <stdlib.h>
@@ -41,13 +41,25 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * The identity layer - just passes signals through regardless of direction.
  *
  */
-struct identity_t : public stratum_t
+struct PPLayer_t : public stratum_t
 {
-	identity_t (const int ID, const int N) : stratum_t ("I", ID, N, N)
+	NeuralM_t				pl_Parameters;
+
+	PPLayer_t (const int ID, DataSet_t *O) : 
+		stratum_t ("PP", ID, O->Nin (), O->Nin ()),
+		pl_Parameters (O->Nin (), 2)
 	{
+		IEEE_t *p = pl_Parameters.raw ();
+		for (int i = 0; i < s_Nin; ++i)
+		{
+			*p++ = O->Mean (i);
+			*p++ = O->StdDev (i);
+		}
+
+		s_strat = NULL; // no learnable parameters
 	}
 
-	virtual ~identity_t (void)
+	virtual ~PPLayer_t (void)
 	{
 	}
 
@@ -66,20 +78,27 @@ struct identity_t : public stratum_t
 };
 
 void
-identity_t::_sAPI_gradient (stratum_t &Z)
+PPLayer_t::_sAPI_gradient (stratum_t &Z)
 {
 	Z.s_delta.Accept (s_delta.raw ());
 }
 
 void 
-identity_t::_sAPI_bprop (IEEE_t *xi, bool activation)
+PPLayer_t::_sAPI_bprop (IEEE_t *xi, bool activation)
 {
 }
 
 IEEE_t *
-identity_t::_sAPI_f (IEEE_t * const xi, bool activate)
+PPLayer_t::_sAPI_f (IEEE_t * const xi, bool activate)
 {
-	s_response.Accept (xi);
+	IEEE_t *p = pl_Parameters.raw ();
+	IEEE_t *q = s_response.raw ();
+
+	for (int i = 0; i < s_Nin; ++i)
+	{
+		q[i] = xi[i] - *p++;
+		q[i] = q[i] / *p;
+	}
 
 	return s_response.sm_data;
 }

@@ -30,18 +30,7 @@ NNet_t::ComputeWork (IEEE_t *x)
 {
 	IEEE_t *ripple;
 
-	if (n_normalize) {
-
-		for (int i = 0; i < n_Nin; ++i)
-		{
-			n_arg[i] = x[i] - n_normParams[2 * i];
-			n_arg[i] /= n_normParams[2 * i + 1];
-		}
-
-	} else
-		n_arg = x;
-
-	ripple = n_arg;
+	ripple = x;
 
 	for (int layer = 0; layer < n_populated; ++layer)
 		ripple = n_strata[layer]->_sAPI_f (ripple);
@@ -64,11 +53,11 @@ NNet_t::ComputeDerivative (const TrainingRow_t x)
 	if (n_populated > 1)
 		n_strata[n_populated - 1]->_sAPI_bprop (n_strata[n_populated-2]->z ());
 	else
-		n_strata[n_populated - 1]->_sAPI_bprop (n_arg);
+		n_strata[n_populated - 1]->_sAPI_bprop (x);
 
 	for (int level = n_populated - 2; level >= 0; --level)
 	{
-		Xi = (level > 0 ? n_strata[level - 1]->z () : n_arg);
+		Xi = (level > 0 ? n_strata[level - 1]->z () : x);
 
 		n_strata[level + 1]->_sAPI_gradient (*n_strata[level]);
 

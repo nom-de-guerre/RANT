@@ -46,6 +46,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <layerN.h>
 #include <dropout.h>
 #include <convolve.h>
+#include <PPLayer.h>
 
 struct verify_t;
 
@@ -89,11 +90,6 @@ protected:
 	IEEE_t					n_SGDn;			// % of batch to use
 	NoReplacementSamples_t	*n_SGDsamples;	// permuted samples
 
-	// Pre-processing for the arguments
-	bool				n_normalize;
-	IEEE_t				*n_normParams;
-	IEEE_t				*n_arg;
-
 	bool TrainWork (const DataSet_t * const);
 	bool Step(const DataSet_t * const training);
 	bool Halt (DataSet_t const * const);
@@ -124,10 +120,7 @@ public:
 		n_keepalive (-1),
 		n_useSGD (false),
 		n_SGDn (nan("")),
-		n_SGDsamples (NULL),
-		n_normalize (false),
-		n_normParams (NULL),
-		n_arg (NULL)
+		n_SGDsamples (NULL)
 	{
 		LoadModel (filename);
 	}
@@ -146,10 +139,7 @@ public:
 		n_keepalive (100),
 		n_useSGD (false),
 		n_SGDn (nan("")),
-		n_SGDsamples (NULL),
-		n_normalize (false),
-		n_normParams (NULL),
-		n_arg (NULL)
+		n_SGDsamples (NULL)
 	{
 		n_strata = new stratum_t * [n_levels];
 		n_width = new int [n_levels];
@@ -170,12 +160,6 @@ public:
 
 		if (n_width)
 			delete [] n_width;
-
-		if (n_normParams)
-			delete [] n_normParams;
-
-		if (n_normalize)
-			delete [] n_arg;
 
 		if (n_SGDsamples)
 			delete n_SGDsamples;
@@ -472,6 +456,17 @@ public:
 		n_strata[layer]->_sAPI_init ();
 	}
 
+	void AddPreProcessingLayer (DataSet_t *O)
+	{
+		int layer = n_populated++;
+
+		assert (layer == 0);
+
+		n_width[layer] = O->Nin ();
+		n_strata[layer] = new PPLayer_t (layer, O);
+		n_strata[layer]->_sAPI_init ();
+	}
+
 	IEEE_t *ComputeWork (const TrainingRow_t);
 
 	/*
@@ -506,21 +501,6 @@ public:
 	}
 
 	bool ExposeGradient (NeuralM_t &);
-
-	void SetNormalizePP (DataSet_t const * const S)
-	{
-		assert (S->Nin () == n_Nin);
-
-		n_normalize = true;
-		n_normParams = new IEEE_t [n_Nin * 2];
-		n_arg = new IEEE_t [n_Nin];
-
-		for (int i = 0; i < n_Nin; ++i)
-		{
-			n_normParams[i * 2] = S->Mean (i);
-			n_normParams[i * 2 + 1] = S->StdDev (i);
-		}
-	}
 
 	IEEE_t IndividualLoss (IEEE_t answer)
 	{
@@ -564,16 +544,6 @@ public:
 			n_populated,
 			n_Nout);
 
-		if (n_normalize)
-		{
-			fprintf (fp, "@Preprocess\n");
-
-			for (int i = 0; i < n_Nin; ++i)
-				fprintf (fp, "\t%e\t%e\n",
-					n_normParams[2 * i],
-					n_normParams[2 * i + 1]);
-		}
-
 		fprintf (fp, "@Layers\n");
 
 		for (int i = 0; i < n_populated; ++i)
@@ -592,19 +562,6 @@ public:
 	 */
 	int LoadPreprocessing (FILE *fp)
 	{
-		n_normalize = true;
-		n_normParams = new IEEE_t [n_Nin * 2];
-		n_arg = new IEEE_t [n_Nin];
-
-		for (int i = 0; i < n_Nin; ++i)
-		{
-			int rc = fscanf (fp, "%le\t%le\n",
-				n_normParams + (2 * i),
-				n_normParams + (2 * i) + 1);
-			if (rc != 2)
-				throw ("Bad PP Layer");
-		}
-
 		return 0;
 	}
 

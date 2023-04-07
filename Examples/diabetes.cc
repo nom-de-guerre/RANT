@@ -84,7 +84,10 @@ void Run (NNmConfig_t &params, int *layers)
 	int Nout = 2;
 #endif
 
-	Np = new NNet_t (layers[0] + 1, 8, Nout);
+	// +2, categorical layers and PP
+	Np = new NNet_t (layers[0] + 2, 8, Nout);
+
+	Np->AddPreProcessingLayer (O);
 
 	for (int i = 1; i < layers[0]; ++i)
 		Np->AddDenseLayer (layers[i], rule);
@@ -98,8 +101,6 @@ void Run (NNmConfig_t &params, int *layers)
 	Np->SetHalt (params.ro_haltCondition);
 	Np->SetMaxIterations (params.ro_maxIterations);
 	Np->SetAccuracy (); // Halt at 100% accuracy, even if above loss threshold
-	Np->SetKeepAlive (100); // Print every x epochs
-	Np->SetNormalizePP (O);
 
 	Np->DisplayModel ();
 
