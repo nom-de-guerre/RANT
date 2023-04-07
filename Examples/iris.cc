@@ -72,7 +72,9 @@ void Run (NNmConfig_t &params, int *layers)
 	NNet_t *Np = NULL;
 	auto rule = (params.ro_flag ? ADAM : RPROP);
 
-	Np = new NNet_t (layers[0] + 1, 4, 3);
+	Np = new NNet_t (layers[0] + 2, 4, 3);
+
+	Np->AddPreProcessingLayer (O);
 
 	for (int i = 0; i < layers[0]; ++i)
 		Np->AddDenseLayer (layers[i + 1], rule);
@@ -82,7 +84,6 @@ void Run (NNmConfig_t &params, int *layers)
 	Np->SetHalt (params.ro_haltCondition);
 	Np->SetMaxIterations (params.ro_maxIterations);
 	Np->SetAccuracy (); // Halt at 100% accuracy, even if above loss threshold
-	Np->SetNormalizePP (O);
 
 	Np->DisplayModel ();
 	printf ("Learnable parameters %d\n", Np->Nparameters ());
