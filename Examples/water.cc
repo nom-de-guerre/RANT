@@ -116,6 +116,7 @@ void Run (NNmConfig_t &params, int *layers)
 	for (int i = 0; i < N_POINTS; ++i)
 	{
 		int sample = rand () % O->t_N;
+		int hammingDistance = 0;
 
 		Pvec = Np->ComputeVec ((*O)[sample]);
 		ground = O->AnswerVec (sample);
@@ -127,12 +128,17 @@ void Run (NNmConfig_t &params, int *layers)
 
 			if (ground[j] != guess[j])
 			{
-				++wrong;
+				++hammingDistance;
 				accept_soln = false;
 			}
 		}
 
-		printf ("Sample\t%d\n", sample);
+		if (hammingDistance)
+			++wrong;
+		else
+			continue;
+
+		printf ("Sample\t%d\t%f\n", sample, (double) hammingDistance / K_LABELS);
 
 		printf ("ground\t");
 		for (int j = 0; j < K_LABELS; ++j)
