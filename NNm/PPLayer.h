@@ -59,12 +59,70 @@ struct PPLayer_t : public stratum_t
 		s_strat = NULL; // no learnable parameters
 	}
 
+	PPLayer_t (FILE *fp) : stratum_t ("PP")
+	{
+		Load (fp);
+	}
+
 	virtual ~PPLayer_t (void)
 	{
 	}
 
 	void _sAPI_init (void)
 	{
+	}
+
+	virtual int _sAPI_Store (FILE *fp) 
+	{
+		int bytes;
+
+		bytes = fprintf (fp, "@PPLayer\n");
+		if (bytes < 1)
+			return errno;
+
+		bytes = fprintf (fp, "@Dim\t%d\t%d\n", 
+			pl_Parameters.rows (), 
+			pl_Parameters.columns ());
+		if (bytes < 1)
+			return errno;
+
+		pl_Parameters.displayExp ("@Weights", fp);
+
+		return 0;
+	}
+
+	int Load (FILE *fp)
+	{
+		char buffer[MAXLAYERNAME];
+		int rows, columns;
+		int rc;
+
+		rc = fscanf (fp, "%s %d %d\n", buffer, &rows, &columns);
+		if (rc != 3)
+			throw ("Invalid PPLayer_t dim");
+
+		if (strcmp ("@Dim", buffer) != 0)
+			throw ("PPLayer_t missing @Dim");
+
+		if (rows < 1)
+			throw ("invalid dense rows");
+
+		if (columns < 1)
+			throw ("invalid dense columns");
+
+		s_Nnodes = rows;
+		s_Nin = rows;
+		s_response.resize (rows, 1);
+
+		rc = fscanf (fp, "%s\n", buffer);
+		if (rc != 1)
+			throw ("No Weights");
+
+		rc = pl_Parameters.Load (fp, rows, columns);
+		if (rc)
+			throw ("Bad Dense Weights");
+
+		return 0;
 	}
 
 	virtual IEEE_t * _sAPI_f (IEEE_t * const, bool = true);
@@ -97,7 +155,7 @@ PPLayer_t::_sAPI_f (IEEE_t * const xi, bool activate)
 	for (int i = 0; i < s_Nin; ++i)
 	{
 		q[i] = xi[i] - *p++;
-		q[i] = q[i] / *p;
+		q[i] = q[i] / *p++;
 	}
 
 	return s_response.sm_data;

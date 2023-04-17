@@ -32,6 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#include <unistd.h>
 #include <float.h>		// FLT_EVAL_METHOD
 
 #include <data.h>
@@ -91,9 +92,9 @@ protected:
 	NoReplacementSamples_t	*n_SGDsamples;	// permuted samples
 
 	bool TrainWork (const DataSet_t * const);
-	bool Step(const DataSet_t * const training);
+	bool Step (const DataSet_t * const training);
 	bool Halt (DataSet_t const * const);
-	
+
 	void LoadModel (const char *);
 
 public:
@@ -249,6 +250,11 @@ public:
 		n_keepalive = modulus;
 	}
 
+	/*
+	 * Layers that comprise an ANN.
+	 *
+	 */
+
 	void AddDenseLayer (int N, StrategyAlloc_t rule)
 	{
 		int layer = n_populated++;
@@ -261,11 +267,6 @@ public:
 		n_strata[layer] = new dense_t (layer, N, Nin, rule);
 		n_strata[layer]->_sAPI_init ();
 	}
-
-	/*
-	 * Layers that comprise an ANN.
-	 *
-	 */
 
 	void AddIdentityLayer (void)
 	{
@@ -526,14 +527,17 @@ public:
 	 * Save a trained model to a file.
 	 *
 	 */
-	bool SaveModel (const char *file, bool overwrite=true)
+	int SaveModel (const char *file, bool overwrite=true)
 	{
 		FILE *fp;
 
-		if (overwrite)
-			 fp = fopen (file, "w+");
-		else
-			 fp = fopen (file, "w+x");
+		if (overwrite) {
+
+			unlink (file);
+			fp = fopen (file, "w+");
+
+		} else
+			fp = fopen (file, "w+x");
 
 		if (fp == NULL)
 			return errno;
@@ -551,17 +555,6 @@ public:
 
 		fclose (fp);
 
-		return true;
-	}
-
-	/*
-	 * Read the pre-processing parameters for a trained ANN from a saved model.
-	 *
-	 * Called from LoadModel.
-	 *
-	 */
-	int LoadPreprocessing (FILE *fp)
-	{
 		return 0;
 	}
 

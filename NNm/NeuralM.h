@@ -282,7 +282,7 @@ struct NeuralM_t
 		for (int i = 0, index = 0; i < sm_rows; ++i)
 		{
 			for (int j = 0; j < sm_columns; ++j, ++index)
-				fprintf (fp, "%le%s ",
+				fprintf (fp, "%.32f%s ",
 					sm_data[index],
 					(j + 1 != sm_columns ? "," : ""));
 

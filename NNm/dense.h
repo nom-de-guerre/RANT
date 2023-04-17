@@ -95,8 +95,16 @@ struct dense_t : public stratum_t
 
 	virtual int _sAPI_Store (FILE *fp)
 	{
-		fprintf (fp, "@Dense\n");
-		fprintf (fp, "@Dim\t%d\t%d\n", de_W.rows (), de_W.columns ());
+		int bytes;
+
+		bytes = fprintf (fp, "@Dense\n");
+		if (bytes < 1)
+			return errno;
+
+		bytes = fprintf (fp, "@Dim\t%d\t%d\n", de_W.rows (), de_W.columns ());
+		if (bytes < 1)
+			return errno;
+
 		de_W.displayExp ("@Weights", fp);
 
 		return 0;

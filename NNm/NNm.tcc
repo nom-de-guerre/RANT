@@ -65,11 +65,6 @@ NNet_t::ComputeDerivative (const TrainingRow_t x)
 	}
 }
 
-/*
- * ------------- The generic ANN Code ---------------
- *
- */
-
 bool
 NNet_t::TrainAndReset (DataSet_t const * const training)
 {
@@ -79,7 +74,7 @@ NNet_t::TrainAndReset (DataSet_t const * const training)
 }
 
 bool
-NNet_t::Train (const DataSet_t * const training)
+NNet_t::Train (DataSet_t const * const training)
 {
 	bool rc;
 
@@ -89,7 +84,7 @@ NNet_t::Train (const DataSet_t * const training)
 }
 
 bool 
-NNet_t::Train (const DataSet_t * const training, int maxIterations)
+NNet_t::Train (DataSet_t const * const training, int maxIterations)
 {
 	bool rc;
 
@@ -100,7 +95,7 @@ NNet_t::Train (const DataSet_t * const training, int maxIterations)
 }
 
 bool 
-NNet_t::TrainWork (const DataSet_t * const training)
+NNet_t::TrainWork (DataSet_t const * const training)
 {
 	bool solved = false;
 
@@ -231,8 +226,6 @@ void NNet_t::LoadModel (const char *filename)
 
 		if (strcmp ("@Layers", buffer) == 0)
 			working = false;
-		else if (strcmp ("@Preprocess", buffer) == 0)
-			LoadPreprocessing (fp);
 		else
 			throw ("Invalid NNet Cmd");
 
@@ -252,6 +245,10 @@ void NNet_t::LoadModel (const char *filename)
 			n_strata[i] = new ScalerMSE_t (fp);
 		else if (strcmp (lType, "@MLE") == 0)
 			n_strata[i] = new SoftmaxMLE_t (fp, n_Nout);
+		else if (strcmp (lType, "@MultiLabel") == 0)
+			n_strata[i] = new multiL_t (fp);
+		else if (strcmp (lType, "@PPLayer") == 0)
+			n_strata[i] = new PPLayer_t (fp);
 		else
 			throw ("Unknown Layer");
 	}

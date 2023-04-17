@@ -248,6 +248,16 @@ struct DataSet_t
 		}
 	}
 
+	void DisplayDatum (int index) const
+	{
+		TrainingRow_t p = entry (index);
+
+		for (int i = 0; i < t_Nin; ++i)
+			printf ("%f\t", p[i]);
+
+		printf ("\n");
+	}
+
 	TrainingRow_t entry (const int index) const
 	{
 		return t_data + index * (t_columns);

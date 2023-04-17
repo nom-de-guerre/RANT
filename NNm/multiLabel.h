@@ -60,12 +60,17 @@ struct multiL_t : public stratum_t
 	}
 
 	multiL_t (const int N, const int Nin, StrategyAlloc_t rule) :
-		stratum_t ("dense", -1, N, Nin + 1),	// account for bias
+		stratum_t ("multiL", -1, N, Nin + 1),	// account for bias
 		mx_W (N, Nin + 1),
 		mx_dL (N, Nin + 1),
 		mx_dot (N, 1)
 	{
 		s_strat = (*rule) (N, Nin + 1, mx_W.raw (), mx_dL.raw ());
+	}
+
+	multiL_t (FILE *fp) : stratum_t ("multiL")
+	{
+		Load (fp);
 	}
 
 	virtual ~multiL_t (void)
@@ -93,6 +98,58 @@ struct multiL_t : public stratum_t
 	virtual void StrategyMono (const int index)
 	{
 		return; // over-ride when debugging or instrumenting
+	}
+
+	virtual int _sAPI_Store (FILE *fp)
+	{
+		int bytes;
+
+		bytes = fprintf (fp, "@MultiLabel\n");
+		if (bytes < 1)
+			return errno;
+
+		bytes = fprintf (fp, "@Dim\t%d\t%d\n", mx_W.rows (), mx_W.columns ());
+		if (bytes < 1)
+			return errno;
+
+		mx_W.displayExp ("@Weights", fp);
+
+		return 0;
+	}
+
+	int Load (FILE *fp)
+	{
+		char buffer[MAXLAYERNAME];
+		int rows, columns;
+		int rc;
+
+		rc = fscanf (fp, "%s %d %d\n", buffer, &rows, &columns);
+		if (rc != 3)
+			throw ("Invalid multiL_t dim");
+
+		if (strcmp ("@Dim", buffer) != 0)
+			throw ("multiL_t missing @Dim");
+
+		if (rows < 1)
+			throw ("invalid multiLabel rows");
+
+		if (columns < 1)
+			throw ("invalid multiLabel columns");
+
+		s_Nnodes = rows;
+		s_Nin = columns - 1;
+		s_response.resize (rows, 1);
+		mx_dot.resize (rows, 1);
+
+		rc = fscanf (fp, "%s\n", buffer);
+		if (rc != 1)
+			throw ("No Weights");
+
+		rc = mx_W.Load (fp, rows, columns);
+		if (rc)
+			throw ("Bad multiL Weights");
+
+		return 0;
 	}
 };
 

@@ -107,7 +107,7 @@ void Run (NNmConfig_t &params, int *layers)
 
 	bool accept_soln = true;
 
-	int N_POINTS = 20; // O->N ();
+	int N_POINTS = O->N ();
 	int wrong = 0;
 	IEEE_t const * Pvec;
 	IEEE_t guess[K_LABELS];
@@ -115,12 +115,11 @@ void Run (NNmConfig_t &params, int *layers)
 
 	for (int i = 0; i < N_POINTS; ++i)
 	{
-		int sample = rand () % O->t_N;
+		int sample = i; // rand () % O->t_N;
 		int hammingDistance = 0;
 
 		Pvec = Np->ComputeVec ((*O)[sample]);
 		ground = O->AnswerVec (sample);
-
 
 		for (int j = 0; j < K_LABELS; ++j)
 		{
@@ -138,7 +137,9 @@ void Run (NNmConfig_t &params, int *layers)
 		else
 			continue;
 
-		printf ("Sample\t%d\t%f\n", sample, (double) hammingDistance / K_LABELS);
+		printf ("Sample\t%d\tHamming Distance %f\n", 
+			sample, 
+			(double) hammingDistance / K_LABELS);
 
 		printf ("ground\t");
 		for (int j = 0; j < K_LABELS; ++j)
@@ -158,7 +159,10 @@ printf ("\t_____________________________________________________________________
 	else
 		printf (" *** Solution REJECTED.\t%d\t%0.3f%%\n",
 			wrong,
-			100 * (float) wrong / (K_LABELS * (float) N_POINTS));
+			100 * (float) wrong / ((float) N_POINTS));
+
+	if (params.ro_save)
+		Np->SaveModel (params.ro_save);
 }
 
 DataSet_t *LoadData (void)
