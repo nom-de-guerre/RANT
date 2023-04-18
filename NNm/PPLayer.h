@@ -52,8 +52,13 @@ struct PPLayer_t : public stratum_t
 		IEEE_t *p = pl_Parameters.raw ();
 		for (int i = 0; i < s_Nin; ++i)
 		{
-			*p++ = O->Mean (i);
-			*p++ = O->StdDev (i);
+			p[0] = O->Mean (i);
+			p[1] = O->StdDev (i);
+
+			if (p[1] == 0)
+				p[1] = 1.0; // useless division better than branching
+
+			p += 2;
 		}
 
 		s_strat = NULL; // no learnable parameters

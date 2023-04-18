@@ -47,7 +47,7 @@ struct MNIST_t
 {
 	DataSet_t			*mn_datap;
 
-	MNIST_t (const char *datafile, const char *labelfile)
+	MNIST_t (const char *datafile, const char *labelfile, bool PP = false)
 	{
 		mapFile_t data (datafile);
 		mapFile_t labels (labelfile);
@@ -74,6 +74,9 @@ struct MNIST_t
 			for (int j = 0; j < IMAGEBYTES; ++j)
 			{
 				(*mn_datap)[i][j] = image[j];
+				if (!PP)
+					continue;
+
 				(*mn_datap)[i][j] /= 255;
 				if ((*mn_datap)[i][j] < 0.35)
 					(*mn_datap)[i][j] = 0.0;
