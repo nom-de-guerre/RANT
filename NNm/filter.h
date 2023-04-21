@@ -64,6 +64,31 @@ public:
 		ff_dL.zero ();
 	}
 
+	filter_t (FILE *fp, const int vNo, const int fwidth, const int mwidth) :
+		ff_isize (mwidth),
+		ff_strategy (NULL)
+	{
+		char buffer[32];
+		int No;
+		int rc = fscanf (fp, "%s %d\t%d\t%d\t%d\n",
+			buffer,
+			&No,
+			&ff_width,
+			&ff_isize,
+			&ff_osize);
+
+		assert (rc == 5);
+		assert (strcmp (buffer, "@Filter") == 0);
+		assert (No == vNo);
+		assert (ff_width == fwidth);
+
+		rc = fscanf (fp, "%s\n", buffer);
+		assert (rc == 1);
+		assert (strcmp ("@Weights", buffer) == 0);
+
+		ff_W.Load (fp, 1, 1+fwidth * fwidth);
+	}
+
 	virtual ~filter_t (void)
 	{
 		delete ff_strategy;
@@ -92,6 +117,19 @@ public:
 	void ComputeDerivatives (IEEE_t *, IEEE_t *);
 	void Convolve (IEEE_t const * const, IEEE_t *);
 	void ComputeGradient (IEEE_t *, IEEE_t *);
+
+	virtual int Persist (FILE *fp, const int No)
+	{
+		fprintf (fp, "@Filter %d\t%d\t%d\t%d\n",
+			No,
+			ff_width,
+			ff_isize,
+			ff_osize);
+
+		ff_W.displayExp ("@Weights", fp);
+
+		return 0;
+	}
 };
 
 void
@@ -170,15 +208,7 @@ filter_t::ComputeDerivatives (IEEE_t * __restrict dO, IEEE_t * __restrict input)
 
 			for (int f_idx = 0, k = 0; k < ff_width; ++k, i_idx += stride)
 				for (int l = 0; l < ff_width; ++l, ++f_idx, ++i_idx)
-{
-assert (f_idx < ff_W.N ());
-assert (index < ff_isize * ff_isize);
-assert (i_idx < ff_isize * ff_isize);
-assert (isnan (dW[f_idx]) == 0);
-assert (isnan (dO[index]) == 0);
-assert (isnan (input[i_idx]) == 0);
 					dW[f_idx] += dO[index] * input[i_idx];
-}
 			//      ∂L/∂f =   ∑   (∂L/∂O)  • ∂O/∂f
 		}
 	}

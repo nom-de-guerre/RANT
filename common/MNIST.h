@@ -78,8 +78,10 @@ struct MNIST_t
 					continue;
 
 				(*mn_datap)[i][j] /= 255;
+#if 0
 				if ((*mn_datap)[i][j] < 0.35)
 					(*mn_datap)[i][j] = 0.0;
+#endif
 
 				(*mn_datap)[i][j] -= 0.5;
 			}

@@ -55,6 +55,11 @@ struct discrete_t
 	virtual void UpdateWeights (void) = 0;
 	virtual void BPROP (IEEE_t *, IEEE_t *) = 0;
 	virtual void Propagate (IEEE_t *, IEEE_t *) = 0;
+
+	virtual int Persist (FILE *, const int)
+	{
+		assert (false);
+	}
 };
 
 /*
@@ -65,7 +70,7 @@ struct discrete_t
 template <typename T>
 struct convolve_t : public stratum_t
 {
-	T						**cn_fwidths;
+	T						**cn_maps;
 
 	int						cn_fwidth;
 
@@ -95,18 +100,52 @@ struct convolve_t : public stratum_t
 		cn_imapSize (Xin.mapSize ()),
 		cn_oneToOne (Xin.sh_N > 1)
 	{
-		cn_fwidths = new T * [sh_N];
+		cn_maps = new T * [sh_N];
 
 		for (int i = 0; i < sh_N; ++i)
-			cn_fwidths[i] = new T (cn_fwidth, Xin.sh_rows, rule);
+			cn_maps[i] = new T (cn_fwidth, Xin.sh_rows, rule);
+	}
+
+	convolve_t (FILE *fp, const char *type) : stratum_t (type)
+	{
+		char buffer[32];
+
+		int rc = fscanf (fp, "%s %d\t%d\t%d\t%d\n",
+			buffer,
+			&cn_fwidth,
+			&cn_imapSize,
+			(int *) &cn_oneToOne,
+			&cn_mode);
+
+		assert (rc == 5);
+		assert (strcmp (buffer, "@Spensa") == 0);
+
+		rc = fscanf (fp, "%s %d\t%d\t%d\n",
+			buffer,
+			&sh_N,
+			&sh_rows,
+			&sh_columns);
+
+		assert (rc == 4);
+		assert (strcmp (buffer, "@Shape") == 0);
+
+		sh_length = sh_rows * sh_columns;
+
+		s_Nnodes = sh_N;
+		s_response.resize (sh_N * sh_rows * sh_columns, 1);
+
+		cn_maps = new T * [sh_N];
+
+		for (int i = 0; i < sh_N; ++i)
+			cn_maps[i] = new T (fp, i, cn_fwidth, sh_rows);
 	}
 
 	virtual ~convolve_t (void)
 	{
 		for (int i = 0; i < sh_N; ++i)
-			delete cn_fwidths[i];
+			delete cn_maps[i];
 
-		delete cn_fwidths;
+		delete cn_maps;
 	}
 
 	int N (void) const
@@ -126,12 +165,33 @@ struct convolve_t : public stratum_t
 	virtual void _sAPI_strategy (void)
 	{
 		for (int i = 0; i < sh_N; ++i)
-			cn_fwidths[i]->UpdateWeights ();
+			cn_maps[i]->UpdateWeights ();
 	}
 
 	virtual int _sAPI_Trainable (void)
 	{
 		return sh_N * cn_fwidth * cn_fwidth + sh_N;
+	}
+
+	virtual int _sAPI_Store (FILE *fp)
+	{
+		fprintf (fp, "@%s\n", s_Name);
+
+		fprintf (fp, "@Spensa %d\t%d\t%d\t%d\n",
+			cn_fwidth,
+			cn_imapSize,
+			cn_oneToOne,
+			cn_mode);
+
+		fprintf (fp, "@Shape %d\t%d\t%d\n",
+			sh_N,
+			sh_rows,
+			sh_columns);
+
+		for (int i = 0; i < sh_N; ++i)
+			cn_maps[i]->Persist (fp, i);
+
+		return 0;
 	}
 
 	virtual void StrategyMono (const int index)
@@ -155,7 +215,7 @@ convolve_t<T>::_sAPI_gradient (stratum_t &Z)
 
 	for (int i = 0; i < sh_N; ++i)
 	{
-		cn_fwidths[i]->Propagate (gradp, targetp);
+		cn_maps[i]->Propagate (gradp, targetp);
 
 		gradp += mapSize ();
 		if (cn_oneToOne)
@@ -184,7 +244,7 @@ convolve_t<T>::_sAPI_bprop (IEEE_t *xi, bool activation)
 
 	for (int i = 0; i < sh_N; ++i)
 	{
-		cn_fwidths[i]->BPROP (gradp, inputp);
+		cn_maps[i]->BPROP (gradp, inputp);
 
 		gradp += block;
 		if (cn_oneToOne)
@@ -201,7 +261,7 @@ convolve_t<T>::_sAPI_f (IEEE_t * const xi, bool activate)
 
 	for (int i = 0; i < sh_N; ++i)
 	{
-		cn_fwidths[i]->f (inputp, outputp);
+		cn_maps[i]->f (inputp, outputp);
 
 		outputp += block;
 		if (cn_oneToOne)

@@ -52,6 +52,24 @@ public:
 	{
 	}
 
+	Mpool_t (FILE *fp, const int No, const int fwidth, const int mwidth) :
+		mp_rindex (NULL)
+	{
+		char buffer[32];
+		int vNo;
+		int rc = fscanf (fp, "%s %d\t%d\t%d\t%d\n",
+			buffer,
+			&vNo,
+			&mp_fwidth,
+			&mp_idim,
+			&mp_odim);
+
+		assert (rc == 5);
+		assert (vNo == No);
+		assert (fwidth == mp_fwidth);
+		assert (mwidth == mp_odim);
+	}
+
 	virtual ~Mpool_t (void)
 	{
 		delete [] mp_rindex;
@@ -83,6 +101,17 @@ public:
 	 */
 	void Pool (IEEE_t const * const , IEEE_t * __restrict);
 	void ComputeGradient (IEEE_t const * const, IEEE_t *gradp);
+
+	virtual int Persist (FILE *fp, const int No)
+	{
+		fprintf (fp, "@MaxPool %d\t%d\t%d\t%d\n",
+			No,
+			mp_fwidth,
+			mp_idim,
+			mp_odim);
+
+		return 0;
+	}
 };
 
 void
@@ -118,7 +147,8 @@ Mpool_t::Pool (
 			if (omap[index] < imagep[linear])
 			{
 				omap[index] = imagep[linear];
-				rindexp[index] = linear;
+				if (rindexp)
+					rindexp[index] = linear;
 			}
 		}
 
