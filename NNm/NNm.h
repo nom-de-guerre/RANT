@@ -587,24 +587,26 @@ public:
 	 * Print the map for a CNN or a Maxpool layer.
 	 *
 	 */
-	void DumpMaps (const int level) const
+	bool DumpMaps (const int level, char const * const filename = NULL) const
 	{
 		if (level < 0 || level >= n_populated)
-			return;
+			return false;
 
 		auto fp = dynamic_cast<convolve_t <filter_t> *> (n_strata[level]);
 		if (fp != NULL)
 		{
 			fp->DumpMaps ();
 
-			return;
+			return true;
 		}
 
 		auto mp = dynamic_cast<convolve_t <Mpool_t> *> (n_strata[level]);
 		if (mp == NULL)
-			return;
+			return false;
 
 		mp->DumpMaps ();
+
+		return true;
 	}
 
 	friend verify_t;

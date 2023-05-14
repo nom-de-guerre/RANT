@@ -34,8 +34,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 class filter_t : public discrete_t
 {
 	int				ff_width;		// only square filters currently supported
-	int				ff_isize;
-	int				ff_osize;
+	int				ff_isize;		// input map is isize x isize
+	int				ff_osize;		// output map is osize x osize
 
 	NeuralM_t		ff_W;
 	NeuralM_t		ff_dL;

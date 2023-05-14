@@ -199,9 +199,9 @@ struct convolve_t : public stratum_t
 		return; // over-ride when debugging or instrumenting
 	}
 
-	void DumpMaps (void)
+	void DumpMaps (FILE *fp = stdout)
 	{
-		s_response.display ();
+		s_response.displayExp (NULL, fp);
 	}
 };
 
