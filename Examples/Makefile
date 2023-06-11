@@ -18,6 +18,9 @@ water: water.cc $(DEPS) $(HDEPS)
 MNIST: MNIST.cc $(DEPS) $(HDEPS)
 	$(CC) -o $@ $(CFLAGS) MNIST.cc
 
+MNISTLoad: MNISTLoad.cc $(DEPS) $(HDEPS)
+	$(CC) -o $@ $(CFLAGS) MNISTLoad.cc
+
 iris: iris.cc $(DEPS) $(HDEPS)
 	$(CC) -o $@ $(CFLAGS) iris.cc
 
@@ -30,7 +33,7 @@ sine: sine.cc $(DEPS) $(HDEPS)
 sine_verify: sine_verify.cc $(DEPS) $(HDEPS)
 	$(CC) -o $@ $(CFLAGS) sine_verify.cc
 
-all: sine classify iris sine_verify MNIST water enzymes diabetes
+all: sine classify iris sine_verify MNIST MNISTLoad water enzymes diabetes
 
 clean:
 	rm classify
@@ -38,6 +41,7 @@ clean:
 	rm iris
 	rm sine_verify
 	rm MNIST
+	rm MNISTLoad
 	rm water
 	rm enzymes
 	rm diabetes

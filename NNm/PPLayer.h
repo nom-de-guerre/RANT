@@ -38,7 +38,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <NNm.h>
 
 /*
- * The identity layer - just passes signals through regardless of direction.
+ * Preprocessing Layer: translate and normalize data.
  *
  */
 struct PPLayer_t : public stratum_t

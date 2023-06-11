@@ -25,34 +25,65 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef __ANT__COMMON__H__
-#define __ANT__COMMON__H__
+#ifndef _NNm_RESHAPE__H__
+#define _NNm_RESHAPE__H__
 
 #include <assert.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <math.h>
+#include <float.h>
 
-#ifndef IEEE_t
-typedef double IEEE_t;
-#endif
+#include <NeuralM.h>
+#include <NNm.h>
 
-#define RECTIFIER(X) log (1 + exp (X))
-#define SIGMOID_FN(X) (1 / (1 + exp (-X))) // derivative of rectifier
-#define SIGMOID_DERIV(Y) (Y * (1 - Y))
-#define RELU(X) ((X) < 0.0 ? 0.0 : (X))
-#define RELU_DERIVATIVE_FN(Y) (Y > 0.0 ? 1.0 : 0.0)
+/*
+ * The identity layer - just passes signals through regardless of direction.
+ *
+ */
+struct reshape_t : public stratum_t
+{
+	reshape_t (const int ID, shape_t &X) : stratum_t ("reshape", ID, X)
+	{
+	}
 
-#ifdef __TANH_ACT_FN
-#define ACTIVATION_FN(X) tanh(X)
-#define DERIVATIVE_FN(Y) (1 - Y*Y)
-#elif defined (__RELU)
-#define ACTIVATION_FN(X) RELU(X)
-#define DERIVATIVE_FN(Y) RELU_DERIVATIVE_FN(Y)
-#elif defined(__IDENTITY)
-#define ACTIVATION_FN(X) (X)
-#define DERIVATIVE_FN(Y) 1.0
-#else
-#define ACTIVATION_FN(X) SIGMOID_FN(X)
-#define DERIVATIVE_FN(Y) SIGMOID_DERIV(Y)
-#endif
+	virtual ~reshape_t (void)
+	{
+	}
 
-#endif 
+	void _sAPI_init (void)
+	{
+	}
+
+	virtual IEEE_t * _sAPI_f (IEEE_t * const, bool = true);
+	virtual void _sAPI_gradient (stratum_t &);
+	virtual void _sAPI_bprop (IEEE_t *, bool = true);
+
+	virtual void StrategyMono (const int index)
+	{
+		return; // over-ride when debugging or instrumenting
+	}
+};
+
+void
+reshape_t::_sAPI_gradient (stratum_t &Z)
+{
+	Z.s_delta.Accept (s_delta.raw ());
+}
+
+void 
+reshape_t::_sAPI_bprop (IEEE_t *xi, bool activation)
+{
+	// no learnable parameters
+}
+
+IEEE_t *
+reshape_t::_sAPI_f (IEEE_t * const xi, bool activate)
+{
+	s_response.Accept (xi);
+
+	return s_response.sm_data;
+}
+
+#endif // header inclusion
 

@@ -96,7 +96,7 @@ struct verify_t : public stratum_t
 		for (int i = 0; i <= level; ++i)
 			ripple = p->n_strata[i]->_sAPI_f (ripple);
 
-		printf ("\tBPROP\t\tDiff\t\tRatio\n");
+		printf ("\tIndex\tBPROP\t\tDiff\t\tRatio\n");
 
 		// For each of the N perceptrons
 		IEEE_t dL_bp;
@@ -130,7 +130,7 @@ struct verify_t : public stratum_t
 
 			error = bottomp->_sAPI_Loss (&answer);
 
-//printf ("DJS\t%e\t%e\t", dL_diff, error);
+printf ("DJS\t%e\t%e\t", dL_diff, dL_diff - error);
 
 			dL_diff -= error;
 			dL_diff /= 2 * h;
@@ -149,7 +149,8 @@ struct verify_t : public stratum_t
 			IEEE_t ratio = (fabs (dL_bp) - fabs (dL_diff)) /
 							(fabs (dL_bp) + fabs (dL_diff));
 
-			printf ("∆\t%e\t%e\t%f\n",
+			printf ("∆\t%d\t%e\t%e\t%f\n",
+				i,
 				dL_bp,
 				dL_diff,
 				fabs (ratio));

@@ -101,6 +101,8 @@ struct dense_t : public stratum_t
 		if (bytes < 1)
 			return errno;
 
+		Display (NULL, fp);
+
 		bytes = fprintf (fp, "@Dim\t%d\t%d\n", de_W.rows (), de_W.columns ());
 		if (bytes < 1)
 			return errno;
@@ -115,6 +117,8 @@ struct dense_t : public stratum_t
 		char buffer[MAXLAYERNAME];
 		int rows, columns;
 		int rc;
+
+		shape_t::Load (fp);
 
 		rc = fscanf (fp, "%s %d %d\n", buffer, &rows, &columns);
 		if (rc != 3)

@@ -82,10 +82,15 @@ struct shape_t
 		return sh_length;
 	}
 
-	void Display (const char *title = NULL) const
+	int block (void) const
 	{
-		printf ("%s\t%d, %d, %d\n",
-			(title ? title : ""),
+		return mapSize ();
+	}
+
+	void Display (const char *title = NULL, FILE *fp=stdout) const
+	{
+		fprintf (fp, "%s\t%d, %d, %d\n",
+			(title ? title : "@Shape"),
 			sh_N,
 			sh_rows,
 			sh_columns);
@@ -104,6 +109,28 @@ struct shape_t
 	bool isFlat (void) const
 	{	
 		return (sh_columns == 1 ? true : false);
+	}
+
+	bool isSingle (void) const
+	{
+		return sh_N == 1;
+	}
+
+	void Load (FILE *fp)
+	{
+		char buffer[MAXLAYERNAME];
+		int rc;
+
+		rc = fscanf (fp, "%s %d, %d, %d\n",
+			buffer,
+			&sh_N,
+			&sh_rows,
+			&sh_columns);
+
+		if (rc != 4)
+			throw ("shape_t: invalid stored state");
+
+		sh_length = sh_N * sh_rows * sh_columns;
 	}
 };
 

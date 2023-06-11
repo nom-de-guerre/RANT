@@ -74,6 +74,7 @@ identity_t::_sAPI_gradient (stratum_t &Z)
 void 
 identity_t::_sAPI_bprop (IEEE_t *xi, bool activation)
 {
+	// no learnable parameters
 }
 
 IEEE_t *

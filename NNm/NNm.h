@@ -35,6 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <unistd.h>
 #include <float.h>		// FLT_EVAL_METHOD
 
+#include <ANT.h>
 #include <data.h>
 #include <NeuralM.h>
 #include <sampling.h>
@@ -46,8 +47,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <softmax.h>
 #include <layerN.h>
 #include <dropout.h>
-#include <convolve.h>
 #include <PPLayer.h>
+#include <filterM.h>
+#include <poolM.h>
+#include <reshape.h>
 
 struct verify_t;
 
@@ -282,6 +285,29 @@ public:
 		n_strata[layer]->_sAPI_init ();
 	}
 
+	void AddReshapeLayer (const int N, const int rows, const int columns)
+	{
+		int layer = n_populated++;
+
+		assert (layer >= 0 && layer < n_levels);
+		assert (n_strata[layer] == NULL);
+
+		int elements;
+
+		if (layer == 0)
+			elements = n_Nin;
+		else
+			elements = n_strata[layer - 1]->GetShape ().len ();
+
+		shape_t Xin (N, rows, columns);
+
+		assert (Xin.len () == elements);
+
+		n_width[layer] = 0;
+		n_strata[layer] = new reshape_t (layer, Xin);
+		n_strata[layer]->_sAPI_init ();
+	}
+
 	// Layer normalization, not batch normalization
 	void AddNormalizationLayer (StrategyAlloc_t rule)
 	{
@@ -311,7 +337,7 @@ public:
 		n_strata[layer]->_sAPI_init ();
 	}
 
-	void AddFilterLayer (int N, int fwidth, StrategyAlloc_t rule)
+	void Add2DFilterLayer (int N, int fwidth, int stride, StrategyAlloc_t rule)
 	{
 		if (N < 1)
 			return;
@@ -325,41 +351,21 @@ public:
 
 		if (layer == 0) {
 
-			double rows = sqrt (n_Nin);
+			double shape = sqrt (n_Nin);
 
-			assert (floor (rows) == ceil (rows));
+			assert (floor (shape) == ceil (shape));
 
-			Xin = shape_t (1, sqrt (n_Nin), sqrt (n_Nin));
+			Xin = shape_t (1, shape, shape);
 
-		} else {
-
+		} else 
 			Xin = n_strata[layer - 1]->GetShape ();
-			if (Xin.isFlat ())
-			{
-				IEEE_t dim = sqrt (Xin.sh_rows);
 
-				assert (floor (dim) == ceil (dim));
-
-				Xin.sh_columns = (int) sqrt (Xin.sh_rows);
-				Xin.sh_rows = Xin.sh_columns;
-			} else {
-				assert (N == Xin.N ());
-			}
-		}
-
-		auto p = new convolve_t<filter_t> (
-			layer, 
-			"filter", 
-			N, 
-			fwidth, 
-			Xin, 
-			rule);
-		n_strata[layer] = p;
-		n_width[layer] = p->N ();
+		n_strata[layer] = new filterM_t (layer, N, fwidth, stride, Xin, rule);
+		n_width[layer] = n_strata[layer]->N ();
 		n_strata[layer]->_sAPI_init ();
 	}
 
-	void AddMaxPoolLayer (int N, int fwidth)
+	void Add2DMaxPoolLayer (int N, int fwidth, int stride)
 	{
 		if (N < 1)
 			return;
@@ -373,33 +379,33 @@ public:
 
 		if (layer == 0) {
 
-			Xin = shape_t (1, sqrt (n_Nin), sqrt (n_Nin));
+			Xin = shape_t (N, sqrt (n_Nin), sqrt (n_Nin));
 
 		} else {
 
 			Xin = n_strata[layer - 1]->GetShape ();
-			if (Xin.isFlat ())
+
+#if 0
+no learnable parameters so 1:many is pointless
+
+			if (Xin.isSingle ())
 			{
+				assert (Xin.sh_N == 1);
+
 				IEEE_t dim = sqrt (Xin.sh_rows);
 
 				assert (floor (dim) == ceil (dim));
 
 				Xin.sh_columns = (int) sqrt (Xin.sh_rows);
 				Xin.sh_rows = Xin.sh_columns;
-			}
+
+			} else
+#endif
+				assert (N == Xin.sh_N);
 		}
 
-		auto *p = new convolve_t<Mpool_t> (
-			layer,
-			"Maxpool",
-			N,
-			fwidth,
-			Xin,
-			NULL,
-			convolve_t<Mpool_t>::e_mode::JUMP);
-
-		n_strata[layer] = p;
-		n_width[layer] = p->N ();
+		n_strata[layer] = new poolM_t (layer, fwidth, stride, Xin);
+		n_width[layer] = Xin.N ();
 		n_strata[layer]->_sAPI_init ();
 	}
 
@@ -587,26 +593,9 @@ public:
 	 * Print the map for a CNN or a Maxpool layer.
 	 *
 	 */
-	bool DumpMaps (const int level, char const * const filename = NULL) const
+	void ShowResponse (const int index) const
 	{
-		if (level < 0 || level >= n_populated)
-			return false;
-
-		auto fp = dynamic_cast<convolve_t <filter_t> *> (n_strata[level]);
-		if (fp != NULL)
-		{
-			fp->DumpMaps ();
-
-			return true;
-		}
-
-		auto mp = dynamic_cast<convolve_t <Mpool_t> *> (n_strata[level]);
-		if (mp == NULL)
-			return false;
-
-		mp->DumpMaps ();
-
-		return true;
+		n_strata[index]->_sAPI_DumpMaps ();
 	}
 
 	friend verify_t;

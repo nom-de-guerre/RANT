@@ -3,6 +3,7 @@ Examples/classify
 Examples/iris
 Examples/sine_verify
 Examples/MNIST
+Examples/MNISTLoad
 Examples/diabetes
 Examples/water
 Examples/enzymes

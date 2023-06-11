@@ -31,29 +31,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string.h>
 #include <stdlib.h>
 
+#define MAXLAYERNAME 32			// Maximum length of the name of a layer type
+
 #include <NeuralM.h>
 #include <strategy.h>
 #include <shape.h>
-
-#define RECTIFIER(X) log (1 + exp (X)) 
-#define SIGMOID_FN(X) (1 / (1 + exp (-X))) // derivative of rectifier 
-#define SIGMOID_DERIV(Y) (Y * (1 - Y)) 
- 
-#ifdef __TANH_ACT_FN 
-#define ACTIVATION_FN(X) tanh(X) 
-#define DERIVATIVE_FN(Y) (1 - Y*Y) 
-#elif defined (__RELU)
-#define ACTIVATION_FN(X) ((X) < 0.0 ? 0.0 : (X))
-#define DERIVATIVE_FN(Y) (Y > 0.0 ? 1.0 : 0.0)
-#elif defined(__IDENTITY)
-#define ACTIVATION_FN(X) (X)
-#define DERIVATIVE_FN(Y) 1.0
-#else 
-#define ACTIVATION_FN(X) SIGMOID_FN(X) 
-#define DERIVATIVE_FN(Y) SIGMOID_DERIV(Y)
-#endif 
-
-#define MAXLAYERNAME 32			// Maximum length of the name of a layer type
 
 struct stratum_t : shape_t
 {
@@ -68,7 +50,8 @@ struct stratum_t : shape_t
 
 	strategy_t				*s_strat;
 
-	bool					s_frozen;
+	bool					s_skip;			// abstract layer
+	bool					s_frozen;		// update during training
 
 	stratum_t (const char *namep, const int ID, const shape_t &X) :
 		shape_t (X),
@@ -79,6 +62,7 @@ struct stratum_t : shape_t
 		s_delta (X.sh_N * X.sh_rows, X.sh_columns),
 		s_response (X.sh_N * X.sh_rows, X.sh_columns),
 		s_strat (NULL),
+		s_skip (false),
 		s_frozen (true)
 	{
 		s_delta.zero ();
@@ -94,6 +78,7 @@ struct stratum_t : shape_t
 		s_delta (N, 1),
 		s_response (N, 1),
 		s_strat (NULL),
+		s_skip (false),
 		s_frozen (true)
 	{
 		s_delta.zero ();
@@ -110,6 +95,7 @@ struct stratum_t : shape_t
 		s_delta (),
 		s_response (),
 		s_strat (NULL),
+		s_skip (false),
 		s_frozen (true)
 	{
 	}
@@ -123,6 +109,11 @@ struct stratum_t : shape_t
 	int N (void) const
 	{
 		return s_Nnodes;
+	}
+
+	inline bool skip (void) const
+	{
+		return s_skip;
 	}
 
 	void Thaw (void)
@@ -196,6 +187,14 @@ struct stratum_t : shape_t
 	virtual int _sAPI_Trainable (void)
 	{
 		return 0;
+	}
+
+	virtual void _sAPI_DumpMaps (FILE *fp = stdout)
+	{
+		shape_t::Display ("@Shape");
+		s_response.displayExp ("@Map", fp);
+
+		return;
 	}
 
 	IEEE_t * z (void)

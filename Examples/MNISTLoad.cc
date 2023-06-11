@@ -107,35 +107,10 @@ void Run (NNmConfig_t &params, const int Nlayers, int *layers)
 		params.ro_path);
 	MNIST_t test (fullpath_data, fullpath_labels);
 
-	auto rule = (params.ro_flag ? ADAM : RPROP);
-
-	NNet_t *Np = NULL;
-	Np = new NNet_t (Nlayers + 5, IMAGEDIM * IMAGEDIM, 10);
-
-	Np->SetHalt (params.ro_haltCondition);
-	Np->SetMaxIterations (params.ro_maxIterations);
-	Np->SetSGD (params.ro_Nsamples);
-
-#define NMAPS 5
-
-#ifdef NMAPS
-	Np->Add2DFilterLayer (NMAPS, 3, 1, rule);
-	Np->Add2DMaxPoolLayer (NMAPS, 2, 2);
-#endif
-
-	for (int i = 0; i < Nlayers; ++i)
-		Np->AddDenseLayer (layers[i], rule);
-
-	Np->AddSoftmaxLayer (rule);
-
-	printf ("Learnable parameters: %d\n", Np->Nparameters ());
+	NNet_t *Np = new NNet_t (params.ro_save);
 
 	Np->DisplayModel ();
 	Np->DisplayShape ();
-
-	Np->Train (data.mn_datap, params.ro_maxIterations);
-
-	printf ("Loss\t%f\n", Np->Loss ());
 
 	confusion_t Cm (10);
 	Cm.Update (test.mn_datap, Np);
@@ -145,8 +120,5 @@ void Run (NNmConfig_t &params, const int Nlayers, int *layers)
 	Cm.DumpStats ();
 
 	printf ("Correct %f%%\n", 100 * Cm.ratioCorrect ());
-
-	if (params.ro_save)
-		Np->SaveModel (params.ro_save);
 }
 

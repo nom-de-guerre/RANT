@@ -33,7 +33,12 @@ NNet_t::ComputeWork (IEEE_t *x)
 	ripple = x;
 
 	for (int layer = 0; layer < n_populated; ++layer)
+	{
+		if (n_strata[layer]->skip ())
+			continue;
+
 		ripple = n_strata[layer]->_sAPI_f (ripple);
+	}
 
 	return ripple;
 }
@@ -50,6 +55,7 @@ NNet_t::ComputeDerivative (const TrainingRow_t x)
 	ComputeWork (x);
 
 	n_error += n_strata[n_populated - 1]->_sAPI_Loss (x + n_Nin);
+
 	if (n_populated > 1)
 		n_strata[n_populated - 1]->_sAPI_bprop (n_strata[n_populated-2]->z ());
 	else
@@ -241,10 +247,10 @@ void NNet_t::LoadModel (const char *filename)
 
 		if (strcmp (lType, "@Dense") == 0)
 			n_strata[i] = new dense_t (fp);
-		else if (strcmp (lType, "@filter") == 0)
-			n_strata[i] = new convolve_t<filter_t> (fp, lType + 1); // skip @
-		else if (strcmp (lType, "@Maxpool") == 0)
-			n_strata[i] = new convolve_t<Mpool_t> (fp, lType + 1); // skip @
+		else if (strcmp (lType, "@Filter2D") == 0)
+			n_strata[i] = new filterM_t (fp); // skip @
+		else if (strcmp (lType, "@Maxpool2D") == 0)
+			n_strata[i] = new  poolM_t (fp); // skip @
 		else if (strcmp (lType, "@MSE") == 0)
 			n_strata[i] = new ScalerMSE_t (fp);
 		else if (strcmp (lType, "@MLE") == 0)

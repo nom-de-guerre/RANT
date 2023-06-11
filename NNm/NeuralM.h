@@ -200,6 +200,48 @@ struct NeuralM_t
 	}
 
 	/*
+	 * Normal matrix multiplication.  No assumption of first column.
+	 *
+	 * Applies RELU activation.
+	 *
+	 */
+	inline
+	void MatrixVectorMultCNN (NeuralM_t &A, IEEE_t *x)
+	{
+		IEEE_t *pA = A.sm_data;
+		int jump = A.stride ();
+		int Nweights = A.columns ();
+
+		for (int i = 0; i < sm_rows; ++i)
+		{
+			// called with zero'ed memory.
+
+			sm_data[i] = RELU (DotProduct (Nweights, pA, x));
+			pA += jump;
+		}
+	}
+
+	/*
+	 * Normal matrix multiplication.  No assumption of first column.
+	 *
+	 */
+	inline
+	void MatrixVectorMultNoBias (NeuralM_t &A, IEEE_t *x)
+	{
+		IEEE_t *pA = A.sm_data;
+		int jump = A.stride ();
+		int Nweights = A.columns ();
+
+		for (int i = 0; i < sm_rows; ++i)
+		{
+			// called with zero'ed memory.
+
+			sm_data[i] = DotProduct (Nweights, pA, x);
+			pA += jump;
+		}
+	}
+
+	/*
 	 * Assumes first column is the bias, and ignores.
 	 *
 	 */
@@ -274,23 +316,40 @@ struct NeuralM_t
 		return 0;
 	}
 
+	void displayMeta (const char * const msgp = NULL, FILE *fp=stdout) const
+	{
+		int bytes;
+
+		if (msgp)
+			bytes = fprintf (fp, "%s\n", msgp);
+
+		bytes = fprintf (fp, "@Meta %d, %d\n", sm_rows, sm_columns);
+		if (bytes < 1)
+			throw ("WRITE FAILED 1");
+	}
+
 	void displayExp (const char * const msgp = NULL, FILE *fp=stdout) const
 	{
+		int bytes;
+
 		if (msgp)
 			fprintf (fp, "%s\n", msgp);
 
 		for (int i = 0, index = 0; i < sm_rows; ++i)
 		{
 			for (int j = 0; j < sm_columns; ++j, ++index)
-				fprintf (fp, "%.32f%s ",
+				bytes = fprintf (fp, "%.32f%s ",
 					sm_data[index],
 					(j + 1 != sm_columns ? "," : ""));
+
+			if (bytes < 1)
+				throw ("WRITE FAILED 2");
 
 			fprintf (fp, "\n");
 		}
 	}
 
-	void display (const char * const msgp = NULL) const
+	void display (const char * const msgp = NULL, FILE *fp = stdout) const
 	{
 		if (msgp)
 			printf ("%s\n", msgp);
@@ -298,7 +357,7 @@ struct NeuralM_t
 		for (int i = 0, index = 0; i < sm_rows; ++i)
 		{
 			for (int j = 0; j < sm_columns; ++j, ++index)
-				printf ("%f%s ",
+				fprintf (fp, "%f%s ",
 					sm_data[index],
 					(j + 1 != sm_columns ? "," : ""));
 

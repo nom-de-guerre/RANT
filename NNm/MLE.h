@@ -99,6 +99,7 @@ struct SoftmaxMLE_t : public stratum_t
 	virtual int _sAPI_Store (FILE *fp)
 	{
 		fprintf (fp, "@MLE\n");
+		Display (NULL, fp);
 		fprintf (fp, "@Dim\t%d\t%d\n", ml_W.rows (), ml_W.columns ());
 		ml_W.displayExp ("@Weights", fp);
 
@@ -111,6 +112,7 @@ struct SoftmaxMLE_t : public stratum_t
         int rows, columns;
         int rc;
 
+		shape_t::Load (fp);
         rc = fscanf (fp, "%s %d %d\n", buffer, &rows, &columns);
         if (rc != 3)
             throw ("Invalid MLE dim");
