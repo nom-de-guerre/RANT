@@ -236,7 +236,7 @@ filterM_t::_sAPI_bprop (IEEE_t *xi, bool activation)
 	IEEE_t const * gradp = s_delta.raw ();
 	IEEE_t const * CNNp = cf_CNN.raw ();
 	IEEE_t const * F = s_response.raw ();
-	IEEE_t *filter_df = cf_dL.raw ();;
+	IEEE_t *filter_df = cf_dL.raw ();
 
 	for (int i = 0; i < sh_N; ++i)
 	{

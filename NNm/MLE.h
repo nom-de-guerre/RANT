@@ -54,7 +54,7 @@ struct SoftmaxMLE_t : public stratum_t
 			const int K, 
 			const int Nin,
 			StrategyAlloc_t rule) :
-		stratum_t ("softmax", ID, K, Nin + 1),	// account for bias
+		stratum_t ("MLE", ID, K, Nin + 1),	// account for bias
 		ml_W (K, Nin + 1),
 		ml_dL (K, Nin + 1),
 		ml_softm (K),
@@ -64,7 +64,7 @@ struct SoftmaxMLE_t : public stratum_t
 	}
 
 	SoftmaxMLE_t (FILE *fp, const int K) :
-		stratum_t ("softmax"),
+		stratum_t ("MLE"),
 		ml_softm (K)
 	{
 		Load (fp);
