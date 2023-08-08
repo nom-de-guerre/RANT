@@ -32,7 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdint.h>
 
 /*
- * The rectified linear activation function and ADAM are needed.
+ * The rectified linear activation function and ADAM are recommended.
  *
  */
 
@@ -107,7 +107,8 @@ void Run (NNmConfig_t &params, const int Nlayers, int *layers)
 		params.ro_path);
 	MNIST_t test (fullpath_data, fullpath_labels);
 
-	auto rule = (params.ro_flag ? ADAM : RPROP);
+	// Default to ADAM
+	auto rule = (params.ro_flag ? RPROP : ADAM);
 
 	NNet_t *Np = NULL;
 	Np = new NNet_t (Nlayers + 5, IMAGEDIM * IMAGEDIM, 10);
