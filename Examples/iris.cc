@@ -152,13 +152,13 @@ void Run (NNmConfig_t &params, int *layers)
 #endif // __FOLDED_RUN
 }
 
-bool includeFeature [] = { false, true, true, true, true, true };
+bool includeFeature [] = { true, true, true, true, true };
 
 DataSet_t *LoadData (void)
 {
 	LoadCSV_t Z ("../../../Neural Networks/Data/iris.csv");
 
-	DataSet_t *tp = Z.LoadDS (6, includeFeature);
+	DataSet_t *tp = Z.LoadDS (5, includeFeature);
 
 	return tp;
 }
