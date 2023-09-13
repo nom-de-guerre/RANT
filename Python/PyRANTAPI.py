@@ -92,7 +92,7 @@ class NNm:
 		return NNmL.Inference (self.Model, predictors)
 
 	def Classify (self, predictors):
-		return NNmL.Classify (self.Model, predictors)
+		return int (NNmL.Classify (self.Model, predictors))
 
 	def ClassifyVec (self, predictors):
 		__y = NNmL.ClassifyVec (self.Model, predictors)
