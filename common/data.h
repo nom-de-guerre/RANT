@@ -170,6 +170,7 @@ struct DataSet_t
 	int						t_Nin;
 	int						t_Nout;
 	int						t_columns; // length of a row
+	bool					t_ownMemory;
 
 	TrainingRow_t			t_data;
 
@@ -177,15 +178,26 @@ struct DataSet_t
 
 	types_e					*t_schema;
 
+	DataSet_t (int N, int Nin) :
+		t_N (N),
+		t_Nin (Nin),
+		t_Nout (0),
+		t_columns (Nin),
+		t_ownMemory (true),
+		t_data (new IEEE_t [N * Nin]),
+		t_dictp (NULL)
+	{
+	}
+
 	DataSet_t (int N, int Nin, int Nout) :
 		t_N (N),
 		t_Nin (Nin),
 		t_Nout (Nout),
 		t_columns (Nin + Nout),
+		t_ownMemory (true),
 		t_data (new IEEE_t [N * Nin + N * Nout]),
 		t_dictp (NULL)
 	{
-		assert (t_Nout == 1);
 	}
 
 	DataSet_t (int N, int Nin, int Nout, IEEE_t *datap) :
@@ -193,6 +205,7 @@ struct DataSet_t
 		t_Nin (Nin),
 		t_Nout (Nout),
 		t_columns (Nin + Nout),
+		t_ownMemory (true),
 		t_data (datap),
 		t_dictp (NULL)
 	{
@@ -203,6 +216,7 @@ struct DataSet_t
 		t_Nin (Nin),
 		t_Nout (Nout),
 		t_columns (Nin + Nout),
+		t_ownMemory (true),
 		t_data (datap),
 		t_dictp (dictp)
 	{
@@ -210,7 +224,13 @@ struct DataSet_t
 
 	~DataSet_t (void)
 	{
-		delete [] t_data;
+		if (t_ownMemory)
+			delete [] t_data;
+	}
+
+	void ClaimMem (void)
+	{
+		t_ownMemory = false;
 	}
 
 	DataSet_t *Copy (void) const
@@ -220,6 +240,12 @@ struct DataSet_t
 		memcpy (replica->t_data, t_data, t_N * t_columns * sizeof (IEEE_t));
 
 		return replica;
+	}
+
+	void Split (const int Nin, const int Nout)
+	{
+		t_Nin = Nin;
+		t_Nout = Nout;
 	}
 
 	int Nin (void) const
@@ -242,7 +268,7 @@ struct DataSet_t
 		for (int i = 0, index = 0; i < t_N; ++i)
 		{
 			for (int j = 0; j < t_columns; ++j, ++index)
-				printf ("%f\t", t_data[index]);
+				printf ("%lf\t", t_data[index]);
 
 			printf ("\n");
 		}
