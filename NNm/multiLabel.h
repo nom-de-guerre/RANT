@@ -79,7 +79,7 @@ struct multiL_t : public stratum_t
 
 	void _sAPI_init (void)
 	{
-		InitLearnable (mx_W.rows (), mx_W.raw ());
+		InitLearnable (mx_W.N (), mx_W.raw ());
 
 		mx_dL.zero ();
 	}
@@ -223,13 +223,15 @@ multiL_t::_sAPI_Loss (IEEE_t const * const answers)
 	for (int i = 0; i < s_Nnodes; ++i)
 	{
 		delta[i] = _p[i] - answers[i];
+
 		if (answers[i])
 			loss += -log (_p[i]);
 		else
 			loss += -log (1 - _p[i]);
-// printf ("(%f, %f)\t", _p[i], answers[i]);
+
+		if (isnan (loss) || isinf (loss))
+			loss = 1000;
 	}
-// printf ("\n");
 
 	loss /= s_Nnodes;
 

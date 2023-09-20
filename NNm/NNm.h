@@ -347,18 +347,24 @@ public:
 		assert (layer >= 0 && layer < n_levels);
 		assert (n_strata[layer] == NULL);
 
-		shape_t Xin;
+		shape_t Xin (1, n_Nin, 1);
 
-		if (layer == 0) {
+		if (layer > 0)
+			Xin = n_strata[layer - 1]->GetShape ();
 
-			double shape = sqrt (n_Nin);
+		if (Xin.isFlat ()) {
+
+			if (Xin.N () > 1)
+				throw ("Illegal filter shape");
+
+			double shape = sqrt (Xin.len ());
 
 			assert (floor (shape) == ceil (shape));
 
 			Xin = shape_t (1, shape, shape);
 
-		} else 
-			Xin = n_strata[layer - 1]->GetShape ();
+		} else
+			assert (Xin.N () == N);
 
 		n_strata[layer] = new filterM_t (layer, N, fwidth, stride, Xin, rule);
 		n_width[layer] = n_strata[layer]->N ();

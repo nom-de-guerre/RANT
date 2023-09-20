@@ -128,6 +128,9 @@ NNet_t::TrainWork (DataSet_t const * const training)
 				n_maxIterations - n_steps);
 		}
 
+		if (isnan (Loss ()))
+			printf ("WARNING: Loss is NaN\n");
+
 		if (n_steps && n_keepalive && (n_steps % n_keepalive) == 0)
 			printf ("(%d) Training Loss: %e\n", n_steps, Loss ());
 	}
@@ -154,6 +157,7 @@ NNet_t::Step (const DataSet_t * const training)
 	{
 		(n_useSGD ? sample = n_SGDsamples->SampleAuto () : sample = i);
 		assert (sample >= 0 && sample < training->N ());
+
 		ComputeDerivative (training->entry (sample));
 	}
 

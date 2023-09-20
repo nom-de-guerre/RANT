@@ -157,10 +157,10 @@ PPLayer_t::_sAPI_f (IEEE_t * const xi, bool activate)
 	IEEE_t *p = pl_Parameters.raw ();
 	IEEE_t *q = s_response.raw ();
 
-	for (int i = 0; i < s_Nin; ++i)
+	for (int i = 0; i < s_Nin; ++i, p += 2)
 	{
-		q[i] = xi[i] - *p++;
-		q[i] = q[i] / *p++;
+		q[i] = xi[i] - p[0];
+		q[i] = q[i] / p[1];
 	}
 
 	return s_response.sm_data;
