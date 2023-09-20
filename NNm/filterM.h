@@ -57,7 +57,7 @@ struct filterM_t : public stratum_t
 			   const int N,
 			   const int k,
 			   const int stride,
-			   const shape_t Xin, 
+			   const shape_t &Xin,
 			   StrategyAlloc_t rule) :
 		stratum_t ("filter2D",
 					ID, 
@@ -190,6 +190,10 @@ for (int i = 0, index = 0; i < 5; ++i)
 #endif
 
 	BPROP_3 (s_delta.raw ());
+// BPROP seems totally broken.  
+// rename matrix routines and specialize
+// assert (false);
+return;
 
 #if 0
 cf_W.display ("filter");
@@ -201,15 +205,19 @@ cf_BPROP.display ("BPROP");
 	int iblock = cf_input.block ();
 	NeuralM_t omap (iblock, 1, Z.s_delta.raw ());
 	IEEE_t *f = cf_W.raw ();
-//	bool accumulate = cf_input.isSingle ();
+	bool skip = cf_input.isSingle ();
 
 	for (int i = 0; i < sh_N; ++i)
 	{
 		// Applies RELU activation
 		omap.MatrixVectorMultNoBias (cf_BPROP, f);
 
-		omap.sm_data += iblock;
 		f += cf_W.columns ();
+
+		if (skip)
+			continue;
+
+		omap.sm_data += iblock;
 	}
 }
 
@@ -273,7 +281,6 @@ filterM_t::_sAPI_f (IEEE_t * const xi, bool activate)
 	for (int i = 0; i < sh_N; ++i)
 	{
 		if (build) {
-
 			// 1:1 or 1:many?
 			if (cf_input.isSingle ())
 				build = false;
@@ -308,6 +315,12 @@ filterM_t::_sAPI_f (IEEE_t * const xi, bool activate)
 		omap.sm_data += oblock;
 		f += cf_W.columns ();;
 	}
+
+#if 0
+cf_CNN.display ("CNN");
+cf_W.display ("filter W");
+s_response.display ("filter");
+#endif
 
 	return s_response.raw ();
 }

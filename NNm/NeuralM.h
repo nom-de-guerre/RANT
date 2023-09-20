@@ -184,7 +184,7 @@ struct NeuralM_t
 	 *
 	 */
 	inline
-	void MatrixVectorMult (NeuralM_t &A, IEEE_t *x)
+	void MatrixVectorMultBias (NeuralM_t &A, IEEE_t *x)
 	{
 		IEEE_t *pA = A.sm_data;
 		int jump = A.stride ();

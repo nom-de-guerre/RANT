@@ -201,7 +201,7 @@ dense_t::_sAPI_bprop (IEEE_t *xi, bool activation)
 IEEE_t *
 dense_t::_sAPI_f (IEEE_t * const xi, bool activate)
 {
-	s_response.MatrixVectorMult (de_W, xi);
+	s_response.MatrixVectorMultBias (de_W, xi);
 
 	IEEE_t * __restrict p = s_response.raw ();
 
