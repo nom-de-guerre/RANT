@@ -70,7 +70,7 @@ void Run (NNmConfig_t &params, int *layers)
 {
 	DataSet_t *O = LoadData ();
 	NNet_t *Np = NULL;
-	auto rule = (params.ro_flag ? ADAM : RPROP);
+	auto rule = (params.ro_flag ? RPROP : ADAM);
 
 	Np = new NNet_t (layers[0] + 2, 4, 3);
 

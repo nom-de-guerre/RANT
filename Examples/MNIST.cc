@@ -117,6 +117,8 @@ void Run (NNmConfig_t &params, const int Nlayers, int *layers)
 	Np->SetMaxIterations (params.ro_maxIterations);
 	Np->SetSGD (params.ro_Nsamples);
 
+	Np->AddPreProcessingLayer (data.mn_datap);
+
 #define NMAPS 5
 
 #ifdef NMAPS
@@ -136,10 +138,11 @@ void Run (NNmConfig_t &params, const int Nlayers, int *layers)
 
 	Np->Train (data.mn_datap, params.ro_maxIterations);
 
-	printf ("Loss\t%f\n", Np->Loss ());
+	printf ("Loss\t%f\tin %d steps.\n", Np->Loss (), Np->Steps ());
 
 	confusion_t Cm (10);
 	Cm.Update (test.mn_datap, Np);
+	// Cm.Update (data.mn_datap, Np);
 
 	Cm.displayInt ("Cm");
 	printf ("\n\n");
