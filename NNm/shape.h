@@ -82,11 +82,6 @@ struct shape_t
 		return sh_length;
 	}
 
-	int block (void) const
-	{
-		return mapSize ();
-	}
-
 	void Display (const char *title = NULL, FILE *fp=stdout) const
 	{
 		fprintf (fp, "%s\t%d, %d, %d\n",
@@ -131,6 +126,16 @@ struct shape_t
 			throw ("shape_t: invalid stored state");
 
 		sh_length = sh_N * sh_rows * sh_columns;
+	}
+
+	int rows (void) const
+	{
+		return sh_rows;
+	}
+
+	int columns (void) const
+	{
+		return sh_columns;
 	}
 };
 
