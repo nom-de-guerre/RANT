@@ -49,7 +49,7 @@ struct filterM_t : public stratum_t
 	NeuralM_t				cf_W;	// The filter weights N x k x k
 	NeuralM_t				cf_dL;	// The per filter losses
 
-	NeuralM_t				cf_CNN; // the kernels
+	NeuralM_t				cf_CNN; 	// the kernels
 	NeuralM_t				cf_BPROP;
 	shape_t					cf_input;	// input shape
 
@@ -69,7 +69,7 @@ struct filterM_t : public stratum_t
 		cf_W (sh_N, k * k),
 		cf_dL (sh_N, k * k),
 		cf_CNN (len (), k * k),
-		cf_BPROP (Xin.block (), k * k),
+		cf_BPROP (N * Xin.mapSize (), k * k), // N is assumed to be sane
 		cf_input (Xin)
 	{
 		s_strat = (*rule) (sh_N, k * k, cf_W.raw (), cf_dL.raw ());
@@ -176,48 +176,38 @@ struct filterM_t : public stratum_t
 	void BuildConvolutions_2 (IEEE_t const * const inputp);
 	void BuildConvolutions_3 (IEEE_t const * const inputp);
 	void BuildConvolutions_5 (IEEE_t const * const inputp);
-	void BPROP_3 (IEEE_t const * const inputp);
+
+	void BuildDeltaMatrices (void);
+	void BPROP_2 (IEEE_t const * const dZ, IEEE_t *M_delta);
+	void BPROP_3 (IEEE_t const * const dZ, IEEE_t *M_delta);
+	void BPROP_5 (IEEE_t const * const dZ, IEEE_t *M_delta);
 };
 
 void
 filterM_t::_sAPI_gradient (stratum_t &Z)
 {
-#if 0
-IEEE_t *p = s_delta.raw ();
-for (int i = 0, index = 0; i < 5; ++i)
-	for (int j = 0; j < 5; ++j, ++index)
-		p[index] = index + 1;
-#endif
-
-	BPROP_3 (s_delta.raw ());
-// BPROP seems totally broken.  
-// rename matrix routines and specialize
-// assert (false);
-return;
-
-#if 0
-cf_W.display ("filter");
-cf_BPROP.display ("BPROP");
-#endif
+	BuildDeltaMatrices ();
 
 	Z.s_delta.zero ();
 
-	int iblock = cf_input.block ();
-	NeuralM_t omap (iblock, 1, Z.s_delta.raw ());
+	int iblock = cf_input.mapSize ();
+	NeuralM_t dZ (iblock, 1, Z.s_delta.raw ());
+	NeuralM_t deltas (cf_input.mapSize (), cf_k * cf_k, cf_BPROP.raw ());
+
 	IEEE_t *f = cf_W.raw ();
 	bool skip = cf_input.isSingle ();
 
 	for (int i = 0; i < sh_N; ++i)
 	{
-		// Applies RELU activation
-		omap.MatrixVectorMultNoBias (cf_BPROP, f);
+		dZ.MatrixVectorMultNoBias (deltas, f);
 
+		deltas.sm_data += deltas.N ();
 		f += cf_W.columns ();
 
 		if (skip)
 			continue;
 
-		omap.sm_data += iblock;
+		dZ.sm_data += iblock;
 	}
 }
 
@@ -240,11 +230,10 @@ filterM_t::_sAPI_bprop (IEEE_t *xi, bool activation)
 	int feature = cf_k * cf_k;
 	int gradIndex = 0;
 
-	IEEE_t dL;
-	IEEE_t const * gradp = s_delta.raw ();
-	IEEE_t const * CNNp = cf_CNN.raw ();
-	IEEE_t const * F = s_response.raw ();
-	IEEE_t *filter_df = cf_dL.raw ();
+	IEEE_t * __restrict gradp = s_delta.raw ();
+	IEEE_t const * __restrict CNNp = cf_CNN.raw ();
+	IEEE_t const * __restrict F = s_response.raw ();
+	IEEE_t * __restrict filter_df = cf_dL.raw ();
 
 	for (int i = 0; i < sh_N; ++i)
 	{
@@ -257,10 +246,17 @@ filterM_t::_sAPI_bprop (IEEE_t *xi, bool activation)
 			 *
 			 */
 
-			dL = gradp[gradIndex] * RELU_DERIVATIVE_FN (F[gradIndex]);
+			gradp[gradIndex] *= RELU_DERIVATIVE_FN (F[gradIndex]);
+
+			/*
+			 *  ∂L   ∂L   ∂u
+			 *  -- = -- • -- , the latter term is the input image
+			 *  ∂f   ∂u   ∂f
+			 *
+			 */
 
 			for (int k = 0; k < feature; ++k)
-				filter_df[k] += CNNp[k] * dL;
+				filter_df[k] += CNNp[k] * gradp[gradIndex];
 
 			CNNp += feature;
 			++gradIndex;
@@ -273,8 +269,8 @@ filterM_t::_sAPI_f (IEEE_t * const xi, bool activate)
 {
 	NeuralM_t omap (sh_rows * sh_columns, 1, s_response.raw ());
 	IEEE_t *f = cf_W.raw ();
-	int oblock = block ();
-	int iblock = cf_input.block ();
+	int oblock = mapSize ();
+	int iblock = cf_input.mapSize ();
 	IEEE_t const * inputp = xi;
 	bool build = true;
 
@@ -316,12 +312,6 @@ filterM_t::_sAPI_f (IEEE_t * const xi, bool activate)
 		f += cf_W.columns ();;
 	}
 
-#if 0
-cf_CNN.display ("CNN");
-cf_W.display ("filter W");
-s_response.display ("filter");
-#endif
-
 	return s_response.raw ();
 }
 
@@ -342,6 +332,7 @@ filterM_t::BuildConvolutions_2 (IEEE_t const * const inputp)
 		{
 			p0[0] = im0[0];
 			p0[1] = im0[1];
+
 			p0[2] = im1[0];
 			p0[3] = im1[1];
 
@@ -375,9 +366,11 @@ filterM_t::BuildConvolutions_3 (IEEE_t const * const inputp)
 			p0[0] = im0[0];
 			p0[1] = im0[1];
 			p0[2] = im0[2];
+
 			p0[3] = im1[0];
 			p0[4] = im1[1];
 			p0[5] = im1[2];
+
 			p0[6] = im2[0];
 			p0[7] = im2[1];
 			p0[8] = im2[2];
@@ -409,8 +402,8 @@ filterM_t::BuildConvolutions_5 (IEEE_t const * const inputp)
 		im0 = im;
 		im1 = im0 + cf_input.sh_columns;
 		im2 = im1 + cf_input.sh_columns;
-		im3 = im3 + cf_input.sh_columns;
-		im4 = im4 + cf_input.sh_columns;
+		im3 = im2 + cf_input.sh_columns;
+		im4 = im3 + cf_input.sh_columns;
 
 		for (int j = 0; j < sh_columns; ++j) 
 		{
@@ -457,28 +450,105 @@ filterM_t::BuildConvolutions_5 (IEEE_t const * const inputp)
 	}
 }
 
-void 
-filterM_t::BPROP_3 (IEEE_t const * const inputp)
+void
+filterM_t::BuildDeltaMatrices (void)
 {
-	int stride = cf_k * cf_k;
-	int row_correction = 2 * stride;
+	int Nmaps = N ();
+	IEEE_t *deltas = s_delta.raw ();
+	IEEE_t *deltaM = cf_BPROP.raw ();
 
-	IEEE_t * __restrict p0 = cf_BPROP.raw ();
-	IEEE_t * __restrict p1 = p0 + stride + 1;
-	IEEE_t * __restrict p2 = p1 + stride + 1;
+	cf_BPROP.zero ();
+
+	for (int i = 0; i < Nmaps; ++i)
+	{
+		switch (cf_k)
+		{
+		case 2:
+			BPROP_2 (deltas, deltaM);
+			break;
+		case 3:
+			BPROP_3 (deltas, deltaM);
+			break;
+		case 5:
+			BPROP_5 (deltas, deltaM);
+			break;
+		default:
+			assert (false);
+		}
+
+		deltas += mapSize ();
+		deltaM += cf_input.mapSize () * cf_k * cf_k;
+	}
+}
+
+void 
+filterM_t::BPROP_2 (IEEE_t const * const deltas, IEEE_t *M)
+{
+	int features = cf_k * cf_k;
+	int jump = features * cf_stride;
+	int row_correction = (cf_k - cf_stride) * features +
+						(cf_stride - 1) * cf_input.columns () * features;
+
+	IEEE_t correction = 1 + (cf_input.columns () - cf_k) / (IEEE_t) cf_stride;
+	IEEE_t dummy;
+	correction = modf (correction, &dummy) * cf_stride;
+	row_correction += correction * features;
+
+	IEEE_t * __restrict p0 = M;
+	IEEE_t * __restrict p1 = p0 + features + 1;
+	IEEE_t * __restrict p2 = 
+		p1 + features + features * (cf_input.sh_columns - 2) + 1;
+	IEEE_t * __restrict p3 = p2 + features + 1;
+
+	IEEE_t const *im = deltas;
+
+	for (int i = 0 ; i < sh_rows; ++i)
+	{
+		for (int j = 0; j < sh_columns; ++j) 
+		{
+			*p0 = *p1 = *p2 = *p3 = *im;
+
+			p0 += jump;
+			p1 += jump;
+			p2 += jump;
+			p3 += jump;
+
+			++im;
+		}
+
+		p0 += row_correction;
+		p1 += row_correction;
+		p2 += row_correction;
+		p3 += row_correction;
+	}
+}
+
+void 
+filterM_t::BPROP_3 (IEEE_t const * const deltas, IEEE_t *M)
+{
+	int features = cf_k * cf_k;
+	int jump = features * cf_stride;
+	int row_correction = (cf_k - cf_stride) * features +
+						(cf_stride - 1) * cf_input.columns () * features;
+
+	IEEE_t correction = 1 + (cf_input.columns () - cf_k) / (IEEE_t) cf_stride;
+	IEEE_t dummy;
+	correction = modf (correction, &dummy) * cf_stride;
+	row_correction += correction * features;
+
+	IEEE_t * __restrict p0 = M;
+	IEEE_t * __restrict p1 = p0 + features + 1;
+	IEEE_t * __restrict p2 = p1 + features + 1;
 	IEEE_t * __restrict p3 = 
-		p2 + stride + stride * (cf_input.sh_columns - 3) + 1;
-	IEEE_t * __restrict p4 = p3 + stride + 1;
-	IEEE_t * __restrict p5 = p4 + stride + 1;
+		p2 + features + features * (cf_input.sh_columns - 3) + 1;
+	IEEE_t * __restrict p4 = p3 + features + 1;
+	IEEE_t * __restrict p5 = p4 + features + 1;
 	IEEE_t * __restrict p6 = 
-		p5 + stride + stride * (cf_input.sh_columns - 3) + 1;
-	IEEE_t * __restrict p7 = p6 + stride + 1;
-	IEEE_t * __restrict p8 = p7 + stride + 1;
+		p5 + features + features * (cf_input.sh_columns - 3) + 1;
+	IEEE_t * __restrict p7 = p6 + features + 1;
+	IEEE_t * __restrict p8 = p7 + features + 1;
 
-	IEEE_t const *im = inputp;
-
-	memset (p0, 0, sizeof (IEEE_t) * stride);
-	memset (p0  + cf_BPROP.N () - stride, 0, sizeof (IEEE_t) * stride);
+	IEEE_t const *im = deltas;
 
 	for (int i = 0 ; i < sh_rows; ++i)
 	{
@@ -486,15 +556,15 @@ filterM_t::BPROP_3 (IEEE_t const * const inputp)
 		{
 			*p0 = *p1 = *p2 = *p3 = *p4 = *p5 = *p6 = *p7 = *p8 = *im;
 
-			p0 += stride;
-			p1 += stride;
-			p2 += stride;
-			p3 += stride;
-			p4 += stride;
-			p5 += stride;
-			p6 += stride;
-			p7 += stride;
-			p8 += stride;
+			p0 += jump;
+			p1 += jump;
+			p2 += jump;
+			p3 += jump;
+			p4 += jump;
+			p5 += jump;
+			p6 += jump;
+			p7 += jump;
+			p8 += jump;
 
 			++im;
 		}
@@ -508,6 +578,120 @@ filterM_t::BPROP_3 (IEEE_t const * const inputp)
 		p6 += row_correction;
 		p7 += row_correction;
 		p8 += row_correction;
+	}
+}
+
+void 
+filterM_t::BPROP_5 (IEEE_t const * const deltas, IEEE_t *M)
+{
+	int features = cf_k * cf_k;
+	int jump = features * cf_stride;
+	int row_correction = (cf_k - cf_stride) * features +
+						(cf_stride - 1) * cf_input.columns () * features;
+
+	IEEE_t correction = 1 + (cf_input.columns () - cf_k) / (IEEE_t) cf_stride;
+	IEEE_t dummy;
+	correction = modf (correction, &dummy) * cf_stride;
+	row_correction += correction * features;
+
+	IEEE_t * __restrict p0 = M;
+	IEEE_t * __restrict p1 = p0 + features + 1;
+	IEEE_t * __restrict p2 = p1 + features + 1;
+	IEEE_t * __restrict p3 = p2 + features + 1;
+	IEEE_t * __restrict p4 = p3 + features + 1;
+
+	IEEE_t * __restrict p5 = 
+		p4 + features + features * (cf_input.sh_columns - 5) + 1;
+	IEEE_t * __restrict p6 = p5 + features + 1;
+	IEEE_t * __restrict p7 = p6 + features + 1;
+	IEEE_t * __restrict p8 = p7 + features + 1;
+	IEEE_t * __restrict p9 = p8 + features + 1;
+
+	IEEE_t * __restrict p10 = 
+		p9 + features + features * (cf_input.sh_columns - 5) + 1;
+	IEEE_t * __restrict p11 = p10 + features + 1;
+	IEEE_t * __restrict p12 = p11 + features + 1;
+	IEEE_t * __restrict p13 = p12 + features + 1;
+	IEEE_t * __restrict p14 = p13 + features + 1;
+
+	IEEE_t * __restrict p15 = 
+		p14 + features + features * (cf_input.sh_columns - 5) + 1;
+	IEEE_t * __restrict p16 = p15 + features + 1;
+	IEEE_t * __restrict p17 = p16 + features + 1;
+	IEEE_t * __restrict p18 = p17 + features + 1;
+	IEEE_t * __restrict p19 = p18 + features + 1;
+
+	IEEE_t * __restrict p20 = 
+		p19 + features + features * (cf_input.sh_columns - 5) + 1;
+	IEEE_t * __restrict p21 = p20 + features + 1;
+	IEEE_t * __restrict p22 = p21 + features + 1;
+	IEEE_t * __restrict p23 = p22 + features + 1;
+	IEEE_t * __restrict p24 = p23 + features + 1;
+
+	IEEE_t const *im = deltas;
+
+	for (int i = 0 ; i < sh_rows; ++i)
+	{
+		for (int j = 0; j < sh_columns; ++j) 
+		{
+			*p0 = *p1 = *p2 = *p3 = *p4 = *p5 = *p6 = *p7 = *p8 =
+				*p9 = *p10 = *p11 = *p12 = *p13 = *p14 = *p15 = *p16 = 
+				*p17 = *p18 = *p19 = *p20 = *p21 = *p22 = *p23 = *p24 = *im;
+
+			p0 += jump;
+			p1 += jump;
+			p2 += jump;
+			p3 += jump;
+			p4 += jump;
+			p5 += jump;
+			p6 += jump;
+			p7 += jump;
+			p8 += jump;
+			p9 += jump;
+			p10 += jump;
+			p11 += jump;
+			p12 += jump;
+			p13 += jump;
+			p14 += jump;
+			p15 += jump;
+			p16 += jump;
+			p17 += jump;
+			p18 += jump;
+			p19 += jump;
+			p20 += jump;
+			p21 += jump;
+			p22 += jump;
+			p23 += jump;
+			p24 += jump;
+
+			++im;
+		}
+
+		p0 += row_correction;
+		p1 += row_correction;
+		p2 += row_correction;
+		p3 += row_correction;
+		p4 += row_correction;
+		p5 += row_correction;
+		p6 += row_correction;
+		p7 += row_correction;
+		p8 += row_correction;
+		p9 += row_correction;
+		p10 += row_correction;
+		p11 += row_correction;
+		p12 += row_correction;
+		p13 += row_correction;
+		p14 += row_correction;
+		p15 += row_correction;
+		p16 += row_correction;
+		p17 += row_correction;
+		p18 += row_correction;
+		p19 += row_correction;
+		p20 += row_correction;
+		p21 += row_correction;
+		p22 += row_correction;
+		p23 += row_correction;
+		p24 += row_correction;
 	}
 }
 

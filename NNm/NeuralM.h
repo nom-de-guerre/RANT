@@ -224,6 +224,8 @@ struct NeuralM_t
 	/*
 	 * Normal matrix multiplication.  No assumption of first column.
 	 *
+	 * Accumulates (+=).
+	 *
 	 */
 	inline
 	void MatrixVectorMultNoBias (NeuralM_t &A, IEEE_t *x)
@@ -236,7 +238,7 @@ struct NeuralM_t
 		{
 			// called with zero'ed memory.
 
-			sm_data[i] = DotProduct (Nweights, pA, x);
+			sm_data[i] += DotProduct (Nweights, pA, x);
 			pA += jump;
 		}
 	}

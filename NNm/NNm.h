@@ -339,6 +339,8 @@ public:
 
 	void Add2DFilterLayer (int N, int fwidth, int stride, StrategyAlloc_t rule)
 	{
+		assert (stride <= fwidth);
+
 		if (N < 1)
 			return;
 

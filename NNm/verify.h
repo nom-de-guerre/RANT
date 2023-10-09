@@ -87,10 +87,10 @@ struct verify_t : public stratum_t
 	{
 		NeuralM_t G (s_Nnodes, 1, s_delta.raw ());
 
+		int level = s_ID; // Currently a layer's ID is its index in n_strata
+
 		p->ComputeDerivative (Xi);
 		G.Copy ();
-
-		int level = s_ID; // Currently a layer's ID is its index in n_strata
 
 		IEEE_t *ripple = Xi;
 		for (int i = 0; i <= level; ++i)
@@ -130,8 +130,6 @@ struct verify_t : public stratum_t
 
 			error = bottomp->_sAPI_Loss (&answer);
 
-printf ("DJS\t%e\t%e\t", dL_diff, dL_diff - error);
-
 			dL_diff -= error;
 			dL_diff /= 2 * h;
 
@@ -146,14 +144,19 @@ printf ("DJS\t%e\t%e\t", dL_diff, dL_diff - error);
 			 *
 			 */
 
-			IEEE_t ratio = (fabs (dL_bp) - fabs (dL_diff)) /
-							(fabs (dL_bp) + fabs (dL_diff));
+			IEEE_t denom = (fabs (dL_bp) + fabs (dL_diff));
+			IEEE_t ratio = fabs (dL_bp) - fabs (dL_diff);
+			if (denom > 0)
+				ratio /= denom;
+			else
+				ratio = 0.0;
 
-			printf ("∆\t%d\t%e\t%e\t%f\n",
-				i,
-				dL_bp,
-				dL_diff,
-				fabs (ratio));
+			if (fabs (ratio) > 1e-4)
+				printf ("∆\t%d\t%e\t%e\t%f\n",
+					i,
+					dL_bp,
+					dL_diff,
+					fabs (ratio));
 		}
 
 		p->UpdateWeights (); // reset the internal state
