@@ -37,18 +37,28 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <strategy.h>
 #include <shape.h>
 
+/*
+ * All layers that want to slot in to a network need to inherit from
+ * this class.
+ *
+ * A struct so specialization can control everything.
+ *
+ * Inherits from shape_t, which is the output shape.
+ *
+ */
+
 struct stratum_t : shape_t
 {
-	char					*s_Name;
-	const int				s_ID;
+	char					*s_Name;		// The name of the layer
+	const int				s_ID;			// The unique ID of the layer
 
-	int						s_Nnodes;
-	int						s_Nin;
+	int						s_Nnodes;		// interpreted by the layer
+	int						s_Nin;			// number if incoming signals
 
 	NeuralM_t				s_delta;
 	NeuralM_t				s_response;
 
-	strategy_t				*s_strat;
+	strategy_t				*s_strat;		// optimizer for layer
 
 	bool					s_skip;			// abstract layer
 	bool					s_frozen;		// update during training
@@ -126,6 +136,11 @@ struct stratum_t : shape_t
 		s_frozen = true;
 	}
 
+	/*
+	 * Glorot initialization of learnable parameters.
+	 *
+	 */
+
 	void InitLearnable (const int N, IEEE_t *learnable)
 	{
 		IEEE_t r = sqrt (6.0 / (s_response.rows () + s_Nin));
@@ -163,6 +178,13 @@ struct stratum_t : shape_t
 	{
 		return &s_delta;
 	}
+
+	/*
+	 * Store layer to a file to reload later.
+	 *
+	 * Saved models are loaded with contructors.
+	 *
+	 */
 
 	virtual int _sAPI_Store (FILE *fp)
 	{
