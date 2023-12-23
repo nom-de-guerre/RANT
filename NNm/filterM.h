@@ -230,6 +230,8 @@ filterM_t::_sAPI_bprop (IEEE_t *xi, bool activation)
 	int feature = cf_k * cf_k;
 	int gradIndex = 0;
 
+	bool oneToMany = cf_input.Single ();
+
 	IEEE_t * __restrict gradp = s_delta.raw ();
 	IEEE_t const * __restrict CNNp = cf_CNN.raw ();
 	IEEE_t const * __restrict F = s_response.raw ();
@@ -261,7 +263,13 @@ filterM_t::_sAPI_bprop (IEEE_t *xi, bool activation)
 			CNNp += feature;
 			++gradIndex;
 		}
+
+		if (oneToMany)
+			CNNp = cf_CNN.raw ();
+
+		filter_df += feature;
 	}
+
 }
 
 IEEE_t *
