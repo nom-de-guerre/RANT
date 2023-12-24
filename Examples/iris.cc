@@ -25,6 +25,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
+/*
+ * Running as, ./iris -i 7500 20 20, should converge.
+ *
+ */
+
 #include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -156,7 +161,7 @@ bool includeFeature [] = { true, true, true, true, true };
 
 DataSet_t *LoadData (void)
 {
-	LoadCSV_t Z ("../../../Neural Networks/Data/iris.csv");
+	LoadCSV_t Z ("../Data/iris.csv");
 
 	DataSet_t *tp = Z.LoadDS (5, includeFeature);
 

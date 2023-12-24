@@ -92,7 +92,6 @@ void Run (NNmConfig_t &params, int *layers)
 
 	Np->SetHalt (params.ro_haltCondition);
 	Np->SetMaxIterations (params.ro_maxIterations);
-	Np->SetAccuracy (); // Halt at 100% accuracy, even if above loss threshold
   	Np->SetKeepAlive (100); // Print every x epochs
 
 	Np->DisplayModel ();
@@ -115,6 +114,8 @@ void Run (NNmConfig_t &params, int *layers)
 
 	int N_POINTS = O->N ();
 	int wrong = 0;
+	int correctLabels = 0;
+
 	IEEE_t const * Pvec;
 	IEEE_t guess[K_LABELS];
 	IEEE_t const * ground;
@@ -137,7 +138,8 @@ void Run (NNmConfig_t &params, int *layers)
 				++wrong;
 				accept_soln = false;
 				correct = false;
-			}
+			} else
+				++correctLabels;
 		}
 
 		if (correct)
@@ -161,16 +163,19 @@ void Run (NNmConfig_t &params, int *layers)
 	if (accept_soln)
 		printf (" *** Solution ACCEPTED.\n");
 	else
-		printf (" *** Solution REJECTED.\t%d\t%0.3f%%\n",
+		printf (" *** Solution REJECTED.  Incorrect predictions: \t%d\t%0.3f%%\n",
 			wrong,
 			100 * (float) wrong / (K_LABELS * (float) N_POINTS));
+
+	printf ("Percentage of labels correctly predicted: %f\n",
+		100 * (float) correctLabels / (6.0 * N_POINTS));
 }
 
 bool includeFeature [] = { false, true, true, true, true, true };
 
 DataSet_t *LoadData (void)
 {
-	LoadCSV_t Z ("/Users/dsantry/Scratch/Data/enzymes0.txt");
+	LoadCSV_t Z ("../Data/enzymes0.txt");
 
 	DataSet_t *tp = Z.LoadDS (175, NULL, true);
 	tp->t_Nin = 175 - K_LABELS;

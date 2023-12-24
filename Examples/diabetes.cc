@@ -161,7 +161,7 @@ bool includeFeature [] = {true, true, true, true, true, true, true, true, true};
 
 DataSet_t *LoadData (void)
 {
-	LoadCSV_t Z ("../../../Neural Networks/Data/diabetes.csv");
+	LoadCSV_t Z ("../Data/diabetes.csv");
 
 	DataSet_t *tp = Z.LoadDS (9, includeFeature);
 

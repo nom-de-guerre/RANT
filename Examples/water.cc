@@ -94,7 +94,7 @@ void Run (NNmConfig_t &params, int *layers)
 	Np->SetHalt (params.ro_haltCondition);
 	Np->SetMaxIterations (params.ro_maxIterations);
 	Np->SetAccuracy (); // Halt at 100% accuracy, even if above loss threshold
-	Np->SetKeepAlive (1000); // Print every x epochs
+	Np->SetKeepAlive (10000); // Print every x epochs
 	if (params.ro_Nsamples < 1.0) // Turn on SGD?
 		Np->SetSGD (params.ro_Nsamples);
 
@@ -176,7 +176,7 @@ printf ("\t_____________________________________________________________________
 
 DataSet_t *LoadData (void)
 {
-	LoadCSV_t Z ("/Users/dsantry/Scratch/Data/water-quality-nom.csv");
+	LoadCSV_t Z ("../Data/water-quality-nom.csv");
 
 	DataSet_t *tp = Z.LoadDS (30, NULL, false);
 	tp->t_Nin = 16;
