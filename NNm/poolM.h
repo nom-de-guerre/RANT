@@ -160,8 +160,8 @@ poolM_t::_sAPI_bprop (IEEE_t *xi, bool activation)
 IEEE_t *
 poolM_t::_sAPI_f (IEEE_t * const xi, bool activate)
 {
-	int oblock = block ();
-	int iblock = cp_input.block ();
+	int oblock = mapSize ();
+	int iblock = cp_input.mapSize ();
 	IEEE_t const * ip = xi;
 	IEEE_t * outp = s_response.raw ();
 	int *wp = cp_winners;

@@ -66,7 +66,7 @@ class NNet_t
 {
 protected:
 
-	int					n_steps;
+	int					n_steps;			// Count of training epochs
 
 	// morphology of the net
 	int					n_Nin;
@@ -75,9 +75,7 @@ protected:
 	int					n_populated;		// slots occupied by layers
 
 	int					*n_width;			// array of lengths of n_levels
-	stratum_t			**n_strata;
-
-	int					n_Nweights;
+	stratum_t			**n_strata;			// array of pointers to layers
 
 	IEEE_t				n_halt;				// target loss
 
@@ -86,7 +84,7 @@ protected:
 	int					n_accuracy;			// N correct in epoch
 	bool				n_HaltOnAccuracy;	// halt training at 100% correct
 
-	int					n_maxIterations;
+	int					n_maxIterations;	// Stop after n_steps >=
 	int					n_keepalive;		// how often to print status
 
 	// Stochastic Gradient Descent Implementation
@@ -98,7 +96,7 @@ protected:
 	bool Step (const DataSet_t * const training);
 	bool Halt (DataSet_t const * const);
 
-	void LoadModel (const char *);
+	void LoadModel (const char *);			// Read model from disk
 
 public:
 
@@ -116,7 +114,6 @@ public:
 		n_populated (0),
 		n_width (NULL),
 		n_strata (NULL),
-		n_Nweights (-1),
 		n_halt (1e-5),
 		n_error (nan ("")),
 		n_HaltOnAccuracy (false),
@@ -135,7 +132,6 @@ public:
 		n_Nout (Nout),
 		n_levels (levels),
 		n_populated (0),
-		n_Nweights (-1),
 		n_halt (1e-5),
 		n_error (nan ("")),
 		n_HaltOnAccuracy (false),
@@ -213,12 +209,14 @@ public:
 	bool Train (const DataSet_t * const);
 	bool Train (const DataSet_t * const, int); // used only when stand-alone
 
+	// Set model as writable
 	void Thaw (void)
 	{
 		for (int i = 0; i < n_populated; ++i)
 			n_strata[i]->Thaw ();
 	}
 
+	// Set model as read-only
 	void Freeze (void)
 	{
 		for (int i = 0; i < n_populated; ++i)
@@ -240,6 +238,7 @@ public:
 		n_HaltOnAccuracy = false;
 	}
 
+	// Use SGD instead of full batch mode
 	void SetSGD (IEEE_t percentage)
 	{
 		assert (percentage > 0 && percentage <= 1.0);
@@ -337,6 +336,10 @@ public:
 		n_strata[layer]->_sAPI_init ();
 	}
 
+	/*
+	 * Accepts 1:N or N:N.  If 1 to many then the input can be flat.
+	 *
+	 */
 	void Add2DFilterLayer (int N, int fwidth, int stride, StrategyAlloc_t rule)
 	{
 		assert (stride <= fwidth);
@@ -393,27 +396,22 @@ public:
 
 			Xin = n_strata[layer - 1]->GetShape ();
 
-#if 0
-no learnable parameters so 1:many is pointless
-
-			if (Xin.isSingle ())
-			{
-				assert (Xin.sh_N == 1);
-
-				IEEE_t dim = sqrt (Xin.sh_rows);
-
-				assert (floor (dim) == ceil (dim));
-
-				Xin.sh_columns = (int) sqrt (Xin.sh_rows);
-				Xin.sh_rows = Xin.sh_columns;
-
-			} else
-#endif
-				assert (N == Xin.sh_N);
+			assert (N == Xin.sh_N);
 		}
 
 		n_strata[layer] = new poolM_t (layer, fwidth, stride, Xin);
 		n_width[layer] = Xin.N ();
+		n_strata[layer]->_sAPI_init ();
+	}
+
+	void AddPreProcessingLayer (DataSet_t *O)
+	{
+		int layer = n_populated++;
+
+		assert (layer == 0);
+
+		n_width[layer] = O->Nin ();
+		n_strata[layer] = new PPLayer_t (layer, O);
 		n_strata[layer]->_sAPI_init ();
 	}
 
@@ -456,7 +454,7 @@ no learnable parameters so 1:many is pointless
 		n_strata[layer]->_sAPI_init ();
 	}
 
-	// Multilabel classification - per-label sigmoid and MSE
+	// Multilabel classification - per-label sigmoid and MLE
 	void AddMultiCLayer (StrategyAlloc_t rule)
 	{
 		int layer = n_populated++;
@@ -468,17 +466,6 @@ no learnable parameters so 1:many is pointless
 
 		n_width[layer] = n_Nout;
 		n_strata[layer] = new multiL_t (layer, n_Nout, Nin, rule);
-		n_strata[layer]->_sAPI_init ();
-	}
-
-	void AddPreProcessingLayer (DataSet_t *O)
-	{
-		int layer = n_populated++;
-
-		assert (layer == 0);
-
-		n_width[layer] = O->Nin ();
-		n_strata[layer] = new PPLayer_t (layer, O);
 		n_strata[layer]->_sAPI_init ();
 	}
 

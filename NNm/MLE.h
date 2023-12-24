@@ -37,7 +37,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <NNm.h>
 
 /*
- * Implements a layer when training a neural network.
+ * Implements the minimum likelihood estimator loss function (MLE).
+ *
+ * It is implemented as layer in the ANN.
  *
  */
 struct SoftmaxMLE_t : public stratum_t

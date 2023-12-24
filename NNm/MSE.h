@@ -37,7 +37,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <NNm.h>
 
 /*
- * Implements a layer when training a neural network.
+ * Implements the mean squared error (MSE) loss function.
  *
  */
 struct ScalerMSE_t : public stratum_t
