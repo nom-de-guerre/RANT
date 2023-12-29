@@ -13,15 +13,19 @@ There are five directories.
 </p>
 
 <p>
+  Data files for the examples.
+</p>
+
+<p>
 NNm: This is the core of the system.  This includes implementations of ADAM and RPROP+ trainers.  There are also two loss functions.  For regression there is mean squared error (MSE).  For classification there is an implementation of Softmax.
 </p>
 
 <p>
-Examples: There are two trivial examples.  The first is a sine regression using RPROP+.  The second is an example of classification.  The command line for both accepts the network architecture; the input is implicit.  Try 4 3 1 for sine and 7 4 4 for classify.  The number of inputs are implicit as they are determined by the program.  There is also an example of gradient verification.
+Examples: Trival examples demonstrating NNm and DDL concepts.
 </p>
 
 <p>
-CNN: This directory contains a primitive convolutional network.  It includes a two examples that train with the MNIST data set.  They are digits and LeNet5.  The latter is a crude approximation.  In particular it uses Softmax, not radial functions, and C5 is a NN, not a convolutional layer.
+Python: Bindings for Python and a trivial example.
 </p>
 
 
