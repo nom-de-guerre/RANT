@@ -114,6 +114,9 @@ struct stratum_t : shape_t
 	{
 		if (s_Name)
 			free (s_Name);
+
+		if (s_strat)
+			delete s_strat;
 	}
 
 	int N (void) const
