@@ -202,7 +202,7 @@ multiL_t::_sAPI_bprop (IEEE_t *xi, bool activation)
 IEEE_t *
 multiL_t::_sAPI_f (IEEE_t * const xi, bool activate)
 {
-	mx_dot.MatrixVectorMultBias (mx_W, xi);
+	mx_dot.MatrixVectorNeuralMult (mx_W, xi);
 
 	IEEE_t *p = s_response.sm_data;
 	IEEE_t *dot = mx_dot.sm_data;

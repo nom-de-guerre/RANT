@@ -179,12 +179,12 @@ struct NeuralM_t
 	}
 
 	/*
-	 * Assumes first column is the bias (1), so used the submatrix
-	 * multiply the vector.
+	 * Assumes first column is the bias (1), so uses the submatrix
+	 * to multiply the vector.
 	 *
 	 */
 	inline
-	void MatrixVectorMultBias (NeuralM_t &A, IEEE_t *x)
+	void MatrixVectorNeuralMult (NeuralM_t &A, IEEE_t *x)
 	{
 		IEEE_t *pA = A.sm_data;
 		int jump = A.stride ();
@@ -236,7 +236,7 @@ struct NeuralM_t
 
 		for (int i = 0; i < sm_rows; ++i)
 		{
-			// called with zero'ed memory.
+			// Used to accumulate multiplications (such as column subspaces)
 
 			sm_data[i] += DotProduct (Nweights, pA, x);
 			pA += jump;

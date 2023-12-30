@@ -151,7 +151,7 @@ ScalerMSE_t::_sAPI_bprop (IEEE_t *xi, bool activation)
 IEEE_t *
 ScalerMSE_t::_sAPI_f (IEEE_t * const xi, bool activate)
 {
-	s_response.MatrixVectorMultBias (ms_W, xi);
+	s_response.MatrixVectorNeuralMult (ms_W, xi);
 
 	IEEE_t *f = s_response.raw ();
 
