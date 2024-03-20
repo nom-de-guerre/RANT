@@ -69,7 +69,7 @@ struct MNIST_t
  		mn_datap = new DataSet_t (N_data, IMAGEBYTES, 1);
 		uint8_t *image = (uint8_t *) (magic + 4);
 
-		for (uint32_ i = 0; i < N_data; ++i)
+		for (uint32_t i = 0; i < N_data; ++i)
 		{
 			for (int j = 0; j < IMAGEBYTES; ++j)
 			{

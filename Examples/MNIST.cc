@@ -34,6 +34,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 /*
  * The rectified linear activation function and ADAM are recommended.
  *
+ * Example invocation:
+ *
+ * MNIST -i 5000 -n 0.05 -p /Users/dsantry/Scratch/Data/MNIST/ 50 50
+ *
+ * 5000 training cycles
+ * use 5% of the data
+ * -p is the folder where the MNIST files are kept
+ * 2 dense layers of 50 perceptrons
+ *
  */
 
 #define __RELU
