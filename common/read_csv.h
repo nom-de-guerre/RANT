@@ -207,7 +207,9 @@ class LoadCSV_t
 		}
 
 		// need to consume new line
-		fscanf (fs_fp, "%s\n", buffer);
+		int ignore = fscanf (fs_fp, "%s\n", buffer);
+		assert (ignore > -1);
+
 		fs_titles [index++] = strdup (buffer);
 
 		return index;
