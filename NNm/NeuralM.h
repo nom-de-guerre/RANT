@@ -31,8 +31,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdio.h>
 #include <string.h>
 
-#include <ANT.h>
-
 /*
  * This file implements the neural matrix.  They implement some
  * matrix/vector products that neural networks need.  They look
