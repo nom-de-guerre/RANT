@@ -310,7 +310,7 @@ struct NeuralM_t
 				++p;
 			}
 
-			(void) fscanf (fp, "\n");
+			rc = fscanf (fp, "\n");
 		}
 
 		return 0;

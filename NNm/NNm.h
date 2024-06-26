@@ -34,6 +34,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <math.h>
 #include <unistd.h>
 #include <float.h>		// FLT_EVAL_METHOD
+#include <errno.h>
 
 #include <ANT.h>
 #include <data.h>

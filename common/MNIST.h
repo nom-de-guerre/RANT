@@ -51,17 +51,17 @@ struct MNIST_t
 	{
 		mapFile_t data (datafile);
 		mapFile_t labels (labelfile);
-		int32_t *magic;
+		uint32_t *magic;
 
-		magic = (int32_t *) labels.mf_base;
+		magic = (uint32_t *) labels.mf_base;
 		assert (ntohl (*magic) == 2049);
 
-		magic = (int32_t *) data.mf_base;
+		magic = (uint32_t *) data.mf_base;
 		assert (ntohl (*magic) == 2051);	// magic number
 		assert (ntohl (magic[2]) == IMAGEDIM);	// # rows
 		assert (ntohl (magic[3]) == IMAGEDIM);	// # columns
 
-		int N_data = data.mf_len;
+		uint32_t N_data = data.mf_len;
 		N_data -= 4 * 4;
 		N_data /= IMAGEBYTES;
 		assert (ntohl (magic[1]) == N_data);
@@ -69,7 +69,7 @@ struct MNIST_t
  		mn_datap = new DataSet_t (N_data, IMAGEBYTES, 1);
 		uint8_t *image = (uint8_t *) (magic + 4);
 
-		for (int i = 0; i < N_data; ++i)
+		for (uint32_t i = 0; i < N_data; ++i)
 		{
 			for (int j = 0; j < IMAGEBYTES; ++j)
 			{
@@ -89,10 +89,10 @@ struct MNIST_t
 			image += IMAGEBYTES;
 		}
 
-		magic = (int32_t *) labels.mf_base;
+		magic = (uint32_t *) labels.mf_base;
 		image = (uint8_t *) (magic + 2);
 
-		for (int i = 0; i < N_data; ++i)
+		for (uint32_t i = 0; i < N_data; ++i)
 			(*mn_datap)[i][IMAGEBYTES] = image[i];
 	}
 
