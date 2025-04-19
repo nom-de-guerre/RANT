@@ -176,8 +176,6 @@ DataSet_t *LoadMNIST (char const * const path)
 	snprintf (fullpath_labels, MAXPATHLEN, "%s/train-labels.idx1-ubyte", path);
     MNIST_t data (fullpath_data, fullpath_labels);
 
-	data.Steal ();
-
 	return data.Data ();
 }
 
