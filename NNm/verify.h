@@ -52,6 +52,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * A value of h = 1e-7 is a good place to start.
  *
+ * See section 3.7 of "Demystifying Deep Learning", published by Wiley
+ * for details (and section (and section 1.4 for pitfalls).
+ *
  */
 
 struct verify_t : public stratum_t
