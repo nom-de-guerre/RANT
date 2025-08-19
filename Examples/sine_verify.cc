@@ -80,13 +80,14 @@ void Run (int *layers)
 
 	Np->SetHalt (soln_MSE);
 
+#define VERIFY_LAYER	1
+
 	for (int i = 0; i < layers[0]; ++i)
-{
-if (i == 1)
-	Np->AddVerificationLayer ();
+	{
+		if (i == VERIFY_LAYER)
+			Np->AddVerificationLayer ();
 		Np->AddDenseLayer (layers[i + 1], RPROP);
-}
-//	Np->AddVerificationLayer ();
+	}
 
 	Np->AddScalerMSELayer (RPROP);
 
@@ -103,12 +104,13 @@ if (i == 1)
 
 	printf ("Loss\t%e\n", Np->Loss ());
 
-	// auto fp = Np->DifferencingLayer (layers[1]);
-	auto fp = Np->DifferencingLayer (1);
+	auto fp = Np->DifferencingLayer (VERIFY_LAYER);
 
 	assert (fp);
 
 	int sample = rand () % N_POINTS;
+	// This will print out the errors, if there are none
+	// nothing is printed.  The middle argument is the step size
 	fp->VerifyGradient (Np, 1e-7, (*O)[sample]);
 }
 
