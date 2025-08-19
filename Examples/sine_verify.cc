@@ -25,6 +25,36 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
+/* -- example usage:
+
+[1014]: ./sine_verify 20 10
+Seed 1755611577
+Input (1) ⟹ dense (20)	⟹ verify (20)	⟹ dense (10)	⟹ MSE (1)	
+Loss	1.313335e-01
+	Index	BPROP		Diff		Ratio
+∆	0	-6.077339e-04	-6.077339e-04	0.000000
+∆	1	2.691747e-03	2.691747e-03	0.000000
+∆	2	2.270372e-03	2.270372e-03	0.000000
+∆	3	7.215221e-04	7.215221e-04	0.000000
+∆	4	3.484898e-04	3.484899e-04	0.000000
+∆	5	1.822235e-03	1.822235e-03	0.000000
+∆	6	1.209529e-03	1.209529e-03	0.000000
+∆	7	1.149240e-03	1.149240e-03	0.000000
+∆	8	-9.418498e-04	-9.418498e-04	0.000000
+∆	9	1.326045e-03	1.326045e-03	0.000000
+∆	10	1.432885e-03	1.432885e-03	0.000000
+∆	11	1.982582e-03	1.982582e-03	0.000000
+∆	12	3.937642e-03	3.937642e-03	0.000000
+∆	13	4.195731e-04	4.195731e-04	0.000000
+∆	14	2.256081e-03	2.256081e-03	0.000000
+∆	15	4.879626e-03	4.879626e-03	0.000000
+∆	16	4.791050e-03	4.791051e-03	0.000000
+∆	17	2.266403e-03	2.266403e-03	0.000000
+∆	18	1.085125e-03	1.085125e-03	0.000000
+∆	19	3.852216e-03	3.852216e-03	0.000000
+
+*/
+
 #include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -109,9 +139,9 @@ void Run (int *layers)
 	assert (fp);
 
 	int sample = rand () % N_POINTS;
-	// This will print out the errors, if there are none
-	// nothing is printed.  The middle argument is the step size
-	fp->VerifyGradient (Np, 1e-7, (*O)[sample]);
+	// middle argument is h (step size), last argument means
+	// print results even if there are no errors
+	fp->VerifyGradient (Np, 1e-7, (*O)[sample], true);
 }
 
 DataSet_t *BuildTrainingSet (int N)

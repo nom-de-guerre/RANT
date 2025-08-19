@@ -83,7 +83,7 @@ struct verify_t : public stratum_t
 		return; // over-ride when debugging or instrumenting
 	}
 
-	void VerifyGradient (NNet_t *p, IEEE_t h, IEEE_t *Xi)
+	void VerifyGradient (NNet_t *p, IEEE_t h, IEEE_t *Xi, bool verbose=false)
 	{
 		NeuralM_t G (s_Nnodes, 1, s_delta.raw ());
 
@@ -151,7 +151,7 @@ struct verify_t : public stratum_t
 			else
 				ratio = 0.0;
 
-			if (fabs (ratio) > 1e-4)
+			if (fabs (ratio) > 1e-4 || verbose)
 				printf ("∆\t%d\t%e\t%e\t%f\n",
 					i,
 					dL_bp,
