@@ -25,6 +25,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
+/*
+ * This file is from the git repo for the matrices project (that includes
+ * eigen vector libraries and Krylov stuff) here:
+ * https://github.com/nom-de-guerre/Matrices
+ *
+ */
+
 #ifndef __DJS_MATRIX_H__
 #define __DJS_MATRIX_H__
 
