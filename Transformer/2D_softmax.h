@@ -114,7 +114,9 @@ public:
 			}
         }
 
-#if 1
+#ifdef __DEBUG_SOFTMAX
+		matrix_paranoia (ss_S);
+
 		for (int i = 0; i < rows; ++i)
 		{
 			IEEE_t __verify = 0.0;

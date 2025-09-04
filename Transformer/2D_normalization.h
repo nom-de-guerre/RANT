@@ -112,7 +112,7 @@ VectorNormalization_t::call (const int N, IEEE_t * const xi, IEEE_t *homep)
 	else
 		ln_sigma = sqrt (ln_sigma);
 
-	if (ln_sigma == 0.0)
+	if (ln_sigma == 0.0 || isnan (ln_sigma))
 		ln_sigma = 1.0;
 
 	for (int i = 0; i < N; ++i, q += 2)

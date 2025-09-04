@@ -40,6 +40,9 @@ class CausalModel_t : public SparseCrossEntropy_t
 
 	Md_t						m_dX;
 
+	counter_t					m_loss;
+	counter_t					m_accuracy;
+
 public:
 
 	CausalModel_t (int N, int h, int l, int d, int V) :
@@ -95,6 +98,9 @@ public:
 	{
 		for (int epoch = 0; epoch < MaxEpochs; ++epoch)
 		{
+			m_loss.reset ();
+			m_accuracy.reset ();
+
 			for (int i = 0; i < Nsamples;)
 			{
 				exemplar_t &y = K.getDatum ();
@@ -110,20 +116,31 @@ public:
 				if ((i % batchSize) == 0)
 				{
 			if (verbose)
-				printf ("EPOCH %d:\t%f\t%f\n",
+				printf ("BATCH %d/%d:\t%f\t%f\n",
 					epoch,
+					i / batchSize,
 					getLoss (),
 					getAccuracy ());
+
+					m_loss += getLoss ();
+					m_accuracy += getAccuracy ();
+
 					update ();
 				}
 			}
 
 			if (getAccuracy () == 1.0)
 				break;
+
+			printf ("EPOCH %d:\t%f\t%f\n",
+				epoch,
+				m_loss.get (),
+				m_accuracy.get ());
+
 			K.reset ();
 		}
 
-		return getLoss ();
+		return m_loss.get ();
 	}
 };
 

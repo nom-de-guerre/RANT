@@ -30,9 +30,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <TextData.h>
 #include <MaskedModel.h>
+#include <Toptions.h>
 
-int main (void)
+int main (int argc, char *argv[])
 {
+	TransformerOptions_t opts (argc, argv);
+
 #ifndef __NO_TRANSBLOCK_FFN
     printf ("Including FFN\n");
 #endif
@@ -40,7 +43,7 @@ int main (void)
     printf ("Including LN\n");
 #endif
 
-	long seed = (long) time (NULL);
+	long seed = opts.to_seed;
 
 	printf ("Using seed %ld\n", seed);
 	srand (seed);
@@ -49,8 +52,20 @@ int main (void)
 		"Data/SherlockHolmesNormalized.txt",
 		"Data/Sherlock.512.E");
 
-	MaskedModel_t NLM (2, 4, TOKENWINDOW, data.get_d (), data.getV_N ());
+	printf ("Running with transformer %d/%d/%d/%d\n",
+		opts.to_Nblocks,
+		opts.to_Nheads,
+		TOKENWINDOW,
+		data.get_d ());
 
-	printf ("Final Loss %f\n", NLM.fit (data, 1024));
+	MaskedModel_t NLM (opts.to_Nblocks,
+		opts.to_Nheads,
+		TOKENWINDOW,
+		data.get_d (),
+		data.getV_N ());
+
+	printf ("Final Loss %f\n",
+		NLM.fit (data,
+			opts.to_Nsamples,
+			opts.to_maxIterations));
 }
-

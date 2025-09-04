@@ -146,7 +146,6 @@ public:
 		for (int i = 0; i < a_h; ++i)
 		{
 			a_heads[i] = new AttentionHead_t (i, l, d, dh, causal);
-
 			a_Wo[i] = new __matrix_XW_t (dh, d, "Wo");
 		}
 	}

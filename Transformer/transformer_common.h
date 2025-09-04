@@ -80,5 +80,27 @@ struct counter_t
 	}
 };
 
+#ifdef __DEBUG_MATRIX
+void matrix_paranoia (Md_t &A)
+{
+	int rows = A.rows ();
+	int columns = A.columns ();
+	IEEE_t * __restrict p;
+
+	p = A.raw ();
+
+	for (int i = 0; i < rows; ++i)
+		for (int j = 0; j < columns; ++j, ++p)
+		{
+			int status = isnan (*p) || isinf (*p);
+			if (status)
+				printf ("FP: %d\t%d\t%f\n", i, j, *p);
+			assert (!status);
+		}
+}
+#else
+#define matrix_paranoia(A)
+#endif
+
 #endif // header inclusion
 

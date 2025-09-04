@@ -86,6 +86,8 @@ public:
 
 		mp_Y = X * mp_W;
 
+		matrix_paranoia (mp_Y);
+
 		return mp_Y;
 	}
 
@@ -109,6 +111,9 @@ public:
 		mp_dX = G * mp_W.transpose ();
 
 		mp_dW += mp_X.transpose () * G;
+
+		matrix_paranoia (mp_dX);
+		matrix_paranoia (mp_dW);
 
 		return mp_dX;
 	}
