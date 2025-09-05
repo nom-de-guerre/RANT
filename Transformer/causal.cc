@@ -52,7 +52,8 @@ int main (int argc, char *argv[])
 		"Data/SherlockHolmesNormalized.txt",
 		"Data/Sherlock.512.E");
 
-	printf ("Running with transformer %d/%d/%d/%d\n",
+	printf ("\t\t\t\tBlocks\tHeads\tWindow\td\n");
+	printf ("Running with transformer\t%d\t%d\t%d\t%d\n",
 		opts.to_Nblocks,
 		opts.to_Nheads,
 		TOKENWINDOW,
