@@ -47,6 +47,24 @@ struct TrainingData_t
 	TextDocument_t					cd_text;
 	vocabDict_t						cd_V;
 
+	Md_t							cd_positional;
+
+	void buildPositional (void)
+	{
+		IEEE_t d = get_d ();
+
+		cd_positional = Md_t (TOKENWINDOW, get_d ());
+
+		for (int pos = 0; pos < TOKENWINDOW; ++pos)
+			for (int i = 0; i < d; i += 2)
+			{
+				IEEE_t denom = (IEEE_t) pos / pow (10000, (IEEE_t) i / d);
+
+				cd_positional (pos, i) = sin (denom);
+				cd_positional (pos, i+1) = cos (denom);
+			}
+	}
+
 public:
 
 	TrainingData_t (char const * const textFile,
@@ -54,6 +72,7 @@ public:
 		cd_text (textFile),
 		cd_V (dictFile)
 	{
+		buildPositional ();
 	}
 
 	int get_d (void) const
@@ -106,6 +125,12 @@ public:
         int Nvectors = cd_V.LookupTokens (Ntokens - 1, ca_lexemes, ca_X);
 
 		assert (Nvectors == (Ntokens - 1));
+
+		Md_t positional = cd_positional.view (0,
+											0,
+											ca_X.rows (),
+											ca_X.columns ());
+		ca_X += positional;
 
         /*
          * Build the causal ground truth

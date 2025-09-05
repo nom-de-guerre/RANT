@@ -94,7 +94,7 @@ public:
 		int Nsamples,
 		const int MaxEpochs=128, 
 		const int batchSize=32,
-		const bool verbose=true)
+		const bool verbose=false)
 	{
 		for (int epoch = 0; epoch < MaxEpochs; ++epoch)
 		{
