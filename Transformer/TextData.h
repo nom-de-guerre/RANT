@@ -96,6 +96,11 @@ public:
 		 *
 		 */
 		int Ntokens = nextClause ();
+		if (Ntokens < 0)
+		{
+			ca_datum.second = NULL;
+			return ca_datum;
+		}
 
 		ca_X = Md_t (Ntokens - 1, cd_V.getVecDim ());
         int Nvectors = cd_V.LookupTokens (Ntokens - 1, ca_lexemes, ca_X);

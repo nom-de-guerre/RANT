@@ -91,7 +91,7 @@ public:
 	}
 
 	IEEE_t fit (CausalData_t &K,
-		const int Nsamples,
+		int Nsamples,
 		const int MaxEpochs=128, 
 		const int batchSize=32,
 		const bool verbose=true)
@@ -104,6 +104,12 @@ public:
 			for (int i = 0; i < Nsamples;)
 			{
 				exemplar_t &y = K.getDatum ();
+				if (y.second == NULL)
+				{
+					Nsamples = i + 1;
+					break;
+				}
+
 				int len = y.first.rows ();
 
 				if (len < 5 || len > 25)
@@ -115,12 +121,12 @@ public:
 
 				if ((i % batchSize) == 0)
 				{
-			if (verbose)
-				printf ("BATCH %d/%d:\t%f\t%f\n",
-					epoch,
-					i / batchSize,
-					getLoss (),
-					getAccuracy ());
+					if (verbose)
+						printf ("BATCH %d/%d:\t%f\t%f\n",
+							epoch,
+							i / batchSize,
+							getLoss (),
+							getAccuracy ());
 
 					m_loss += getLoss ();
 					m_accuracy += getAccuracy ();
