@@ -132,7 +132,7 @@ public:
 				}
 
 #if 1
-				if (epoch < 10)
+				if (epoch < 13)
 					continue;
 
 				int const * const y = datum.second;

@@ -250,6 +250,12 @@ public:
 
 		assert (Nvectors == (Ntokens - 1));
 
+		Md_t positional = cd_positional.view (0,
+											0,
+											be_X.rows (),
+											be_X.columns ());
+		be_X += positional;
+
 		be_datum.first = be_X;
 		be_datum.second = be_y;
 

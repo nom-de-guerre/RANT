@@ -52,20 +52,22 @@ int main (int argc, char *argv[])
 		"Data/SherlockHolmesNormalized.txt",
 		"Data/Sherlock.512.E");
 
-	printf ("Running with transformer %d/%d/%d/%d\n",
+	printf ("\t\t\t\tBlocks\tHeads\tWindow\td\n");
+	printf ("Running with transformer\t%d\t%d\t%d\t%d\n",
 		opts.to_Nblocks,
 		opts.to_Nheads,
 		TOKENWINDOW,
 		data.get_d ());
 
 	MaskedModel_t NLM (opts.to_Nblocks,
-		opts.to_Nheads,
-		TOKENWINDOW,
-		data.get_d (),
-		data.getV_N ());
+						opts.to_Nheads,
+						TOKENWINDOW,
+						data.get_d (),
+						data.getV_N ());
 
 	printf ("Final Loss %f\n",
-		NLM.fit (data,
-			opts.to_Nsamples,
-			opts.to_maxIterations));
+			NLM.fit (data,
+				opts.to_Nsamples,
+				opts.to_maxIterations));
 }
+
