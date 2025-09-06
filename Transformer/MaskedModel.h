@@ -104,7 +104,7 @@ public:
 		const int Nsamples,
 		const int MaxEpochs=128, 
 		const int batchSize=32,
-		const bool verbose=true)
+		const bool verbose=false)
 	{
 		K.setMinLen (10);
 		K.setMaxLen (25);
@@ -114,9 +114,12 @@ public:
 			for (int i = 0; i < Nsamples; ++i)
 			{
 				exemplar_t &datum = K.getDatum ();
+#ifdef __SHOW_PREDICTIONS
 				int len = datum.first.rows ();
 				int const * const _y = fit (datum);
-
+#else
+				(void) fit (datum);
+#endif
 				if ((i % batchSize) == 0)
 				{
 					if (verbose)
@@ -131,7 +134,7 @@ public:
 					update ();
 				}
 
-#if 1
+#ifdef __SHOW_PREDICTIONS
 				if (epoch < 13)
 					continue;
 
@@ -151,7 +154,7 @@ public:
 #endif
 			}
 
-			if (verbose)
+//			if (verbose)
 				printf ("EPOCH %d:\t%f\t%f\n",
 					epoch,
 					m_loss.get (),

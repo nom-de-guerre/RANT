@@ -49,6 +49,9 @@ struct TrainingData_t
 
 	Md_t							cd_positional;
 
+	int								cd_minLen;
+	int								cd_maxLen;
+
 	void buildPositional (void)
 	{
 		IEEE_t d = get_d ();
@@ -70,7 +73,9 @@ public:
 	TrainingData_t (char const * const textFile,
 					char const * const dictFile) :
 		cd_text (textFile),
-		cd_V (dictFile)
+		cd_V (dictFile),
+		cd_minLen (-1),
+		cd_maxLen (INT_MAX)
 	{
 		buildPositional ();
 	}
@@ -83,6 +88,16 @@ public:
 	int getV_N (void) const
 	{
 		return cd_V.getVocabN ();
+	}
+
+	void setMinLen (const int min)
+	{
+		cd_minLen = min;
+	}
+
+	void setMaxLen (const int max)
+	{
+		cd_maxLen = max;
 	}
 };
 
@@ -114,7 +129,20 @@ public:
 		 * We ignore the newline token, hence the Ntokens - 1
 		 *
 		 */
-		int Ntokens = nextClause ();
+		int Ntokens;
+
+		while (true)
+		{
+			Ntokens = nextClause ();
+			if (Ntokens > cd_minLen && Ntokens < cd_maxLen)
+				break;
+			else if (Ntokens < 0)
+			{
+				ca_datum.second = NULL;
+				return ca_datum;
+			}
+		}
+
 		if (Ntokens < 0)
 		{
 			ca_datum.second = NULL;
@@ -164,28 +192,13 @@ class MaskedData_t : public TrainingData_t
 	exemplarList_t					be_dataList;
 	exemplarList_t::iterator		be_dataCursor;
 
-	int								be_minLen;
-	int								be_maxLen;
-
 public:
 
 	MaskedData_t (char const * const textFile, char const * const dictFile) :
 		TrainingData_t (textFile, dictFile),
 		be_y (NULL),
-		be_useList (false),
-		be_minLen (-1),
-		be_maxLen (INT_MAX)
+		be_useList (false)
 	{
-	}
-
-	void setMinLen (const int min)
-	{
-		be_minLen = min;
-	}
-
-	void setMaxLen (const int max)
-	{
-		be_maxLen = max;
 	}
 
 	int nextClause ()
@@ -239,7 +252,7 @@ public:
 		while (true)
 		{
 			Ntokens = nextClause ();
-			if (Ntokens > be_minLen && Ntokens < be_maxLen)
+			if (Ntokens > cd_minLen && Ntokens < cd_maxLen)
 				break;
 		}
 
@@ -250,12 +263,13 @@ public:
 
 		assert (Nvectors == (Ntokens - 1));
 
+#if 0
 		Md_t positional = cd_positional.view (0,
 											0,
 											be_X.rows (),
 											be_X.columns ());
 		be_X += positional;
-
+#endif
 		be_datum.first = be_X;
 		be_datum.second = be_y;
 

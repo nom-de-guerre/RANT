@@ -96,6 +96,9 @@ public:
 		const int batchSize=32,
 		const bool verbose=false)
 	{
+		K.setMinLen (10);
+		K.setMaxLen (25);
+
 		for (int epoch = 0; epoch < MaxEpochs; ++epoch)
 		{
 			m_loss.reset ();
@@ -109,11 +112,6 @@ public:
 					Nsamples = i + 1;
 					break;
 				}
-
-				int len = y.first.rows ();
-
-				if (len < 5 || len > 25)
-					continue;
 
 				++i; // only increment i on accepted sequence
 

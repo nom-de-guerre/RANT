@@ -49,6 +49,11 @@ struct layer_t
 	virtual Md_t &call (Md_t &) = 0;
 	virtual Md_t &backward (Md_t &) = 0;
 	virtual void update (void) = 0;
+
+	virtual int N_LearnableParameters (void)
+	{
+		return 0;
+	}
 };
 
 #endif // header inclusion
