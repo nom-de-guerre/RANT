@@ -150,7 +150,7 @@ public:
 		}
 
 		ca_X = Md_t (Ntokens - 1, cd_V.getVecDim ());
-        int Nvectors = cd_V.LookupTokens (Ntokens - 1, ca_lexemes, ca_X);
+        int Nvectors = cd_V.EmbedTokens (Ntokens - 1, ca_lexemes, ca_X);
 
 		assert (Nvectors == (Ntokens - 1));
 
@@ -259,7 +259,7 @@ public:
 		maskDatum (Ntokens);
 
 		be_X = Md_t (Ntokens - 1, cd_V.getVecDim ());
-        int Nvectors = cd_V.LookupTokens (Ntokens - 1, be_lexemes, be_X);
+        int Nvectors = cd_V.EmbedTokens (Ntokens - 1, be_lexemes, be_X);
 
 		assert (Nvectors == (Ntokens - 1));
 
