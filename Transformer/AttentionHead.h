@@ -119,7 +119,7 @@ public:
 	}
 };
 
-class Attention_t : layer_t
+class Attention_t : public layer_t
 {
 	int							a_h;
 

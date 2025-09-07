@@ -205,7 +205,7 @@ VectorNormalization_t::backward (IEEE_t *xi, IEEE_t *Gin, IEEE_t *Gout)
 	ComputeGout (xi, Gout);
 }
 
-class MatrixNormalization_t
+class MatrixNormalization_t : public layer_t
 {
 	int						ma_d;
 	VectorNormalization_t	**ma_positions;
@@ -233,7 +233,7 @@ public:
 		delete [] ma_positions;
 	}
 
-	Md_t &call (Md_t &X)
+	virtual Md_t &call (Md_t &X)
 	{
 		ma_X = X;
 
@@ -256,7 +256,7 @@ public:
 		return ma_Z;
 	}
 
-	Md_t &backward (Md_t &dZ)
+	virtual Md_t &backward (Md_t &dZ)
 	{
 		IEEE_t *Gin = dZ.raw ();
 		int Gstride = dZ.stride ();
@@ -280,7 +280,7 @@ public:
 		return ma_dZ;
 	}
 
-	void update (void)
+	virtual void update (void)
 	{
 		for (int i = 0; i < ma_d; ++i)
 			ma_positions[i]->update ();

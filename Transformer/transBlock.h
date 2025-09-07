@@ -35,102 +35,22 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define RELU(X) ((X) < 0.0 ? 0.0 : (X))
 #define RELU_DERIVATIVE_FN(Y) (Y > 0.0 ? 1.0 : 0.0)
 
-class transformerBlock_t
+class transformerBlock_t : public layer_t
 {
-	int							tb_l;
-	int							tb_d;
-
-	Md_t						tb_Y;
-	Md_t						tb_dX;
-
-	Attention_t					tb_Attn;
-
-#ifndef __NO_TRANSBLOCK_FFN
-	ffn_t						tb_ffn1;
-	ffn_t						tb_ffn2;
-#endif
-
-#ifndef __NO_LAYERNORM_
-	MatrixNormalization_t		tb_Z0;
-	MatrixNormalization_t		tb_Z1;
-#endif
-
-	Md_t						tb_dZ;
-
 public:
 
 	transformerBlock_t (const int h, const int l, const int d, bool causal) :
-		tb_l (l),
-		tb_d (d),
-		tb_Y (tb_l, tb_d),
-		tb_Attn (h, l, d, causal)
-#ifndef __NO_TRANSBLOCK_FFN
-		,tb_ffn1 (d, 2*d, true),
-		tb_ffn2 (2*d, d)
-#endif
-#ifndef __NO_LAYERNORM_
-		,tb_Z0 (l, d)
-		,tb_Z1 (l, d)
-#endif
+		layer_t ()
 	{
+		l_children.push_back (new Attention_t (h, l, d, causal));
+		l_children.push_back (new MatrixNormalization_t (l, d));
+		l_children.push_back (new ffn_t (d, 2*d, true));
+		l_children.push_back (new ffn_t (2*d, d));
+		l_children.push_back (new MatrixNormalization_t (l, d));
 	}
 
 	~transformerBlock_t (void)
 	{
-	}
-
-	Md_t &call (Md_t &X)
-	{
-		tb_Y = tb_Attn.call (X);
-
-#ifndef __NO_LAYERNORM_
-		tb_Y = tb_Z0.call (tb_Y);
-#endif // __NO_LAYERNORM_
-
-#ifndef __NO_TRANSBLOCK_FFN
-		Md_t H = tb_ffn1.call (tb_Y);
-		tb_Y = tb_ffn2.call (H);
-#endif // __NO_TRANSBLOCK_FFN
-
-#ifndef __NO_LAYERNORM_
-		tb_Y = tb_Z1.call (tb_Y);
-#endif // __NO_LAYERNORM_
-
-		return tb_Y;
-	}
-
-	Md_t &backward (Md_t &dL)
-	{
-#ifndef __NO_LAYERNORM_
-		dL = tb_Z1.backward (dL);
-#endif
-
-#ifndef __NO_TRANSBLOCK_FFN
-		Md_t dZ = tb_ffn2.backward (dL);
-		dL = tb_ffn1.backward (dZ);
-#endif
-
-#ifndef __NO_LAYERNORM_
-		dL = tb_Z0.backward (dL);
-#endif
-		tb_dX = tb_Attn.backward (dL);
-
-		return tb_dX;
-	}
-
-	void update (void)
-	{
-		tb_Attn.update ();
-
-#ifndef __NO_TRANSBLOCK_FFN
-		tb_ffn1.update ();
-		tb_ffn2.update ();
-#endif
-
-#ifndef __NO_LAYERNORM_
-		tb_Z1.update ();
-		tb_Z0.update ();
-#endif
 	}
 };
 

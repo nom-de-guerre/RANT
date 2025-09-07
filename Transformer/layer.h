@@ -30,6 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define __RANT_LAYER__H__
 
 #include <list>
+
 struct layer_t;
 
 typedef std::list<layer_t *> callable_t;
@@ -38,17 +39,58 @@ struct layer_t
 {
 	callable_t			l_children;
 
+	Md_t				l_Y;
+	Md_t				l_dX;
+
 	layer_t (void)
 	{
 	}
 
 	virtual ~layer_t (void)
 	{
+		for (auto component = l_children.rbegin ();
+				component != l_children.rend ();
+				++component)
+		delete *component;
 	}
 
-	virtual Md_t &call (Md_t &) = 0;
-	virtual Md_t &backward (Md_t &) = 0;
-	virtual void update (void) = 0;
+	virtual Md_t &call (Md_t &X)
+	{
+		Md_t A = X;
+
+		for (auto component = l_children.begin ();
+				component != l_children.end ();
+				++component)
+		{
+			l_Y = (*component)->call (A);
+			A = l_Y;
+		}
+
+		return l_Y;
+	}
+
+	virtual Md_t &backward (Md_t &dL)
+	{
+		Md_t G = dL;
+
+		for (auto component = l_children.rbegin ();
+				component != l_children.rend ();
+				++component)
+		{
+			l_dX = (*component)->backward (G);
+			G = l_dX;
+		}
+
+		return l_dX;
+	}
+
+	virtual void update (void)
+	{
+		for (auto component = l_children.begin ();
+				component != l_children.end ();
+				++component)
+			(*component)->update ();
+	}
 
 	virtual int N_LearnableParameters (void)
 	{

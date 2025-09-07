@@ -30,56 +30,20 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <transBlock.h>
 
-class transformer_t
+class transformer_t : public layer_t
 {
-	int							t_Nblocks;
-	transformerBlock_t			**t_blocks;
-
-	Md_t						t_Z;
-	Md_t						t_dX;
 
 public:
 
-	transformer_t (int N, int h, int l, int d, bool causal=false):
-		t_Nblocks (N),
-		t_blocks (new transformerBlock_t * [N])
+	transformer_t (int N, int h, int l, int d, bool causal=false) :
+		layer_t ()
 	{
-		for (int i = 0; i < t_Nblocks; ++i)
-			t_blocks[i] = new transformerBlock_t (h, l, d, causal);
+		for (int i = 0; i < N; ++i)
+			l_children.push_back (new transformerBlock_t (h, l, d, causal));
 	}
 
 	~transformer_t (void)
 	{
-		for (int i = 0; i < t_Nblocks; ++i)
-			delete t_blocks[i];
-
-		delete [] t_blocks;
-	}
-
-	Md_t &call (Md_t &X)
-	{
-		t_Z = X;
-
-		for (int i=0; i < t_Nblocks; ++i)
-			t_Z = t_blocks[i]->call (t_Z);
-
-		return t_Z;
-	}
-
-	Md_t &backward (Md_t &G)
-	{
-		t_dX = G;
-
-		for (int i = t_Nblocks - 1; i > -1; --i)
-			t_dX = t_blocks[i]->backward (t_dX);
-
-		return t_dX;
-	}
-
-	void update (void)
-	{
-		for (int i = t_Nblocks - 1; i > -1; --i)
-			t_blocks[i]->update ();
 	}
 };
 

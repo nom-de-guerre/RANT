@@ -32,7 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <transformer_common.h>
 
-class Softmax2D_t
+class Softmax2D_t : public layer_t
 {
 	Md_t		ss_S;
 	Md_t		ss_G;
@@ -58,7 +58,7 @@ public:
 		return ss_S;
 	}
 
-	Md_t &call (Md_t &X)
+	virtual Md_t &call (Md_t &X)
 	{
 		int rows = X.rows ();
 		int columns = X.columns ();
@@ -141,7 +141,7 @@ public:
 	 * to compute the exiting gradient.
 	 *
 	 */
-	Md_t &backward (Md_t &dL)
+	virtual Md_t &backward (Md_t &dL)
 	{
 		const int rows = ss_S.rows ();
 		const int columns = ss_S.columns ();

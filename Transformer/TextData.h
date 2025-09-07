@@ -154,12 +154,13 @@ public:
 
 		assert (Nvectors == (Ntokens - 1));
 
+#if 0
 		Md_t positional = cd_positional.view (0,
 											0,
 											ca_X.rows (),
 											ca_X.columns ());
 		ca_X += positional;
-
+#endif
         /*
          * Build the causal ground truth
          *

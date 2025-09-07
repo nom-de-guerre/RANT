@@ -94,7 +94,7 @@ public:
 		int Nsamples,
 		const int MaxEpochs=128, 
 		const int batchSize=32,
-		const bool verbose=false)
+		const bool verbose=true)
 	{
 		K.setMinLen (10);
 		K.setMaxLen (25);
