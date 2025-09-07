@@ -141,7 +141,7 @@ public:
 		return vm_dap + tokenId * __RANT_DICT_ENTRY_LEN;
 	}
 
-	int LookupTokens (const int N, struct iovec *pTokens, Md_t &X)
+	int EmbedTokens (const int N, struct iovec *pTokens, Md_t &X)
 	{
 		int valid = 0;
 		int index;
