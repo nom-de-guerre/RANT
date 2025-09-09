@@ -92,7 +92,7 @@ public:
 				tokens[N].iov_base = base;
 				tokens[N].iov_len = len;
 
-				if (strncmp (base, "qzmSEPqzm", 9) == 0)
+				if (strncmp (base, "[SEP]", 5) == 0)
 					return N + 1;
 
 				base += len + 1;
@@ -114,7 +114,10 @@ public:
 	char const *parse (int &len)
 	{
 
-		while (td_consumed < mf_len && !isalpha (*td_cursor))
+		while (td_consumed < mf_len && (
+				!isalpha (*td_cursor) &&
+				*td_cursor != '[' &&
+				*td_cursor != ']'))
 		{
 			++td_consumed;
 			++td_cursor;
@@ -129,7 +132,10 @@ public:
 		char const *p = td_cursor;
 		len = 0;
 
-		while (td_consumed < mf_len && isalpha (*td_cursor))
+		while (td_consumed < mf_len && (
+				isalpha (*td_cursor) ||
+				*td_cursor == '[' ||
+				*td_cursor == ']'))
 		{
 			++td_consumed;
 			++td_cursor;

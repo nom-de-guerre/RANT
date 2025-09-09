@@ -50,7 +50,7 @@ int main (int argc, char *argv[])
 
 	MaskedData_t data (
 		"Data/SherlockHolmesNormalized.txt",
-		"Data/Sherlock.512.E");
+		"Data/Sherlock.E");
 
 	printf ("\t\t\t\tBlocks\tHeads\tWindow\td\n");
 	printf ("Running with transformer\t%d\t%d\t%d\t%d\n",

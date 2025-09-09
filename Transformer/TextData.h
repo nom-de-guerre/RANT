@@ -134,7 +134,7 @@ public:
 		while (true)
 		{
 			Ntokens = nextClause ();
-			if (Ntokens > cd_minLen && Ntokens < cd_maxLen)
+			if (Ntokens > cd_minLen && Ntokens <= cd_maxLen)
 				break;
 			else if (Ntokens < 0)
 			{
@@ -230,8 +230,8 @@ public:
 			{
 
 				be_y[mask] = cd_V[(char const *) be_lexemes[mask].iov_base];
-				be_lexemes[mask].iov_base = (void *) "qzmUNKqzm";
-				be_lexemes[mask].iov_len = 9;
+				be_lexemes[mask].iov_base = (void *) "[MASK]";
+				be_lexemes[mask].iov_len = 6;
 
 				--numberToMask;
 
@@ -253,7 +253,7 @@ public:
 		while (true)
 		{
 			Ntokens = nextClause ();
-			if (Ntokens > cd_minLen && Ntokens < cd_maxLen)
+			if (Ntokens > cd_minLen && Ntokens <= cd_maxLen)
 				break;
 		}
 
