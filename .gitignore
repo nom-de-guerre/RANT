@@ -7,6 +7,8 @@ Examples/MNISTLoad
 Examples/diabetes
 Examples/water
 Examples/enzymes
+Transformer/causal
+Transformer/masked
 **/.DS_Store
 **/*.swp
 Private
