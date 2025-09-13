@@ -36,7 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 class MaskedModel_t : public SparseCrossEntropy_t
 {
 	transformer_t				m_T;
-	LanguageHead_t				m_V;
+	LanguageHead_t				m_L;
 
 	Md_t						m_dX;
 
@@ -48,7 +48,7 @@ public:
 	MaskedModel_t (int N, int h, int l, int d, int V) :
 		SparseCrossEntropy_t (),
 		m_T (N, h, l, d),
-		m_V (d, V)
+		m_L (d, V)
 	{
 	}
 
@@ -59,15 +59,15 @@ public:
 	int const * const predict (Md_t &X)
 	{
 		Md_t Z = m_T.call (X);
-		(void) m_V.call (Z);
+		(void) m_L.call (Z);
 
-		return m_V.tokens ();
+		return m_L.tokens ();
 	}
 
-	int const * const fit (Md_t &X, int const * const y)
+	int const * const fit_work (Md_t &X, int const * const y)
 	{
 		int const * _y = predict (X);
-		Md_t S = m_V.S ();
+		Md_t S = m_L.S ();
 
 		Md_t &G_full = loss (S, y, _y);
 
@@ -81,7 +81,7 @@ public:
 			G.importRow (i, G_full);
 		}
 
-		G = m_V.backward (G);
+		G = m_L.backward (G);
 		m_dX = m_T.backward (G);
 
 		return _y;
@@ -89,12 +89,12 @@ public:
 
 	int const * const fit (exemplar_t &datum)
 	{
-		return fit (datum.first, datum.second);
+		return fit_work (datum.first, datum.second);
 	}
 
 	void update (void)
 	{
-		m_V.update ();
+		m_L.update ();
 		m_T.update ();
 
 		reset ();
@@ -120,6 +120,8 @@ public:
 #else
 				(void) fit (datum);
 #endif
+				K.backward (m_dX, datum.second);
+
 				if ((i % batchSize) == 0)
 				{
 					if (verbose)
@@ -132,6 +134,7 @@ public:
 					m_accuracy += getAccuracy ();
 
 					update ();
+					K.update ();
 				}
 
 #ifdef __SHOW_PREDICTIONS
@@ -148,8 +151,8 @@ public:
 					printf ("%d\t%d:\t%s\t%s\n", 
 						epoch, 
 						i, 
-						K.cd_V.TokenString (y[m]), 
-						K.cd_V.TokenString (_y[m]));
+						K.cd_V.TokenToString (y[m]),
+						K.cd_V.TokenToString (_y[m]));
 				}
 #endif
 			}

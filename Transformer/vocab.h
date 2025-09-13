@@ -36,26 +36,34 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string.h>
 
 #include <transformer_common.h>
+#include <SparseOptimizer.h>
 
 #define __RANT_DICT_ENTRY_LEN			64		// len of lexicon entry
 #define IDX2VocabEntry(X) (X * __RANT_DICT_ENTRY_LEN)
 
-#define SEMVECSIZE (vm_d * sizeof (IEEE_t))
+#define SEMVECSIZE (vd_d * sizeof (IEEE_t))
 #define IDX2OFF(X) (X * SEMVECSIZE)
 
 class vocabDict_t
 {
 	int						vd_N;
-	int						vm_d;		// dimension of semantic vector
+	int						vd_d;		// dimension of semantic vector
 
-	char					*vm_dap;
+	char					*vd_dap;
 	IEEE_t					*vd_semanticVectors;
 
 	int dictionaryLookup (char const * const p, bool find = true) const;
 
+	bool					vd_learnV;
+	IEEE_t					*vd_dX;
+	SparseOptimizer_t		*vd_O;
+
 public:
 
-	vocabDict_t (char const * const filename)
+	vocabDict_t (char const * const filename, const bool learnV=false) :
+		vd_learnV (learnV),
+		vd_dX (NULL),
+		vd_O (NULL)
 	{
 		FILE *fp;
 
@@ -77,7 +85,7 @@ public:
 		if (strcmp (buffer, "Words") != 0)
 			throw ("Bad Dictionary");
 
-		rc = fscanf (fp, "%s %d\n", buffer, &vm_d);
+		rc = fscanf (fp, "%s %d\n", buffer, &vd_d);
 		if (rc != 2)
 			throw ("Bad Vector Dim");
 		if (strcmp (buffer, "Tuple") != 0)
@@ -89,10 +97,10 @@ public:
 		if (strcmp (buffer, "Dictionary") != 0)
 			throw ("Bad Semantic Space");
 
-		vm_dap = new char [vd_N * __RANT_DICT_ENTRY_LEN];
-		vd_semanticVectors = new IEEE_t [vd_N * vm_d];
+		vd_dap = new char [vd_N * __RANT_DICT_ENTRY_LEN];
+		vd_semanticVectors = new IEEE_t [vd_N * vd_d];
 
-		char *p = vm_dap;
+		char *p = vd_dap;
 		IEEE_t *q = vd_semanticVectors;
 
 		for (int i = 0; i < vd_N; ++i, p += __RANT_DICT_ENTRY_LEN)
@@ -101,15 +109,24 @@ public:
 			if (rc != 1)
 				throw ("Bad Entry");
 
-			for (int j = 0; j < vm_d; ++j, ++q)
+			for (int j = 0; j < vd_d; ++j, ++q)
 				rc = fscanf (fp, "%lf\n", q);
+		}
+
+		if (vd_learnV)
+		{
+			vd_dX = new IEEE_t [vd_N * vd_d];
+			vd_O = new SparseOptimizer_t (vd_N, vd_d, vd_semanticVectors, vd_dX);
 		}
 	}
 
 	~vocabDict_t (void)
 	{
 		delete [] vd_semanticVectors;
-		delete [] vm_dap;
+		delete [] vd_dap;
+
+		if (vd_dX)
+			delete [] vd_dX;
 	}
 
 	int getVocabN (void) const
@@ -119,7 +136,7 @@ public:
 
 	int getVecDim (void) const
 	{
-		return vm_d;
+		return vd_d;
 	}
 
 	/*
@@ -131,14 +148,14 @@ public:
 	{
 		int index = dictionaryLookup (wordp);
 
-		// printf ("%d\t%s\n", index, vm_dap + IDX2VocabEntry (index));
+		// printf ("%d\t%s\n", index, vd_dap + IDX2VocabEntry (index));
 
 		return index;
 	}
 
-	char const *TokenString (const int tokenId)
+	char const *TokenToString (const int tokenId)
 	{
-		return vm_dap + tokenId * __RANT_DICT_ENTRY_LEN;
+		return vd_dap + tokenId * __RANT_DICT_ENTRY_LEN;
 	}
 
 	int EmbedTokens (const int N, struct iovec *pTokens, Md_t &X)
@@ -154,6 +171,8 @@ public:
 				pTokens[i].iov_len = -1;
 
 #if 1
+// Currently there is one text.  V and E were built for it.
+// This is a temporary dev measure to verify correctness.
 printf ("Not found %d\t%s\n", 
 	(int) pTokens[i].iov_len, 
 	(char *) pTokens[i].iov_base);
@@ -162,16 +181,51 @@ printf ("Not found %d\t%s\n",
 				continue;
 			}
 
-			X.importRow (i, vd_semanticVectors + (index * vm_d));
+			X.importRow (i, vd_semanticVectors + (index * vd_d));
 			++valid;
 		}
 
 		return valid;
 	}
 
+	/*
+	 * Used for learnable embeddings.  fit () needs to access the
+	 * the initial embeddings.
+	 *
+	 * Model needs to account for structure: |V| x d, row order.
+	 *
+	 */
+	void backward (Md_t &dX, int const * const y)
+	{
+		if (vd_learnV == false)
+			return;
+
+		// The emebeddings are row order so convert here
+		int Ntokens = dX.rows ();
+		int token;
+
+		for (int i = 0; i < Ntokens; ++i)
+		{
+			token = y[i];
+			if (token < 0 || token >= vd_N)
+				continue;
+
+			vd_O->touch (token);
+			dX.exportRow (token, vd_dX + (token * vd_d));
+		}
+	}
+
+	void update (void)
+	{
+		if (vd_learnV == false)
+			return;
+
+		vd_O->update ();
+	}
+
 	void DumpTokens (void) const
 	{
-		char const * p = vm_dap;
+		char const * p = vd_dap;
 
 		for (int i = 0; i < vd_N; ++i, p += __RANT_DICT_ENTRY_LEN)
 			printf ("%d\t%s\n", i, p);
@@ -200,7 +254,7 @@ int vocabDict_t::dictionaryLookup (char const * const p, bool find) const
 
         cursor = (right + left) >> 1;
 
-		lexCmp = strcmp (p, vm_dap + cursor * __RANT_DICT_ENTRY_LEN);
+		lexCmp = strcmp (p, vd_dap + cursor * __RANT_DICT_ENTRY_LEN);
 
         if (lexCmp == 0) 
 		{

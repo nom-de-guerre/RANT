@@ -36,7 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 class CausalModel_t : public SparseCrossEntropy_t
 {
 	transformer_t				m_T;
-	LanguageHead_t				m_V;
+	LanguageHead_t				m_L;
 
 	Md_t						m_dX;
 
@@ -48,7 +48,7 @@ public:
 	CausalModel_t (int N, int h, int l, int d, int V) :
 		SparseCrossEntropy_t (),
 		m_T (N, h, l, d, true),
-		m_V (d, V)
+		m_L (d, V)
 	{
 	}
 
@@ -59,19 +59,19 @@ public:
 	int const * const predict (Md_t &X)
 	{
 		Md_t Z = m_T.call (X);
-		(void) m_V.call (Z);
+		(void) m_L.call (Z);
 
-		return m_V.tokens ();
+		return m_L.tokens ();
 	}
 
 	int const * const fit (Md_t &X, int const * const y)
 	{
 		int const * _y = predict (X);
-		Md_t S = m_V.S ();
+		Md_t S = m_L.S ();
 
 		Md_t &G = loss (S, y, _y);
 
-		G = m_V.backward (G);
+		G = m_L.backward (G);
 		m_dX = m_T.backward (G);
 
 		return _y;
@@ -84,7 +84,7 @@ public:
 
 	void update (void)
 	{
-		m_V.update ();
+		m_L.update ();
 		m_T.update ();
 
 		reset ();
@@ -116,6 +116,7 @@ public:
 				++i; // only increment i on accepted sequence
 
 				(void) fit (y);
+				K.backward (m_dX, y.second);
 
 				if ((i % batchSize) == 0)
 				{
@@ -130,6 +131,7 @@ public:
 					m_accuracy += getAccuracy ();
 
 					update ();
+					K.update ();
 				}
 			}
 

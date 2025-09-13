@@ -152,6 +152,51 @@ public:
 };
 
 /*
+ * Tracks a matrix
+ *
+ */
+
+struct __matrix_dX_t
+{
+	Md_t				mp_X;
+	Md_t				mp_dX;				// gradient exiting the object
+
+	bool				mp_training;		// weights are mutable
+
+	Optimizer_t			mp_O;
+
+	char const * const	mp_name;
+
+	__matrix_dX_t (int n, int m, const char * name = "anon") :
+		mp_X (n, m),
+		mp_dX (n, m),
+		mp_training (true),
+		mp_O (n, m, mp_X.raw (), mp_dX.raw ()),
+		mp_name (strdup (name))
+	{
+		mp_X.zero ();
+		mp_dX.zero ();
+	}
+
+	~__matrix_dX_t (void)
+	{
+		free ((void *) mp_name);
+	}
+
+	char const *Id (void) const
+	{
+		return mp_name;
+	}
+
+	void update (void)
+	{
+		assert (mp_training);
+
+		mp_O.update ();
+	}
+};
+
+/*
  *
  * Z = AB
  *

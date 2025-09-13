@@ -1165,7 +1165,7 @@ public:
 		return max;
 	}
 
-	// The matrix Frobenius norm
+	// zero out matrix
 	void zero (void)
 	{
 		T * __restrict p = INVOKE->raw ();
@@ -1175,21 +1175,24 @@ public:
 		memset (p, 0, rows * columns * sizeof (T));
 	}
 
+	// total number of elements in matrix
 	int N (void) const
 	{
 		return INVOKE->rows () * INVOKE->columns ();
 	}
 
-	void importRow (int row, T *p)
+	// Copy a row into a matrix (column order so not fun)
+	void importRow (int row, T *from)
 	{
 		T *datap = raw () + row;
 		int incr = stride ();
 		int d = columns ();
 
 		for (int i = 0; i < d; ++i, datap += incr)
-			*datap = p[i];
+			*datap = from[i];
 	}
 
+	// Copy a row matrix to matrix (column order so not fun)
 	void importRow (int row, Matrix_t<T> &A)
 	{
 		if (!MatrixView_t<T>::defined (get(), A.get()))
@@ -1203,6 +1206,32 @@ public:
 
 		for (int i = 0; i < d; ++i, to += incr, from += incr)
 			*to = *from;
+	}
+
+	// Copy a row matrix to matrix (column order so not fun)
+	void addRow (int row, Matrix_t<T> &A)
+	{
+		if (!MatrixView_t<T>::defined (get(), A.get()))
+			throw ("importRow dimension mismatch");
+
+		T *to = raw () + row;
+		T *from = A.raw () + row;
+
+		int incr = stride ();
+		int d = columns ();
+
+		for (int i = 0; i < d; ++i, to += incr, from += incr)
+			*to += *from;
+	}
+
+	void exportRow (const int row, T *to)
+	{
+		T *datap = raw () + row;
+		int incr = stride ();
+		int d = columns ();
+
+		for (int i = 0; i < d; ++i, datap += incr)
+			to[i] = *datap;
 	}
 
 	// The matrix Frobenius norm

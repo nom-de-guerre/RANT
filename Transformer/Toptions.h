@@ -83,11 +83,19 @@ int TransformerOptions_t::Parse (int argc, char *argv[])
 
 	while (true)
 	{
-		opt = getopt (argc, argv, "s:r:n:h:t:i:p:q");
+		opt = getopt (argc, argv, "N:s:r:n:h:t:i:p:q");
 		if (opt == -1)
 			break;
 
 		switch (opt) {
+
+		case 'N':
+
+			to_Nsamples = atoi (optarg);
+			count += 2;
+
+			break;
+
 		case 'r':
 
 			to_seed = atoi (optarg);

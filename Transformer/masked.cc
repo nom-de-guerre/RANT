@@ -48,9 +48,13 @@ int main (int argc, char *argv[])
 	printf ("Using seed %ld\n", seed);
 	srand (seed);
 
+	if (opts.to_flag)
+		printf ("Running with learnable E.\n");
+
 	MaskedData_t data (
 		"Data/SherlockHolmesNormalized.txt",
-		"Data/Sherlock.E");
+		"Data/Sherlock.E",
+		opts.to_flag);
 
 	printf ("\t\t\t\tBlocks\tHeads\tWindow\td\n");
 	printf ("Running with transformer\t%d\t%d\t%d\t%d\n",

@@ -71,9 +71,10 @@ struct TrainingData_t
 public:
 
 	TrainingData_t (char const * const textFile,
-					char const * const dictFile) :
+					char const * const dictFile,
+					const bool learnV=false) :
 		cd_text (textFile),
-		cd_V (dictFile),
+		cd_V (dictFile, learnV),
 		cd_minLen (-1),
 		cd_maxLen (INT_MAX)
 	{
@@ -99,6 +100,16 @@ public:
 	{
 		cd_maxLen = max;
 	}
+
+	void backward (Md_t &dX, int const * const y)
+	{
+		cd_V.backward (dX, y);
+	}
+
+	void update (void)
+	{
+		cd_V.update ();
+	}
 };
 
 class CausalData_t : public TrainingData_t
@@ -111,8 +122,10 @@ class CausalData_t : public TrainingData_t
 
 public:
 
-	CausalData_t (char const * const textFile, char const * const dictFile) :
-		TrainingData_t (textFile, dictFile)
+	CausalData_t (char const * const textFile,
+					char const * const dictFile,
+					const bool learnV) :
+		TrainingData_t (textFile, dictFile, learnV)
 	{
 	}
 
@@ -195,8 +208,10 @@ class MaskedData_t : public TrainingData_t
 
 public:
 
-	MaskedData_t (char const * const textFile, char const * const dictFile) :
-		TrainingData_t (textFile, dictFile),
+	MaskedData_t (char const * const textFile,
+					char const * const dictFile,
+					const bool learnV=false) :
+		TrainingData_t (textFile, dictFile, learnV),
 		be_y (NULL),
 		be_useList (false)
 	{
