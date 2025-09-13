@@ -223,6 +223,14 @@ printf ("Not found %d\t%s\n",
 		vd_O->update ();
 	}
 
+	int N_LearnableParameters (void) const
+	{
+		if (vd_learnV)
+			return vd_N * vd_d;
+
+		return 0;
+	}
+
 	void DumpTokens (void) const
 	{
 		char const * p = vd_dap;

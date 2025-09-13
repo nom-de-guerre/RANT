@@ -110,6 +110,11 @@ public:
 	{
 		cd_V.update ();
 	}
+
+	int N_LearnableParameters (void) const
+	{
+		return cd_V.N_LearnableParameters ();
+	}
 };
 
 class CausalData_t : public TrainingData_t

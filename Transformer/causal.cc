@@ -70,7 +70,7 @@ int main (int argc, char *argv[])
 						data.getV_N ());
 
 	printf ("Model has %d learnable parameters.\n",
-		NLM.N_LearnableParameters ());
+		NLM.N_LearnableParameters () + data.N_LearnableParameters ());
 
 	printf ("Final Loss %f\n",
 			NLM.fit (data,
