@@ -93,6 +93,11 @@ public:
 	{
 		f_ffn.update ();
 	}
+
+	virtual int N_LearnableParameters (void) const
+	{
+		return f_ffn.N_LearnableParameters ();
+	}
 };
 
 #endif // header inclusion

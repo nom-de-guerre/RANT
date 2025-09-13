@@ -149,6 +149,11 @@ public:
 	{
 		mp_training = false;
 	}
+
+	int N_LearnableParameters (void) const
+	{
+		return mp_W.N ();
+	}
 };
 
 /*

@@ -45,6 +45,18 @@ public:
 	~transformer_t (void)
 	{
 	}
+
+	virtual int N_LearnableParameters (void) const
+	{
+		int N = 0;
+
+		for (auto component = l_children.begin ();
+				component != l_children.end ();
+				++component)
+			N += (*component)->N_LearnableParameters ();
+
+		return N;
+	}
 };
 
 #endif // header inclusion

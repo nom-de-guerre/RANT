@@ -91,6 +91,11 @@ public:
 	{
 		return lh_logits;
 	}
+
+	int N_LearnableParameters (void) const
+	{
+		return lh_head.N_LearnableParameters ();
+	}
 };
 
 #endif // header inclusion

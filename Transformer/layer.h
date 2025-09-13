@@ -92,7 +92,7 @@ struct layer_t
 			(*component)->update ();
 	}
 
-	virtual int N_LearnableParameters (void)
+	virtual int N_LearnableParameters (void) const
 	{
 		return 0;
 	}

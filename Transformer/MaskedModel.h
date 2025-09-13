@@ -174,6 +174,11 @@ public:
 
 		return getLoss ();
 	}
+
+	int N_LearnableParameters (void) const
+	{
+		return m_T.N_LearnableParameters () + m_L.N_LearnableParameters ();
+	}
 };
 
 #endif // header inclusion

@@ -1,4 +1,4 @@
-/*  
+/*
  
 Copyright (c) 2025, Douglas Santry 
 All rights reserved.
@@ -117,6 +117,13 @@ public:
 	{
 		return at_head.Y ();
 	}
+
+	virtual int N_LearnableParameters (void) const
+	{
+		return at_Q.N_LearnableParameters () +
+				at_K.N_LearnableParameters () +
+				at_V.N_LearnableParameters ();
+	}
 };
 
 class Attention_t : public layer_t
@@ -195,6 +202,16 @@ public:
 			a_Wo[i]->update ();
 			a_heads[i]->update ();
 		}
+	}
+
+	virtual int N_LearnableParameters (void) const
+	{
+		int N = 0;
+
+		N = a_h * a_heads[0]->N_LearnableParameters ();
+		N += a_h * a_Wo[0]->N_LearnableParameters ();
+
+		return N;
 	}
 };
 
