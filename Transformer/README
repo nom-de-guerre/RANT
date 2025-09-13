@@ -1,0 +1,26 @@
+
+This is a C++ implementation of a linguistic transformer.  It is far more
+memory efficient than Python (200 MB versus 8G).  
+
+The names of many files are currently hardcoded as this module is currently
+under active development.  A language model requires two ancillary
+object, they are a vocabulary of tokens and a set of initial vector
+embeddings for the tokens.  They are found in the Data folder. The
+Data folder contains 3 files:
+
+SherlockHolmesNormalized.txt - generated with Tools/normalizeText.py
+
+The normalized file is used to build a dictionary of tokens and their
+initial vector embeddings.
+
+Sherlock.E - the initial embeddings generated with Tools/vocab_generate.py
+
+Both the causal and the masked example use the same file.
+
+causal and masked accept the same command line options:
+
+-i maximum number of epochs to run
+-r specify the random number generator seed: invaluable for debugging etc.
+-n the number of transformer blocks
+-h the number of heads
+
