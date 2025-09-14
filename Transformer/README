@@ -23,4 +23,5 @@ causal and masked accept the same command line options:
 -r specify the random number generator seed: invaluable for debugging etc.
 -n the number of transformer blocks
 -h the number of heads
+-N the number of exemplars per epoch (need control for use with notebook computers)
 
