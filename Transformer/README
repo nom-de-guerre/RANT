@@ -29,3 +29,6 @@ There are two models demonstrating two of the more important LLM families,
 causal (used for generative AI) and masked.  The masked model implements one
 of BERT's training tasks, masked tokens.
 
+Positional encodings are currently turned off as they are not compatible 
+with the current initial embeddings (normalized and drowned out).
+

@@ -33,8 +33,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <transformer.h>
 
-#define __MASKED_SKIP_POSITION      -1
-
 struct loss_t
 {
 	Md_t						lo_G;
@@ -89,7 +87,7 @@ public:
 
 		for (int i = 0; i < l; ++i)
 		{
-			if (y[i] == __MASKED_SKIP_POSITION)
+			if (y[i] < 0) // tokens have to be positive - models can encode
 				continue;
 
 			check = -log (lo_G (i, y[i]));

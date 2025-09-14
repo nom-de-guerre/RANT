@@ -72,10 +72,12 @@ public:
 		Md_t &G_full = loss (S, y, _y);
 
 		Md_t G (G_full.rows (), G_full.columns (), 0.0);
+
+		// filter gradient for masked tokens only
 		int rows = G_full.rows ();
 		for (int i = 0; i < rows; ++i)
 		{
-			if (y[i] == __MASKED_SKIP_POSITION)
+			if (y[i] < 0) // negative tokens are masked
 				continue;
 
 			G.importRow (i, G_full);
@@ -101,19 +103,27 @@ public:
 	}
 
 	IEEE_t fit (MaskedData_t &K,
-		const int Nsamples,
+		int Nsamples,
 		const int MaxEpochs=128, 
 		const int batchSize=32,
 		const bool verbose=false)
 	{
-		K.setMinLen (10);
-		K.setMaxLen (25);
+		K.setMinLen (5);
 
 		for (int epoch = 0; epoch < MaxEpochs; ++epoch)
 		{
-			for (int i = 0; i < Nsamples; ++i)
+			m_loss.reset ();
+			m_accuracy.reset ();
+
+			for (int i = 1; i <= Nsamples; ++i)
 			{
 				exemplar_t &datum = K.getDatum ();
+				if (datum.second == NULL)
+				{
+					Nsamples = i;
+					break; // bail on batch
+				}
+
 #ifdef __SHOW_PREDICTIONS
 				int len = datum.first.rows ();
 				int const * const _y = fit (datum);
@@ -129,6 +139,8 @@ public:
 							i / batchSize,
 							getLoss (),
 							getAccuracy ());
+					else
+						write (1, ".", 1);
 
 					m_loss += getLoss (),
 					m_accuracy += getAccuracy ();
@@ -163,16 +175,13 @@ public:
 					m_loss.get (),
 					m_accuracy.get ());
 
-			m_loss.reset ();
-			m_accuracy.reset ();
-
-			if (getAccuracy () == 1.0)
+			if (m_accuracy.get () == 1.0)
 				break;
 
 			K.reset ();
 		}
 
-		return getLoss ();
+		return m_loss.get ();
 	}
 
 	int N_LearnableParameters (void) const

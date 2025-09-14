@@ -43,10 +43,16 @@ public:
 		layer_t ()
 	{
 		l_children.push_back (new Attention_t (h, l, d, causal));
+#ifndef __NO_LAYERNORM_
 		l_children.push_back (new MatrixNormalization_t (l, d));
+#endif
+#ifndef __NO_TRANSBLOCK_FFN
 		l_children.push_back (new ffn_t (d, 2*d, true));
 		l_children.push_back (new ffn_t (2*d, d));
+#endif
+#ifndef __NO_LAYERNORM_
 		l_children.push_back (new MatrixNormalization_t (l, d));
+#endif
 	}
 
 	~transformerBlock_t (void)

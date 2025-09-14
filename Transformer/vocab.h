@@ -207,11 +207,13 @@ printf ("Not found %d\t%s\n",
 		for (int i = 0; i < Ntokens; ++i)
 		{
 			token = y[i];
-			if (token < 0 || token >= vd_N)
-				continue;
+			// masking models hide tokens by making them negative
+			if (token < 0)
+				token = -token;
 
 			vd_O->touch (token);
-			dX.exportRow (token, vd_dX + (token * vd_d));
+			// export from the dX i-th row to token row in the embeddings
+			dX.exportRow (i, vd_dX + (token * vd_d));
 		}
 	}
 

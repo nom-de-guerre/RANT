@@ -229,12 +229,15 @@ public:
 		return be_Ntokens;
 	}
 
-	void maskDatum (const int Ntokens)
+	bool maskDatum (const int Ntokens)
 	{
         /*
          * Build the masked ground truth
          *
          */
+
+		if (Ntokens < 1)
+			return false;
 
 		int numberToMask = (int) ceil (0.2 * (IEEE_t) Ntokens);
 
@@ -246,20 +249,23 @@ public:
 		{
 			int mask = toMask.Sample ();
 
+			be_y[mask] = cd_V[(char const *) be_lexemes[mask].iov_base];
+
 			if (numberToMask)
 			{
 
-				be_y[mask] = cd_V[(char const *) be_lexemes[mask].iov_base];
 				be_lexemes[mask].iov_base = (void *) "[MASK]";
 				be_lexemes[mask].iov_len = 6;
 
 				--numberToMask;
 
 			} else
-				be_y[mask] = __MASKED_SKIP_POSITION;
+				be_y[mask] = -be_y[mask]; // loss ignores negative tokens
 
 // printf ("%d\t%f\t%s\n", i, sample, (char const *) be_lexemes[i].iov_base);
 		}
+
+		return true;
 	}
 
 	exemplar_t &getDatumAnteList (void)
@@ -275,9 +281,17 @@ public:
 			Ntokens = nextClause ();
 			if (Ntokens > cd_minLen && Ntokens <= cd_maxLen)
 				break;
+
+			if (Ntokens == -1)
+				break;
 		}
 
-		maskDatum (Ntokens);
+		bool rc = maskDatum (Ntokens);
+		if (!rc)
+		{
+			be_datum.second = NULL;
+			return be_datum;
+		}
 
 		be_X = Md_t (Ntokens - 1, cd_V.getVecDim ());
         int Nvectors = cd_V.EmbedTokens (Ntokens - 1, be_lexemes, be_X);

@@ -51,7 +51,7 @@ struct TransformerOptions_t
 		to_haltCondition (1e-5),
 		to_maxIterations (100),
 		to_Nblocks (1),
-		to_Nheads (4),
+		to_Nheads (16),
 		to_path ((char *) DEFAULT_PATH),
 		to_flag (false),
 		to_save (NULL)

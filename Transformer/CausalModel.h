@@ -104,7 +104,7 @@ public:
 			m_loss.reset ();
 			m_accuracy.reset ();
 
-			for (int i = 0; i < Nsamples;)
+			for (int i = 1; i <= Nsamples;)
 			{
 				exemplar_t &y = K.getDatum ();
 				if (y.second == NULL)
@@ -126,6 +126,8 @@ public:
 							i / batchSize,
 							getLoss (),
 							getAccuracy ());
+					else
+						write (1, ".", 1);
 
 					m_loss += getLoss ();
 					m_accuracy += getAccuracy ();

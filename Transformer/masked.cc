@@ -36,17 +36,17 @@ int main (int argc, char *argv[])
 {
 	TransformerOptions_t opts (argc, argv);
 
+	long seed = opts.to_seed;
+
+	printf ("Using seed %ld\n", seed);
+	srand (seed);
+
 #ifndef __NO_TRANSBLOCK_FFN
     printf ("Including FFN\n");
 #endif
 #ifndef __NO_LAYERNORM_
     printf ("Including LN\n");
 #endif
-
-	long seed = opts.to_seed;
-
-	printf ("Using seed %ld\n", seed);
-	srand (seed);
 
 	if (opts.to_flag)
 		printf ("Running with learnable E.\n");
