@@ -25,3 +25,7 @@ causal and masked accept the same command line options:
 -h the number of heads
 -N the number of exemplars per epoch (need control for use with notebook computers)
 
+There are two models demonstrating two of the more important LLM families,
+causal (used for generative AI) and masked.  The masked model implements one
+of BERT's training tasks, masked tokens.
+
