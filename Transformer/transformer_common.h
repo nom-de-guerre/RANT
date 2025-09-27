@@ -30,9 +30,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <assert.h>
 
+#define RANT_TRANSFORMER_MAGIC		0x7f07fa91 // uint32_t
+
 typedef double IEEE_t;
+// use this if IEEE_t is float
+// #define IEEE_MIN	FLT_MIN
+#define IEEE_MIN	DBL_MIN
+
 #include <matrix.h>
-typedef Matrix_t<double> Md_t;
+typedef Matrix_t<IEEE_t> Md_t;
 
 void InitLearnable (const int N, const int fanIn, IEEE_t *learnable)
 {

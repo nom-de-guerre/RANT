@@ -102,6 +102,7 @@ public:
 
 		char *p = vd_dap;
 		IEEE_t *q = vd_semanticVectors;
+		double entry_buffer;
 
 		for (int i = 0; i < vd_N; ++i, p += __RANT_DICT_ENTRY_LEN)
 		{
@@ -110,7 +111,10 @@ public:
 				throw ("Bad Entry");
 
 			for (int j = 0; j < vd_d; ++j, ++q)
-				rc = fscanf (fp, "%lf\n", q);
+			{
+				rc = fscanf (fp, "%lf\n", &entry_buffer);
+				*q = (IEEE_t) entry_buffer;
+			}
 		}
 
 		if (vd_learnV)

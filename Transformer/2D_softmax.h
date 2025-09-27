@@ -178,6 +178,10 @@ public:
 		return J;
 	}
 
+	/*
+	 * Used for greedy decoding.
+	 *
+	 */
 	int *argmax (void)
 	{
 		int rows = ss_S.rows ();
@@ -185,7 +189,7 @@ public:
 
 		for (int i = 0; i < rows; ++i)
 		{
-			IEEE_t min = -DBL_MIN;
+			IEEE_t min = -IEEE_MIN;
 			int index = 0;
 			for (int j = 0; j < columns; ++j)
 			{

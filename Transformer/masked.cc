@@ -41,6 +41,8 @@ int main (int argc, char *argv[])
 	printf ("Using seed %ld\n", seed);
 	srand (seed);
 
+	printf ("IEEE_t is %lu bytes.\n", sizeof (IEEE_t));
+
 #ifndef __NO_TRANSBLOCK_FFN
     printf ("Including FFN\n");
 #endif

@@ -1150,7 +1150,7 @@ public:
 	// The matrix infinite norm
 	double norm_inf (void)
 	{
-		double max = DBL_MIN;
+		double max = IEEE_MIN;
 
 		for (int i = INVOKE->rows () - 1; i >= 0; --i) {
 
