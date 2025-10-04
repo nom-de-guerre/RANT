@@ -34,7 +34,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <2D_softmax.h>
 #include <layer.h>
 
-class LanguageHead_t
+class LanguageHead_t : layer_t
 {
 
 	__matrix_XW_t				lh_head;
@@ -46,6 +46,7 @@ class LanguageHead_t
 public:
 
 	LanguageHead_t (const int d, const int V) :
+		layer_t (),
 		lh_head (d, V),
 		lh_Y (d, V)
 	{
@@ -55,7 +56,7 @@ public:
 	{
 	}
 
-	Md_t &call (Md_t &Z)
+	virtual Md_t &call (Md_t &Z)
 	{
 		lh_logits = lh_head.call (Z);
 		return lh_Y.call (lh_logits);
@@ -67,12 +68,12 @@ public:
 	 * J is not required.
 	 *
 	 */
-	Md_t &backward (Md_t &dS)
+	virtual Md_t &backward (Md_t &dS)
 	{
 		return lh_head.backward (dS);
 	}
 
-	void update (void)
+	virtual void update (void)
 	{
 		lh_head.update ();
 	}
