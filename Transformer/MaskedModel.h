@@ -124,13 +124,17 @@ public:
 					break; // bail on batch
 				}
 
+				assert (datum.first.isRowOrder ());
+
 #ifdef __SHOW_PREDICTIONS
 				int len = datum.first.rows ();
 				int const * const _y = fit (datum);
 #else
 				(void) fit (datum);
 #endif
+#ifndef __NO_E_LEARNING
 				K.backward (m_dX, datum.second);
+#endif
 
 				if ((i % batchSize) == 0)
 				{
@@ -146,7 +150,9 @@ public:
 					m_accuracy += getAccuracy ();
 
 					update ();
+#ifndef __NO_E_LEARNING
 					K.update ();
+#endif
 				}
 
 #ifdef __SHOW_PREDICTIONS

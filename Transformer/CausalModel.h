@@ -116,8 +116,9 @@ public:
 				++i; // only increment i on accepted sequence
 
 				(void) fit (y);
+#ifndef __NO_E_LEARNING
 				K.backward (m_dX, y.second);
-
+#endif
 				if ((i % batchSize) == 0)
 				{
 					if (verbose)
@@ -133,7 +134,9 @@ public:
 					m_accuracy += getAccuracy ();
 
 					update ();
+#ifndef __NO_E_LEARNING
 					K.update ();
+#endif
 				}
 			}
 
