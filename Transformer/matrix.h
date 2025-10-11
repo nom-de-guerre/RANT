@@ -126,6 +126,7 @@ template<typename T> struct MatrixView_t
 	bool				mw_transpose;
 	bool				mw_CoW;
 	bool				mw_immutable;
+	bool				mw_rowOrder;
 
 	// The physical size of the matrix
 	int					mw_prows;
@@ -183,6 +184,7 @@ template<typename T> struct MatrixView_t
 		mw_transpose (false),
 		mw_CoW (true),
 		mw_immutable (false),
+		mw_rowOrder (false),
 		mw_prows (matrixView->mw_prows),
 		mw_pcolumns (matrixView->mw_pcolumns),
 		mw_vrows (nrows),
@@ -216,6 +218,7 @@ template<typename T> struct MatrixView_t
 		mw_transpose (false),
 		mw_CoW (true),
 		mw_immutable (false),
+		mw_rowOrder (false),
 		mw_prows (matrixView->rows ()),
 		mw_pcolumns (1),
 		mw_vrows (mw_prows),
@@ -238,6 +241,7 @@ template<typename T> struct MatrixView_t
 		mw_transpose (false),
 		mw_CoW (true),
 		mw_immutable (false),
+		mw_rowOrder (false),
 		mw_prows (__n),
 		mw_pcolumns (__m),
 		mw_vrows (__n),
@@ -261,6 +265,7 @@ template<typename T> struct MatrixView_t
 		mw_transpose (false),
 		mw_CoW (true),
 		mw_immutable (false),
+		mw_rowOrder (false),
 		mw_prows (__n),
 		mw_pcolumns (__m),
 		mw_vrows (__n),
@@ -294,6 +299,7 @@ template<typename T> struct MatrixView_t
 		mw_transpose (false),
 		mw_CoW (true),
 		mw_immutable (false),
+		mw_rowOrder (false),
 		mw_prows (__n),
 		mw_pcolumns (__m),
 		mw_vrows (__n),
@@ -409,6 +415,7 @@ template<typename T> struct MatrixView_t
 
 	void display (const char *name, const char *precision)
 	{
+		// DJS - mw_rowOrder
 		printf ("%s\t%p (%p)\t%d\t%d (%d) x %d (%d)\t (%s)\n", name,
 			this, 
 			mw_matrix->raw (),
@@ -433,6 +440,7 @@ template<typename T> struct MatrixView_t
 
 	void displayExp (const char *name)
 	{
+		// DJS - mw_rowOrder
 		printf ("%s\t%p (%p)\t%d\t%d (%d) x %d (%d)\t (%s)\n", name,
 			this, 
 			mw_matrix->raw (),
@@ -454,7 +462,10 @@ template<typename T> struct MatrixView_t
 
 	inline T &datum (const int row, const int column)
 	{
-		return mw_base[column * mw_prows + row];
+		if (mw_rowOrder)
+			return mw_base[row * mw_pcolumns + column];
+		else
+			return mw_base[column * mw_prows + row];
 	}
 
 	/*
@@ -466,6 +477,8 @@ template<typename T> struct MatrixView_t
 	{
 		if (!defined (term))
 			throw ("+= illegal dimensions");
+
+		assert (mw_rowOrder == term.mw_rowOrder);
 
 		update ();
 
@@ -487,6 +500,8 @@ template<typename T> struct MatrixView_t
 	{
 		if (!defined (term))
 			throw ("-= illegal dimensions");
+
+		assert (mw_rowOrder == term.mw_rowOrder);
 
 		update ();
 
@@ -725,7 +740,7 @@ public:
 		if (!m_data.valid ())
 			return -1;
 
-		return INVOKE->mw_prows;
+		return (INVOKE->mw_rowOrder ? INVOKE->mw_pcolumns : INVOKE->mw_prows);
 	}
 
 	Matrix_t<T> &operator= (Matrix_t A)
@@ -738,31 +753,24 @@ public:
 		return *this;
 	}
 
-	// unique identifier of the matrix
-	int ID (void)
-	{
-		int tmp = reinterpret_cast<std::uintptr_t>(m_data.get ());
-		return (int) tmp;
-	}
-
 	// Logical number of rows
-	int rows(void)
+	int rows(void) const
 	{
 		return INVOKE->rows ();
 	}
 
 	// Physical number of rows
-	int prows(void)
+	int prows(void) const
 	{
 		return INVOKE->prows ();
 	}
 
-	int columns(void)
+	int columns(void) const
 	{
 		return INVOKE->columns ();
 	}
 
-	void displayMeta (const char *name)
+	void displayMeta (const char *name) const
 	{
 		INVOKE->displayMeta (name);
 	}
@@ -777,7 +785,7 @@ public:
 		INVOKE->displayExp (name);
 	}
 
-	T *raw ()
+	T *raw (void)
 	{
 		return m_data->raw ();
 	}
@@ -785,6 +793,75 @@ public:
 	void copy (void)
 	{
 		CoW ();
+	}
+
+	bool isRowOrder (void) const
+	{
+		return INVOKE->mw_rowOrder;
+	}
+
+	void setRowOrder (bool fromTranspose = true)
+	{
+		INVOKE->mw_rowOrder = true;
+	}
+
+	/*
+	 * By default matrices are stored column order.
+	 *
+	 * Converts the column-order matrix "from" to row-order and
+	 * and stores it.  The memory must already be allocated.
+	 *
+	 */
+#define TILE_N	32		// on M4 a core has a 128 byte cacheline so 32 doubles
+	void toRowOrder (Matrix_t<T> &from)
+	{
+		int nrow = rows ();
+		int ncol = columns ();
+		T * __restrict RowOrderM = raw ();
+		T * __restrict ColOrderM = from.raw ();
+
+		for (int tile_row = 0; tile_row < nrow; tile_row += TILE_N)
+		{
+			for (int tile_column = 0; tile_column < ncol; tile_column += TILE_N)
+			{
+				for (int i = tile_row; i < tile_row + TILE_N && i < nrow; i++)
+				{
+					for (int j = tile_column; j < tile_column + TILE_N && j < ncol; j++)
+					{
+						// expressed for clarity, the compiler optimizes these away
+						int ColOrderM_idx = j * nrow + i;
+						int RowOrderM_idx = i * ncol + j;
+						RowOrderM[RowOrderM_idx] = ColOrderM[ColOrderM_idx];
+					}
+				}
+			}
+		}
+
+		setRowOrder ();
+	}
+
+	/*
+	 * By default matrices are stored column order.
+	 * This tranposes a row order matrix and maintains row order.
+	 *
+	 */
+	void transposeRowOrder (T *to)
+	{
+		T *from = raw ();
+		const int nrows = INVOKE->rows ();
+		const int ncolumns = INVOKE->columns ();
+
+		for (int i = 0; i < nrows; i++)
+		{
+			for (int j = 0; j < ncolumns; j++)
+			{
+				// written for clarity, optimizers ignore them
+				int source_index = i * ncolumns + j;
+				int destination_index = j * nrows + i;
+
+				to[destination_index] = from [source_index];
+			}
+		}
 	}
 
 	/**********************************************************
@@ -1122,8 +1199,17 @@ public:
 	}
 
 	// returns a new matrix that that is the transpose
-	Matrix_t<T> transpose()
+	Matrix_t<T> transpose (void)
 	{
+		if (isRowOrder ())
+		{
+			Matrix_t<T> At (columns (), rows ());
+			At.m_data->mw_rowOrder = true;
+			transposeRowOrder (At.raw ());
+
+			return At;
+		}
+
 		int rows = INVOKE->rows ();
 		int prows = INVOKE->prows ();
 		int columns = INVOKE->columns ();
@@ -1181,9 +1267,17 @@ public:
 		return INVOKE->rows () * INVOKE->columns ();
 	}
 
-	// Copy a row into a matrix (column order so not fun)
+	// Copy a row into a matrix (column order, so not fun)
 	void importRow (int row, T *from)
 	{
+		if (isRowOrder ())
+		{
+			T * __restrict p = raw () + row * stride ();
+			memcpy (p, from, columns () * sizeof (T));
+
+			return;
+		}
+
 		T *datap = raw () + row;
 		int incr = stride ();
 		int d = columns ();
@@ -1192,7 +1286,7 @@ public:
 			*datap = from[i];
 	}
 
-	// Copy a row matrix to matrix (column order so not fun)
+	// Copy a row matrix to matrix (column order, so not fun)
 	void importRow (int row, Matrix_t<T> &A)
 	{
 		if (!MatrixView_t<T>::defined (get(), A.get()))
@@ -1264,24 +1358,53 @@ public:
 
 	friend Matrix_t<T> operator*(Matrix_t<T> A, Matrix_t<T> B)
 	{
-		if (B.m_data->mw_transpose && A.raw () != B.raw ())
-			throw ("only AtB or AtA supported"); // need to implement this
+		if (!MatrixView_t<T>::defined_prod (A.get(), B.get()))
+			throw ("Mult dimension mismatch");
 
-		if (A.m_data->mw_transpose) {
+		assert (B.isRowOrder () == false);
 
-			A.m_data->mw_transpose = false;
-
-			return mult_transpose (A, B);
-		}
+		if (A.isRowOrder ())
+			return mult_RowOrderByColumnOrder (A, B);
 
 		return mult_normal (A, B);
 	}
 
-	friend Matrix_t<T> mult_normal (Matrix_t<T> A, Matrix_t<T> B)
+	friend Matrix_t<T> mult_RowOrderByColumnOrder(Matrix_t<T> &A, Matrix_t<T> &B)
 	{
-		if (!MatrixView_t<T>::defined_prod (A.get(), B.get()))
-			throw ("* dimension mismatch");
- 
+		int Arows =  A.rows ();
+		int Bcolumns = B.columns ();
+		int d = B.rows ();
+
+		Matrix_t<T> Q (Arows, Bcolumns);
+
+		T * __restrict Araw = A.raw ();
+		T * __restrict Braw = B.raw ();
+		T * __restrict Bcol;
+		T * __restrict Qraw = Q.raw ();
+		int Bstride = B.stride ();
+
+		for (int j = 0; j < Bcolumns; j++)
+		{
+			for (int i = 0; i < Arows; i++)
+			{
+				*Qraw = 0.0;
+				Bcol = Braw;
+
+				for (int k = 0; k < d; ++k, ++Araw, ++Bcol)
+					*Qraw += *Araw * *Bcol;
+
+				++Qraw; // result stored column order
+			}
+
+			Araw = A.raw ();
+			Braw += Bstride;
+		}
+
+		return Q;
+	}
+
+	friend Matrix_t<T> mult_normal (Matrix_t<T> &A, Matrix_t<T> &B)
+	{
 		int Arows =  A.rows ();
 		int Aprows = A.m_data->prows ();
 		int Acolumns = A.columns ();
@@ -1332,6 +1455,8 @@ public:
 	 */
 	friend Matrix_t<T> mult_transpose (Matrix_t<T> A, Matrix_t<T> B)
 	{
+		assert (A.isRowOrder () == false && B.isRowOrder ());
+
 		int Arows =  A.rows ();
 		int Acolumns = A.columns ();
 		int Aprows = A.m_data->prows ();
@@ -1400,6 +1525,8 @@ public:
 		if (!MatrixView_t<T>::defined (A.get(), B.get()))
 			throw ("+ dimension mismatch");
  
+		assert (A.isRowOrder () == B.isRowOrder ());
+
 		Matrix_t<T> Q = prepare_target (A, B);
 
 		T * __restrict Araw = A.raw ();
@@ -1420,6 +1547,8 @@ public:
 		if (!MatrixView_t<T>::defined (A.get(), B.get()))
 			throw ("- dimension mismatch");
  
+		assert (A.isRowOrder () == B.isRowOrder ());
+
 		Matrix_t<T> Q = prepare_target (A, B);
 		// Matrix_t<T> Q (A.rows (), A.columns ());
 
@@ -1448,6 +1577,8 @@ public:
 	 */
 	bool SolveSymmetric (Matrix_t<T> &b, Matrix_t<T> &x)
 	{
+		assert (isRowOrder () == false);
+
 		int n = rows ();
 		Matrix_t<T> G (n, n);
 
@@ -1472,6 +1603,8 @@ template<typename T> void Matrix_t<T>::find_R (Matrix_t<T> &b)
 {
 	if (!MatrixView_t<T>::defined_prod (get(), b.get())) 
 		throw ("compute R, dimension mismatch");
+
+	assert (isRowOrder () == false);
 
 	CoW ();
 	b.CoW ();
@@ -1560,6 +1693,8 @@ template<typename T> void Matrix_t<T>::find_R (Matrix_t<T> &b)
 // Solve for x in Rx = b, R is upper triangular (called from solveQR)
 template<typename T> Matrix_t<T> Matrix_t<T>::find_x (Matrix_t<T> &b)
 {
+	assert (isRowOrder () == false);
+
 	int columns = Matrix_t<T>::columns ();
 	int asym = Matrix_t<T>::rows () - columns;
 	int dim = b.rows () - asym;
@@ -1590,6 +1725,8 @@ template<typename T> Matrix_t<T> Matrix_t<T>::find_x (Matrix_t<T> &b)
 
 template<typename T> void Matrix_t<T>::QR (Matrix_t<T> &Q)
 {
+	assert (isRowOrder () == false);
+
 	CoW ();
 	Q = Matrix_t<T> (INVOKE->rows (), INVOKE->columns ());
 
@@ -1717,6 +1854,8 @@ template<typename T> void Matrix_t<T>::QR (Matrix_t<T> &Q)
 
 template<typename T> void Matrix_t<T>::HessenbergSimilarity (bool similar)
 {
+	assert (isRowOrder () == false);
+
 	CoW ();
 
 	int rows = Matrix_t<T>::rows ();
@@ -1826,6 +1965,8 @@ template<typename T> void Matrix_t<T>::HessenbergSimilarity (bool similar)
 template<typename T> void 
 Matrix_t<T>::ApplyHouseholder (Matrix_t<T> &v, bool similar)
 {
+	assert (isRowOrder () == false);
+
 	CoW ();
 	v.CoW ();
 
@@ -1934,6 +2075,8 @@ Matrix_t<T>::ApplyHouseholder (Matrix_t<T> &v, bool similar)
 template<typename T> void
 Matrix_t<T>::ImplicitQRStep (int N, double shifts[], Matrix_t &Q)
 {
+	assert (isRowOrder () == false);
+
 	CoW ();
 
 	/*
@@ -2124,6 +2267,8 @@ Matrix_t<T>::ComputeCholesky (Matrix_t<T> &G)
 	double * __restrict Araw = raw ();
 	double * __restrict Graw = G.raw ();
 
+	assert (isRowOrder () == false);
+
 #ifdef __DEBUG
 	assert (step > 0);
 #endif
@@ -2155,6 +2300,8 @@ Matrix_t<T>::SolveLower (Matrix_t<T> &b, Matrix_t<T> &x)
 	double *constraint = b.raw ();
 	int step = stride ();
 
+	assert (isRowOrder () == false);
+
 #ifdef __DEBUG
 	assert (step > 0);
 #endif
@@ -2184,6 +2331,8 @@ Matrix_t<T>::SolveUpper (Matrix_t<T> &b)
 	double *Araw = raw ();
 	double *constraint = b.raw ();
 	int step = stride ();
+
+	assert (isRowOrder () == false);
 
 	for (int ncol = n; ncol >= 0; --ncol)
 	{

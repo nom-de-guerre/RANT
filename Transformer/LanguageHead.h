@@ -58,7 +58,15 @@ public:
 
 	virtual Md_t &call (Md_t &Z)
 	{
-		lh_logits = lh_head.call (Z);
+		/*
+		 * The default representation is column-order.  Re-ordering the left-side of the
+		 * equation results in cache line loads for the dot products.
+		 *
+		 */
+		Md_t ZrowOrder (Z.rows (), Z.columns ());
+		ZrowOrder.toRowOrder (Z);
+
+		lh_logits = lh_head.call (ZrowOrder);
 		return lh_Y.call (lh_logits);
 	}
 

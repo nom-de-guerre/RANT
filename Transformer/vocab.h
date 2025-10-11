@@ -167,6 +167,9 @@ public:
 		int valid = 0;
 		int index;
 
+		// greatly speeds up computation of Q, K and V in the heads.
+		X.setRowOrder ();
+
 		for (int i = 0; i < N; ++i)
 		{
 			index = (*this)[(char const * const) pTokens[i].iov_base];
