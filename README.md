@@ -4,6 +4,8 @@ RANT includes all the tools required to train and deploy Deep Learning models.  
 
 RANT supports regression and classification (both multiclass and multilabel).  There are many examples of Deep Learning and how to train models using RANT in the Examples folder using both the Python and C++ interface.  For example, a tiny model that can learn MNIST.
 
+The library now also includes a C++ implementation of a masked and causal transformer.  This includes full support for training.
+
 Bug reports and suggestions welcome.
 
 
