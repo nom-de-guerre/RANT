@@ -67,7 +67,7 @@ public:
 		at_Q (d, dh),
 		at_K (d, dh),
 		at_V (d, dh),
-		at_Softmax (l, l),
+		at_Softmax (l, l, causal),
 		at_causal (causal)
 	{
 	}

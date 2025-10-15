@@ -184,13 +184,16 @@ template<typename T> struct MatrixView_t
 		mw_transpose (false),
 		mw_CoW (true),
 		mw_immutable (false),
-		mw_rowOrder (false),
+		mw_rowOrder (matrixView->mw_rowOrder),
 		mw_prows (matrixView->mw_prows),
 		mw_pcolumns (matrixView->mw_pcolumns),
 		mw_vrows (nrows),
 		mw_vcolumns (ncols)
 	{
-		mw_base = matrixView->mw_base + scol * mw_prows + srow;
+		if (mw_rowOrder)
+			mw_base = matrixView->mw_base + scol + srow * mw_pcolumns;
+		else
+			mw_base = matrixView->mw_base + scol * mw_prows + srow;
 
 		init ();
 	}
@@ -1075,7 +1078,7 @@ public:
 	 * <srow, scol> to <srow + nrows, scol + ncols>
 	 *
 	 */
-	Matrix_t view (int srow, int scol, int nrows, int ncols, bool WiP = true)
+	Matrix_t view (int srow, int scol, int nrows, int ncols, bool WiP = true) const
 	{
 		Matrix_t A;
 

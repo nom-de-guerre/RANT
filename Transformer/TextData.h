@@ -46,27 +46,10 @@ struct TrainingData_t
 {
 	TextDocument_t					cd_text;
 	vocabDict_t						cd_V;
-
-	Md_t							cd_positional;
+	struct iovec 					cd_lexemes[TOKENWINDOW];
 
 	int								cd_minLen;
 	int								cd_maxLen;
-
-	void buildPositional (void)
-	{
-		IEEE_t d = get_d ();
-
-		cd_positional = Md_t (TOKENWINDOW, get_d ());
-
-		for (int pos = 0; pos < TOKENWINDOW; ++pos)
-			for (int i = 0; i < d; i += 2)
-			{
-				IEEE_t denom = (IEEE_t) pos / pow (10000, (IEEE_t) i / d);
-
-				cd_positional (pos, i) = sin (denom);
-				cd_positional (pos, i+1) = cos (denom);
-			}
-	}
 
 public:
 
@@ -78,7 +61,6 @@ public:
 		cd_minLen (-1),
 		cd_maxLen (INT_MAX)
 	{
-		buildPositional ();
 	}
 
 	int get_d (void) const
@@ -115,11 +97,35 @@ public:
 	{
 		return cd_V.N_LearnableParameters ();
 	}
+
+	int nextClause (bool filter=true)
+	{
+		int Ntokens;
+
+		while (true)
+		{
+			Ntokens = cd_text.NextClause (TOKENWINDOW, cd_lexemes);
+			if (Ntokens < 0)
+				return Ntokens;
+
+			if (!filter)
+				return Ntokens;
+
+			if (Ntokens > cd_minLen && Ntokens <= cd_maxLen)
+				break;
+		}
+
+		return Ntokens;
+	}
+
+	void reset (void)
+	{
+		cd_text.Reset ();
+	}
 };
 
-class CausalData_t : public TrainingData_t
+struct CausalData_t : public TrainingData_t
 {
-	struct iovec 					ca_lexemes[TOKENWINDOW];
 
 	Md_t							ca_X;
 	int								ca_y[TOKENWINDOW];
@@ -134,75 +140,45 @@ public:
 	{
 	}
 
-	int nextClause ()
-	{
-		int ca_Ntokens = cd_text.NextClause (TOKENWINDOW, ca_lexemes);
-
-		return ca_Ntokens;
-	}
-
 	exemplar_t &getDatum (void)
 	{
 		/*
 		 * We ignore the newline token, hence the Ntokens - 1
 		 *
 		 */
-		int Ntokens;
-
-		while (true)
-		{
-			Ntokens = nextClause ();
-			if (Ntokens > cd_minLen && Ntokens <= cd_maxLen)
-				break;
-			else if (Ntokens < 0)
-			{
-				ca_datum.second = NULL;
-				return ca_datum;
-			}
-		}
-
+		int Ntokens = nextClause ();
 		if (Ntokens < 0)
 		{
 			ca_datum.second = NULL;
 			return ca_datum;
 		}
 
+#ifdef __POSITIONAL
+		bool pos = true;
+#else
+		bool pos = false;
+#endif
 		ca_X = Md_t (Ntokens - 1, cd_V.getVecDim ());
-        int Nvectors = cd_V.EmbedTokens (Ntokens - 1, ca_lexemes, ca_X);
+        int Nvectors = cd_V.EmbedTokens (Ntokens - 1, cd_lexemes, ca_X, pos);
 
 		assert (Nvectors == (Ntokens - 1));
 
-#if 0
-		Md_t positional = cd_positional.view (0,
-											0,
-											ca_X.rows (),
-											ca_X.columns ());
-		ca_X += positional;
-#endif
         /*
          * Build the causal ground truth
          *
          */
         for (int i = 1; i < Ntokens; ++i)
-            ca_y[i - 1] = cd_V[(char const *) ca_lexemes[i].iov_base];
+            ca_y[i - 1] = cd_V[(char const *) cd_lexemes[i].iov_base];
 
 		ca_datum.first = ca_X;
 		ca_datum.second = ca_y;
 
 		return ca_datum;
 	}
-
-	void reset (void)
-	{
-		cd_text.Reset ();
-	}
-
 };
 
 class MaskedData_t : public TrainingData_t
 {
-	struct iovec 					be_lexemes[TOKENWINDOW];
-
 	Md_t							be_X;
 	int								*be_y;
 	exemplar_t						be_datum;
@@ -220,13 +196,6 @@ public:
 		be_y (NULL),
 		be_useList (false)
 	{
-	}
-
-	int nextClause ()
-	{
-		int be_Ntokens = cd_text.NextClause (TOKENWINDOW, be_lexemes);
-
-		return be_Ntokens;
 	}
 
 	bool maskDatum (const int Ntokens)
@@ -249,20 +218,18 @@ public:
 		{
 			int mask = toMask.Sample ();
 
-			be_y[mask] = cd_V[(char const *) be_lexemes[mask].iov_base];
+			be_y[mask] = cd_V[(char const *) cd_lexemes[mask].iov_base];
 
 			if (numberToMask)
 			{
 
-				be_lexemes[mask].iov_base = (void *) "[MASK]";
-				be_lexemes[mask].iov_len = 6;
+				cd_lexemes[mask].iov_base = (void *) "[MASK]";
+				cd_lexemes[mask].iov_len = 6;
 
 				--numberToMask;
 
 			} else
 				be_y[mask] = -be_y[mask]; // loss ignores negative tokens
-
-// printf ("%d\t%f\t%s\n", i, sample, (char const *) be_lexemes[i].iov_base);
 		}
 
 		return true;
@@ -274,17 +241,7 @@ public:
 		 * We ignore the newline token, hence the Ntokens - 1
 		 *
 		 */
-		int Ntokens;
-
-		while (true)
-		{
-			Ntokens = nextClause ();
-			if (Ntokens > cd_minLen && Ntokens <= cd_maxLen)
-				break;
-
-			if (Ntokens == -1)
-				break;
-		}
+		int Ntokens = nextClause ();
 
 		bool rc = maskDatum (Ntokens);
 		if (!rc)
@@ -293,18 +250,16 @@ public:
 			return be_datum;
 		}
 
+#ifdef __POSITIONAL
+		bool pos = true;
+#else
+		bool pos = false;
+#endif
 		be_X = Md_t (Ntokens - 1, cd_V.getVecDim ());
-        int Nvectors = cd_V.EmbedTokens (Ntokens - 1, be_lexemes, be_X);
+        int Nvectors = cd_V.EmbedTokens (Ntokens - 1, cd_lexemes, be_X, pos);
 
 		assert (Nvectors == (Ntokens - 1));
 
-#if 0
-		Md_t positional = cd_positional.view (0,
-											0,
-											be_X.rows (),
-											be_X.columns ());
-		be_X += positional;
-#endif
 		be_datum.first = be_X;
 		be_datum.second = be_y;
 

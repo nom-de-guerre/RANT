@@ -28,9 +28,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <time.h>
 
+#include <stdio.h>
+#include <readline/readline.h>
+#include <readline/history.h>
+
 #include <TextData.h>
 #include <CausalModel.h>
 #include <Toptions.h>
+
+void Interaction (CausalModel_t &NLM, CausalData_t &data, int N=1024);
 
 int main (int argc, char *argv[])
 {
@@ -42,6 +48,9 @@ int main (int argc, char *argv[])
 	srand (seed);
 
 	printf ("IEEE_t is %lu bytes.\n", sizeof (IEEE_t));
+#ifdef __POSITIONAL
+	printf ("Including Positional Embeddings\n");
+#endif
 #ifndef __NO_E_LEARNING
     printf ("Including Learned Embeddings\n");
 #endif
@@ -80,5 +89,59 @@ int main (int argc, char *argv[])
 			NLM.fit (data,
 				opts.to_Nsamples,
 				opts.to_maxIterations));
+
+	Interaction (NLM, data, opts.to_Nsamples);
+}
+
+void Interaction (CausalModel_t &NLM, CausalData_t &data, int N)
+{
+	bool rc = true;
+	char *line;
+	Md_t X;
+	int const *y;
+
+	while (rc)
+	{
+		line = readline ("-> ");
+		if (line == NULL)
+			break;
+
+		if (line[0] == '$')
+		{
+			if (strcmp (line + 1, "list") == 0)
+			{
+				data.reset ();
+
+				for (int i = 0; i < N; ++i)
+				{
+					int Ntokens = data.nextClause ();
+					for (int i = 0; i < Ntokens; ++i)
+						printf ("%s ", (char const *) data.cd_lexemes[i].iov_base);
+					printf ("\n");
+				}
+
+			} else if (strcmp (line + 1, "bye") == 0) {
+
+				free (line);
+				return;
+
+			} else
+				printf ("Command not recognized\n");
+
+			free (line);
+			continue;
+		}
+
+		char *lineHistory = strdup (line);
+
+		data.cd_V.StringToX (line, X, true);
+
+		y = NLM.predict (X);
+		data.cd_V.printTokens (X.rows (), y);
+
+		free (line);
+
+		add_history (lineHistory);
+	}
 }
 

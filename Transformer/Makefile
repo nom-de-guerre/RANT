@@ -8,7 +8,7 @@ HDEPS = $(wildcard *.h)
 DEPS = Makefile $(HDEPS)
 
 causal: causal.cc $(DEPS) $(HDEPS)
-	$(CC) -o $@ $(CFLAGS) causal.cc
+	$(CC) -o $@ $(CFLAGS) causal.cc -lreadline -D__POSITIONAL
 
 masked: masked.cc $(DEPS) $(HDEPS)
 	$(CC) -o $@ $(CFLAGS) masked.cc

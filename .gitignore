@@ -9,6 +9,7 @@ Examples/water
 Examples/enzymes
 Transformer/causal
 Transformer/masked
+Transformer/Attic
 **/.DS_Store
 **/*.swp
 Private

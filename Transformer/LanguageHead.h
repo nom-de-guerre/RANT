@@ -86,7 +86,7 @@ public:
 		lh_head.update ();
 	}
 
-	int const * const tokens (void)
+	int const * tokens (void)
 	{
 		return lh_Y.argmax ();
 	}

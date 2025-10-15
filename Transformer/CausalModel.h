@@ -82,14 +82,6 @@ public:
 		return fit (datum.first, datum.second);
 	}
 
-	void update (void)
-	{
-		m_L.update ();
-		m_T.update ();
-
-		reset ();
-	}
-
 	IEEE_t fit (CausalData_t &K,
 		int Nsamples,
 		const int MaxEpochs=128, 
@@ -116,6 +108,7 @@ public:
 				++i; // only increment i on accepted sequence
 
 				(void) fit (y);
+
 #ifndef __NO_E_LEARNING
 				K.backward (m_dX, y.second);
 #endif
@@ -141,7 +134,10 @@ public:
 			}
 
 			if (getAccuracy () == 1.0)
+			{
+				printf ("\nEarly termination\n");
 				break;
+			}
 
 			printf ("EPOCH %d:\t%f\t%f\n",
 				epoch,
@@ -152,6 +148,14 @@ public:
 		}
 
 		return m_loss.get ();
+	}
+
+	void update (void)
+	{
+		m_L.update ();
+		m_T.update ();
+
+		reset ();
 	}
 
 	int N_LearnableParameters (void) const

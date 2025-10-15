@@ -43,6 +43,9 @@ int main (int argc, char *argv[])
 
 	printf ("IEEE_t is %lu bytes.\n", sizeof (IEEE_t));
 
+#ifdef __POSITIONAL
+	printf ("Including Positional Embeddings\n");
+#endif
 #ifndef __NO_E_LEARNING
 	printf ("Including Learned Embeddings\n");
 #endif

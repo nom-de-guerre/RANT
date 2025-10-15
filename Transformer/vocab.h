@@ -35,6 +35,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <errno.h>
 #include <string.h>
 
+#include <list>
+typedef std::list<int> tokenList_t;
+
 #include <transformer_common.h>
 #include <SparseOptimizer.h>
 
@@ -43,6 +46,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #define SEMVECSIZE (vd_d * sizeof (IEEE_t))
 #define IDX2OFF(X) (X * SEMVECSIZE)
+
+#define __MAXSEQ_LENGTH 100
 
 class vocabDict_t
 {
@@ -58,6 +63,8 @@ class vocabDict_t
 	IEEE_t					*vd_dX;
 	SparseOptimizer_t		*vd_O;
 
+	Md_t					vd_positional;
+
 public:
 
 	vocabDict_t (char const * const filename, const bool learnV=false) :
@@ -72,6 +79,8 @@ public:
 			throw strerror (errno);
 
 		Load (fp);
+
+		buildPositional ();
 	}
 
 	void Load (FILE *fp)
@@ -162,37 +171,102 @@ public:
 		return vd_dap + tokenId * __RANT_DICT_ENTRY_LEN;
 	}
 
-	int EmbedTokens (const int N, struct iovec *pTokens, Md_t &X)
+	void printTokens (int N, int const *tokens)
 	{
-		int valid = 0;
-		int index;
+		for (int i = 0; i < N; ++i)
+			printf ("%s ", TokenToString (tokens[i]));
+		printf ("\n");
+	}
 
-		// greatly speeds up computation of Q, K and V in the heads.
-		X.setRowOrder ();
+	void buildPositional (void)
+	{
+		IEEE_t d = vd_d;
+
+		vd_positional = Md_t (__MAXSEQ_LENGTH, vd_d);
+		vd_positional.setRowOrder ();
+
+		IEEE_t *p = vd_positional.raw ();
+
+		for (IEEE_t pos = 0; pos < __MAXSEQ_LENGTH; ++pos)
+			for (int i = 0; i < d; i += 2)
+			{
+				IEEE_t angle = pos / pow (10000, (IEEE_t) i / d);
+
+				*p = sin (angle);
+				++p;
+				*p = cos (angle);
+				++p;
+			}
+	}
+
+	int EmbedTokens (const int N, struct iovec *pTokens, Md_t &X, bool pos=false)
+	{
+		int token;
+		tokenList_t seq;
 
 		for (int i = 0; i < N; ++i)
 		{
-			index = (*this)[(char const * const) pTokens[i].iov_base];
-			if (index == -1)
-			{
-				pTokens[i].iov_len = -1;
-
-#if 1
-// Currently there is one text.  V and E were built for it.
-// This is a temporary dev measure to verify correctness.
-printf ("Not found %d\t%s\n", 
-	(int) pTokens[i].iov_len, 
-	(char *) pTokens[i].iov_base);
-#endif
-
-				continue;
-			}
-
-			X.importRow (i, vd_semanticVectors + (index * vd_d));
-			++valid;
+			token = (*this)[(char const * const) pTokens[i].iov_base];
+			seq.push_back (token);
 		}
 
-		return valid;
+		TokensToX (seq, X, pos);
+
+		return seq.size ();
+	}
+
+	bool StringToX (char *pString, Md_t &X, bool pos=false) const
+	{
+		tokenList_t seq;
+		char *start = pString;
+		int Ntokens = 1; // account for last push following loop
+		int token;
+
+		for (char *p = pString; *p; ++p)
+		{
+			if (isalnum (*p) || *p == '[' || *p == ']')
+				continue;
+
+			*p = 0;
+			++p;
+			token = (*this)[start];
+			seq.push_back (token);
+			start = p;
+			++Ntokens;
+		}
+
+		token = (*this)[start];
+		seq.push_back (token);
+
+		X = Md_t (Ntokens, getVecDim ());
+
+		return TokensToX (seq, X, pos);
+	}
+
+	bool TokensToX (tokenList_t seq, Md_t &X, bool pos) const
+	{
+		// greatly speeds up computation of Q, K and V in the heads.
+		X.setRowOrder ();
+		int token;
+
+		int row = 0;
+		for (auto it = seq.begin (); it != seq.end (); ++it, ++row)
+		{
+			token = *it;
+
+			X.importRow (row, vd_semanticVectors + (token * vd_d));
+		}
+
+		if (pos)
+		{
+			Md_t positional = vd_positional.view (0,
+											0,
+											X.rows (),
+											X.columns ());
+			X += positional;
+		}
+
+		return true;
 	}
 
 	/*
