@@ -59,8 +59,9 @@ public:
 	virtual Md_t &call (Md_t &Z)
 	{
 		/*
-		 * The default representation is column-order.  Re-ordering the left-side of the
-		 * equation results in cache line loads for the dot products.
+		 * The default representation is column-order.  Re-ordering
+		 * the left-side of the equation results in cache line loads
+		 * for the dot products.
 		 *
 		 */
 		Md_t ZrowOrder (Z.rows (), Z.columns ());

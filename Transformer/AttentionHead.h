@@ -171,12 +171,20 @@ public:
 
 	virtual Md_t &call (Md_t &X)
 	{
+		Md_t _X;
 		a_Y = Md_t (X.rows (), X.columns (), 0.0);
+
+		if (X.isRowOrder ())
+			_X = X;
+		else {
+			_X = Md_t (X.rows (), X.columns ());
+			_X.toRowOrder (X);
+		}
 
 		for (int i = 0; i < a_h; ++i)
 		{
-			Md_t &Zi = a_heads[i]->call (X);
-			a_Y += a_Wo[i]->call (Zi);
+			Md_t &Hi = a_heads[i]->call (_X);
+			a_Y += a_Wo[i]->call (Hi);
 		}
 
 		return a_Y;
