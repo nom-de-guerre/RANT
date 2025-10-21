@@ -94,7 +94,26 @@ struct layer_t
 
 	virtual int N_LearnableParameters (void) const
 	{
-		return 0;
+		int N = 0;
+
+		for (auto component = l_children.begin ();
+			 component != l_children.end ();
+			 ++component)
+			N += (*component)->N_LearnableParameters ();
+
+        return N;
+	}
+
+	virtual bool save (FILE *fp)
+	{
+		bool rc = true;
+
+		for (auto component = l_children.begin ();
+				component != l_children.end ();
+				++component)
+			rc &= (*component)->save (fp);
+
+		return rc;
 	}
 };
 

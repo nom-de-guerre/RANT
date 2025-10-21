@@ -42,20 +42,30 @@ public:
 			l_children.push_back (new transformerBlock_t (h, l, d, causal));
 	}
 
+	transformer_t (FILE *fp)
+	{
+		char buffer[32];
+		int n;
+
+		fscanf (fp, "%s\n", buffer);
+		if (strcmp (buffer, "@TRANSFORMER") != 0)
+			throw ("Bad Transformer");
+		fscanf (fp, "%d\n", &n); // number of blocks
+
+		for (int i = 0; i < n; ++i)
+			l_children.push_back (new transformerBlock_t (fp));
+	}
+
 	~transformer_t (void)
 	{
 	}
 
-	virtual int N_LearnableParameters (void) const
+	virtual bool save (FILE *fp)
 	{
-		int N = 0;
+		fprintf (fp, "@TRANSFORMER\n");
+		fprintf (fp, "%d\n", (int) l_children.size ());
 
-		for (auto component = l_children.begin ();
-				component != l_children.end ();
-				++component)
-			N += (*component)->N_LearnableParameters ();
-
-		return N;
+		return layer_t::save (fp);
 	}
 };
 

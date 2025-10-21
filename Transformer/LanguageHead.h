@@ -34,7 +34,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <2D_softmax.h>
 #include <layer.h>
 
-class LanguageHead_t : layer_t
+class LanguageHead_t : public layer_t
 {
 
 	__matrix_XW_t				lh_head;
@@ -50,6 +50,19 @@ public:
 		lh_head (d, V),
 		lh_Y (d, V)
 	{
+	}
+
+	LanguageHead_t (FILE *fp)
+	{
+		char buffer[32];
+
+		fscanf (fp, "%s\n", buffer);
+		if (strcmp ("@LANGUAGEHEAD", buffer) != 0)
+			throw ("BAD LANGAUGE HEAD");
+
+		lh_head.load (fp);
+
+		lh_Y.reset (lh_head.rows (), lh_head.columns ());
 	}
 
 	~LanguageHead_t (void)
@@ -100,6 +113,14 @@ public:
 	Md_t &logits (void)
 	{
 		return lh_logits;
+	}
+
+	virtual bool save (FILE *fp)
+	{
+		bool rc = fprintf (fp, "@LANGUAGEHEAD\n");
+		rc &= lh_head.save (fp);
+
+		return rc;
 	}
 
 	int N_LearnableParameters (void) const

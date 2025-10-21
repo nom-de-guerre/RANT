@@ -72,6 +72,46 @@ public:
 	{
 	}
 
+	AttentionHead_t (FILE *fp)
+	{
+		char buffer[32];
+		int l;
+		int flag;
+
+		fscanf (fp, "%s\n", buffer);
+		if (strcmp ("@ATTNHEAD", buffer) != 0)
+			throw ("Bad Attention Head\n");
+
+		fscanf (fp, "%s %d\n", buffer, &l);
+		if (strcmp ("@SEQLEN", buffer) != 0)
+			throw ("Bad Attention length\n");
+
+		fscanf (fp, "%s %d\n", buffer, &flag);
+		if (strcmp ("@CAUSAL", buffer) != 0)
+			throw ("Bad Attention Causal\n");
+		(flag ? at_causal = true : at_causal = false);
+
+		fscanf (fp, "%s\n", buffer);
+		if (strcmp ("@Wq", buffer) != 0)
+			throw ("Bad Wq\n");
+
+		at_Q.load (fp);
+
+		fscanf (fp, "%s\n", buffer);
+		if (strcmp ("@Wk", buffer) != 0)
+			throw ("Bad Wk\n");
+
+		at_K.load (fp);
+
+		fscanf (fp, "%s\n", buffer);
+		if (strcmp ("@Wv", buffer) != 0)
+			throw ("Bad Wv\n");
+
+		at_V.load (fp);
+
+		at_Softmax.reset (l, l, at_causal);
+	}
+
 	virtual ~AttentionHead_t (void)
 	{
 	}
@@ -111,6 +151,21 @@ public:
 		at_V.update ();
 		at_K.update ();
 		at_Q.update ();
+	}
+
+	virtual bool save (FILE *fp)
+	{
+		fprintf (fp, "@ATTNHEAD\n");
+		fprintf (fp, "@SEQLEN %d\n", at_Softmax.S ().rows ());
+		fprintf (fp, "@CAUSAL %d\n", (int) at_causal);
+		fprintf (fp, "@Wq\n");
+		at_Q.save (fp);
+		fprintf (fp, "@Wk\n");
+		at_K.save (fp);
+		fprintf (fp, "@Wv\n");
+		at_V.save (fp);
+
+		return true;
 	}
 
 	Md_t &Y (void)
@@ -154,6 +209,34 @@ public:
 		{
 			a_heads[i] = new AttentionHead_t (i, l, d, dh, causal);
 			a_Wo[i] = new __matrix_XW_t (dh, d, "Wo");
+		}
+	}
+
+	Attention_t (FILE *fp) :
+		layer_t (),
+		a_h (-1),
+		a_heads (NULL),
+		a_Wo (NULL)
+	{
+		char buffer[32];
+
+		fscanf (fp, "%s\n", buffer);
+		if (strcmp (buffer, "@ATTENTION") != 0)
+			throw ("Bad Attention Module");
+
+		fscanf (fp, "%d\n", &a_h);
+		a_heads = new AttentionHead_t * [a_h];
+		for (int i = 0; i < a_h; ++i)
+			a_heads[i] = new AttentionHead_t (fp);
+
+		a_Wo = new __matrix_XW_t * [a_h];
+		for (int i = 0; i < a_h; ++i)
+		{
+			fscanf (fp, "%s\n", buffer);
+			if (strcmp ("@Wo", buffer) != 0)
+				throw ("Bad Wq\n");
+
+			a_Wo[i] = new __matrix_XW_t (fp);
 		}
 	}
 
@@ -220,6 +303,22 @@ public:
 		N += a_h * a_Wo[0]->N_LearnableParameters ();
 
 		return N;
+	}
+
+	virtual bool save (FILE *fp)
+	{
+		fprintf (fp, "@ATTENTION\n");
+		fprintf (fp, "%d\n", a_h);
+
+		for (int i = 0; i < a_h; ++i)
+			a_heads[i]->save (fp);
+		for (int i = 0; i < a_h; ++i)
+		{
+			fprintf (fp, "@Wo\n");
+			a_Wo[i]->save (fp);
+		}
+
+		return true;
 	}
 };
 

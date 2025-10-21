@@ -1597,6 +1597,64 @@ public:
 	{
 		return m_data.rcount ();
 	}
+
+	bool save (FILE *fp)
+	{
+		int rc;
+		int nrows = rows ();
+		int ncolumns = columns ();
+		IEEE_t *p = raw ();
+
+		rc = fprintf (fp, "@dim %d %d\n", nrows, ncolumns);
+		if (rc < 0)
+			return false;
+
+		for (int i = 0; i < nrows; ++i)
+		{
+			for (int j = 0; j < ncolumns; ++j, ++p)
+			{
+				rc = fprintf (fp, "%lf ", *p);
+				if (rc < 0)
+					return false;
+			}
+
+			rc = fprintf (fp, "\n");
+			if (rc < 0)
+				return false;
+		}
+
+		return true;
+	}
+
+	bool load (FILE *fp)
+	{
+		int rc;
+		int nrows;
+		int ncolumns;
+
+		rc = fscanf (fp, "@dim %d %d\n", &nrows, &ncolumns);
+		if (rc < 0)
+			return false;
+
+		m_data = new MatrixView_t<T>(nrows, ncolumns);
+		IEEE_t *p = raw ();
+
+		for (int i = 0; i < nrows; ++i)
+		{
+			for (int j = 0; j < ncolumns; ++j, ++p)
+			{
+				rc = fscanf (fp, "%f ", p);
+				if (rc < 0)
+					return false;
+			}
+
+			rc = fscanf (fp, "\n");
+			if (rc < 0)
+				return false;
+		}
+
+		return true;
+	}
 };
 
 // All QR based stuff below uses Householder reflectors.

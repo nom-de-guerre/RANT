@@ -321,6 +321,28 @@ public:
 		for (int i = 0; i < vd_N; ++i, p += __RANT_DICT_ENTRY_LEN)
 			printf ("%d\t%s\n", i, p);
 	}
+
+	bool save (char const * const filename)
+	{
+		FILE *fp = fopen (filename, "w");
+		if (fp == NULL)
+			return false;
+
+		fprintf (fp, "Words %d\n", vd_N);
+		fprintf (fp, "Tuple %d\n", vd_d);
+		fprintf (fp, "Dictionary\n");
+
+		for (int i = 0, index = 0; i < vd_N; ++i)
+		{
+			fprintf (fp, "%s\n", vd_dap + (i * __RANT_DICT_ENTRY_LEN));
+			for (int j = 0; j < vd_d; ++j, ++index)
+				fprintf (fp, "%lf\n", vd_semanticVectors[index]);
+		}
+
+		fclose (fp);
+
+		return true;
+	}
 };
 
 int vocabDict_t::dictionaryLookup (char const * const p, bool find) const

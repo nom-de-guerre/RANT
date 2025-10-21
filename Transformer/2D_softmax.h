@@ -48,9 +48,22 @@ public:
 	{
 	}
 
+	Softmax2D_t (void) :
+		ss_indices (NULL)
+	{
+	}
+
 	~Softmax2D_t (void)
 	{
 		delete [] ss_indices;
+	}
+
+	void reset (int nrows, int ncols, bool applyCausalMask=false)
+	{
+		ss_S = Md_t (nrows, ncols);
+		ss_indices = new int [nrows];
+
+		ss_applyCausalMask = applyCausalMask;
 	}
 
 	inline Md_t &S (void)

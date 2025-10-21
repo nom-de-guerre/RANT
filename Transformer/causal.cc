@@ -108,7 +108,7 @@ void Interaction (CausalModel_t &NLM, CausalData_t &data, int N)
 
 		if (line[0] == '$')
 		{
-			if (strcmp (line + 1, "list") == 0)
+			if (strncmp (line + 1, "list", 4) == 0)
 			{
 				data.reset ();
 
@@ -116,15 +116,31 @@ void Interaction (CausalModel_t &NLM, CausalData_t &data, int N)
 				{
 					int Ntokens = data.nextClause ();
 					for (int i = 0; i < Ntokens; ++i)
-						printf ("%s ", (char const *) data.cd_lexemes[i].iov_base);
+						printf ("%s ",
+							(char const *) data.cd_lexemes[i].iov_base);
 					printf ("\n");
 				}
 
-			} else if (strcmp (line + 1, "bye") == 0) {
+			} else if (strncmp (line + 1, "bye", 3) == 0) {
 
 				free (line);
 				return;
 
+			} else if (strncmp (line + 1, "save", 4) == 0) {
+
+				char *p = line + 6;
+				if (strncmp (p, "model", 5) == 0)
+					NLM.save (p + 6);
+				else if (strncmp (p, "V", 1) == 0)
+					data.cd_V.save (p + 2);
+				else if (strncmp (p, "all", 3)) {
+					char buffer[128];
+					snprintf (buffer, 128, "%s.E", p+4);
+					data.cd_V.save (buffer);
+					snprintf (buffer, 128, "%s.RANT", p+4);
+					NLM.save (buffer);
+				} else
+					printf ("Save command not recognized\n");
 			} else
 				printf ("Command not recognized\n");
 

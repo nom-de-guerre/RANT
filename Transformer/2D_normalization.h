@@ -73,6 +73,19 @@ struct VectorNormalization_t
 		ln_dL.zero ();
 	}
 
+	VectorNormalization_t (FILE *fp)
+	{
+		char buffer[32];
+
+		fscanf (fp, "%s\n", buffer);
+		if (strcmp ("@LN_POSITION", buffer) != 0)
+			throw ("Bad LN Vector");
+
+		ln_params.load (fp);
+
+		ln_xhat = new IEEE_t [ln_params.rows ()];
+	}
+
 	~VectorNormalization_t (void)
 	{
 		delete [] ln_xhat;
@@ -86,6 +99,14 @@ struct VectorNormalization_t
 	void update (void)
 	{
 		ln_O.update ();
+	}
+
+	bool save (FILE *fp)
+	{
+		fprintf (fp, "@LN_POSITION\n");
+		ln_params.save (fp);
+
+		return true;
 	}
 };
 
@@ -225,6 +246,21 @@ public:
 			ma_positions[i] = new VectorNormalization_t (l);
 	}
 
+	MatrixNormalization_t (FILE *fp)
+	{
+		char buffer[32];
+		fscanf (fp, "%s\n", buffer);
+		if (strcmp ("@LN", buffer) != 0)
+			throw ("Bad LN");
+
+		fscanf (fp, "%d\n", &ma_d);
+
+		ma_positions = new VectorNormalization_t * [ma_d];
+
+		for (int i = 0; i < ma_d; ++i)
+			ma_positions[i] = new VectorNormalization_t (fp);
+	}
+
 	~MatrixNormalization_t (void)
 	{
 		for (int i = 0; i < ma_d; ++i)
@@ -284,6 +320,17 @@ public:
 	{
 		for (int i = 0; i < ma_d; ++i)
 			ma_positions[i]->update ();
+	}
+
+	virtual bool save (FILE *fp)
+	{
+		fprintf (fp, "@LN\n");
+		fprintf (fp, "%d\n", ma_d);
+
+		for (int i = 0; i < ma_d; ++i)
+			 ma_positions[i]->save (fp);
+
+		return true;
 	}
 };
 

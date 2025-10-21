@@ -55,20 +55,31 @@ public:
 #endif
 	}
 
+	transformerBlock_t (FILE *fp)
+	{
+		char buffer[32];
+
+		fscanf (fp, "%s\n", buffer);
+		if (strcmp (buffer, "@TBLOCK") != 0)
+			throw ("Bad Transformer Block");
+
+		l_children.push_back (new Attention_t (fp));
+		l_children.push_back (new MatrixNormalization_t (fp));
+		l_children.push_back (new ffn_t (fp));
+		l_children.push_back (new ffn_t (fp));
+		l_children.push_back (new MatrixNormalization_t (fp));
+	}
+
 	~transformerBlock_t (void)
 	{
 	}
 
-	virtual int N_LearnableParameters (void) const
+	virtual bool save (FILE *fp)
 	{
-		int N = 0;
+		fprintf (fp, "@TBLOCK\n");
+		layer_t::save (fp);
 
-		for (auto component = l_children.begin ();
-				component != l_children.end ();
-				++component)
-			N += (*component)->N_LearnableParameters ();
-
-		return N;
+		return true;
 	}
 };
 

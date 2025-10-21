@@ -29,6 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define __RANT_MATRIX_LEARNABLE__H__
 
 #include <stdlib.h>
+#include <stdio.h>
 
 #include <transformer_common.h>
 #include <Optimizer.h>
@@ -56,7 +57,7 @@ class __matrix_XW_t
 
 public:
 
-	__matrix_XW_t (int d, int n, const char * name = "anon") :
+	__matrix_XW_t (int d, int n, char const * name = "anon") :
 		mp_W (d, n),
 		mp_dW (d, n),
 		mp_dX (d, n),
@@ -67,6 +68,18 @@ public:
 		InitLearnable (mp_W.N (), d, mp_W.raw ());
 		mp_dW.zero ();
 
+	}
+
+	__matrix_XW_t (FILE *fp) :
+		mp_training (false),
+		mp_name (strdup ("anon"))
+	{
+		mp_W.load (fp);
+	}
+
+	__matrix_XW_t (void) :
+		mp_name (strdup ("anon"))
+	{
 	}
 
 	~__matrix_XW_t (void)
@@ -118,11 +131,31 @@ public:
 		return mp_dX;
 	}
 
+	bool save (FILE *fp)
+	{
+		return mp_W.save (fp);
+	}
+
+	bool load (FILE *fp)
+	{
+		return mp_W.load (fp);
+	}
+
 	void update (void)
 	{
 		assert (mp_training);
 
 		mp_O.update ();
+	}
+
+	int rows (void) const
+	{
+		return mp_W.rows ();
+	}
+
+	int columns (void) const
+	{
+		return mp_W.columns ();
 	}
 
 	Md_t &W (void)

@@ -51,6 +51,23 @@ public:
 	{
 	}
 
+	ffn_t (FILE *fp)
+	{
+		char buffer[32];
+		int flag;
+
+		fscanf (fp, "%s\n", buffer);
+		if (strcmp ("@FFN", buffer) != 0)
+			throw ("BAD FFN");
+
+		fscanf (fp, "%s %d\n", buffer, &flag);
+		if (strcmp ("@ACTIVATED", buffer) != 0)
+			throw ("BAD FFN ACTIVATED");
+		(flag ? f_activate = true : f_activate = false);
+
+		f_ffn.load (fp);
+	}
+
 	~ffn_t (void)
 	{
 	}
@@ -92,6 +109,15 @@ public:
 	virtual void update (void)
 	{
 		f_ffn.update ();
+	}
+
+	virtual bool save (FILE *fp)
+	{
+		fprintf (fp, "@FFN\n");
+		fprintf (fp, "@ACTIVATED %d\n", (int) f_activate);
+		f_ffn.save (fp);
+
+		return true;
 	}
 
 	virtual int N_LearnableParameters (void) const

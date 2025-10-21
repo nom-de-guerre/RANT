@@ -44,6 +44,8 @@ struct TransformerOptions_t
 	char			*to_path;
 	bool			to_flag;
 	char			*to_save;
+	char			*to_Efile;
+	char			*to_file;
 
 	TransformerOptions_t (int argc, char *argv[]) :
 		to_seed (time (NULL)),
@@ -83,11 +85,25 @@ int TransformerOptions_t::Parse (int argc, char *argv[])
 
 	while (true)
 	{
-		opt = getopt (argc, argv, "N:s:r:n:h:t:i:p:q");
+		opt = getopt (argc, argv, "f:V:N:s:r:n:h:t:i:p:q");
 		if (opt == -1)
 			break;
 
 		switch (opt) {
+
+		case 'f':
+
+			to_file = strdup (optarg);
+			count += 2;
+
+			break;
+
+		case 'V':
+
+			to_Efile = strdup (optarg);
+			count += 2;
+
+			break;
 
 		case 'N':
 

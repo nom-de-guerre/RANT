@@ -52,6 +52,13 @@ public:
 	{
 	}
 
+	CausalModel_t (FILE *fp) :
+		SparseCrossEntropy_t (),
+		m_T (fp),
+		m_L (fp)
+	{
+	}
+
 	~CausalModel_t (void)
 	{
 	}
@@ -88,8 +95,8 @@ public:
 		const int batchSize=32,
 		const bool verbose=false)
 	{
-		K.setMinLen (10);
-		K.setMaxLen (25);
+		K.setMinLen (8);
+//		K.setMaxLen (25);
 
 		for (int epoch = 0; epoch < MaxEpochs; ++epoch)
 		{
@@ -156,6 +163,22 @@ public:
 		m_T.update ();
 
 		reset ();
+	}
+
+	bool save (char const * const filename)
+	{
+		FILE *fp = fopen (filename, "w");
+		if (fp == NULL)
+			return false;
+
+		bool rc = fprintf (fp, "@CAUSALMODEL\n");
+
+		rc &= m_T.save (fp);
+		rc &= m_L.save (fp);
+
+		fclose (fp);
+
+		return rc;
 	}
 
 	int N_LearnableParameters (void) const
