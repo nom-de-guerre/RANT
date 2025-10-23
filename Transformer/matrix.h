@@ -1323,9 +1323,19 @@ public:
 
 	void exportRow (const int row, T *to)
 	{
-		T *datap = raw () + row;
+		bool rowOrder = isRowOrder ();
 		int incr = stride ();
 		int d = columns ();
+		T *datap = raw ();
+
+		if (rowOrder) {
+
+			datap += row * incr;
+			memcpy (to, datap, columns () * sizeof (IEEE_t));
+			return;
+		}
+
+		datap += row;
 
 		for (int i = 0; i < d; ++i, datap += incr)
 			to[i] = *datap;
