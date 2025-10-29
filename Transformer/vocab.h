@@ -67,7 +67,7 @@ class vocabDict_t
 
 public:
 
-	vocabDict_t (char const * const filename, const bool learnV=false) :
+	vocabDict_t (char const * const filename, const bool learnV=true) :
 		vd_learnV (learnV),
 		vd_dX (NULL),
 		vd_O (NULL)
@@ -294,7 +294,7 @@ public:
 
 			vd_O->touch (token);
 			// export from the dX i-th row to token row in the embeddings
-			dX.exportRow (i, vd_dX + (token * vd_d));
+			dX.exportAddRow (i, vd_dX + (token * vd_d));
 		}
 	}
 
