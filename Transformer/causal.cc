@@ -53,6 +53,7 @@ int main (int argc, char *argv[])
 #endif
 #ifndef __NO_E_LEARNING
     printf ("Including Learned Embeddings\n");
+	opts.to_flag = true;
 #endif
 #ifndef __NO_TRANSBLOCK_FFN
     printf ("Including FFN\n");
