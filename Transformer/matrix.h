@@ -348,27 +348,27 @@ template<typename T> struct MatrixView_t
 		mw_serialNo = ++serialNo;
 	}
 
-	int rows () 
+	int rows () const
 	{ 
 		return mw_vrows; 
 	}
 
-	int prows () 
+	int prows () const
 	{ 
 		return mw_prows; 
 	}
 
-	int columns () 
+	int columns () const
 	{ 
 		return mw_vcolumns; 
 	}
 
-	int pcolumns () 
+	int pcolumns () const
 	{ 
 		return mw_pcolumns; 
 	}
 
-	bool immutable ()
+	bool immutable () const
 	{
 		return mw_immutable;
 	}
@@ -436,6 +436,17 @@ template<typename T> struct MatrixView_t
 		{
 			for (int j = 0; j < columns(); j++)
 				printf (buffer, (double) this->datum (i, j));
+
+			printf ("\n" );
+		}
+	}
+
+	void displayData (void)
+	{
+		for (int i = 0; i < rows(); i++)
+		{
+			for (int j = 0; j < columns(); j++)
+				printf ("%lf, ", (double) this->datum (i, j));
 
 			printf ("\n" );
 		}
@@ -776,6 +787,11 @@ public:
 	void displayMeta (const char *name) const
 	{
 		INVOKE->displayMeta (name);
+	}
+
+	void displayData (void)
+	{
+		INVOKE->displayData ();
 	}
 
 	void display(const char *name = "", const char *precision = "2")
@@ -1271,6 +1287,28 @@ public:
 	}
 
 	// Copy a row into a matrix (column order, so not fun)
+	void importAddRow (int row, T *from)
+	{
+		int ncolumns = columns ();
+
+		if (isRowOrder ())
+		{
+			T * __restrict p = raw () + row * stride ();
+			for (int i = 0; i < ncolumns; ++i)
+				p[i] += from[i];
+
+			return;
+		}
+
+		T *datap = raw () + row;
+		int incr = stride ();
+		int d = columns ();
+
+		for (int i = 0; i < d; ++i, datap += incr)
+			*datap += from[i];
+	}
+
+	// Copy a row into a matrix (column order, so not fun)
 	void importRow (int row, T *from)
 	{
 		if (isRowOrder ())
@@ -1339,6 +1377,26 @@ public:
 
 		for (int i = 0; i < d; ++i, datap += incr)
 			to[i] = *datap;
+	}
+
+	void exportAddRow (const int row, T *to)
+	{
+		bool rowOrder = isRowOrder ();
+		int incr = stride ();
+		int d = columns ();
+		T *datap = raw ();
+
+		if (rowOrder) {
+
+			datap += row * incr;
+			memcpy (to, datap, columns () * sizeof (IEEE_t));
+			return;
+		}
+
+		datap += row;
+
+		for (int i = 0; i < d; ++i, datap += incr)
+			to[i] += *datap;
 	}
 
 	// The matrix Frobenius norm
